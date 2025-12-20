@@ -10,6 +10,11 @@ import { testBall } from './test-ball.js';
 import { testPiece } from './test-piece.js';
 import { testGrid } from './test-grid.js';
 import testPieceFactory from './test-piece-factory.js';
+import testScoreManager from './test-score-manager.js';
+import testConfigManager from './test-config-manager.js';
+import testInputHandler from './test-input-handler.js';
+import testFloatingText from './test-floating-text.js';
+import testGameEngine from './test-game-engine.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -31,6 +36,21 @@ export async function runAllTests() {
 	// Run async test suites
 	const asyncResults = await runAsyncTestSuite(testPieceFactory);
 	suites.push({ name: testPieceFactory.name, tests: asyncResults });
+	
+	const scoreManagerResults = await runAsyncTestSuite(testScoreManager);
+	suites.push({ name: testScoreManager.name, tests: scoreManagerResults });
+	
+	const configManagerResults = await runAsyncTestSuite(testConfigManager);
+	suites.push({ name: testConfigManager.name, tests: configManagerResults });
+	
+	const inputHandlerResults = await runAsyncTestSuite(testInputHandler);
+	suites.push({ name: testInputHandler.name, tests: inputHandlerResults });
+	
+	const floatingTextResults = await runAsyncTestSuite(testFloatingText);
+	suites.push({ name: testFloatingText.name, tests: floatingTextResults });
+	
+	const gameEngineResults = await runAsyncTestSuite(testGameEngine);
+	suites.push({ name: testGameEngine.name, tests: gameEngineResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

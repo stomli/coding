@@ -101,6 +101,7 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 
 ### 4.1 Piece Movement
 - **Auto-Drop:** Pieces fall at configurable speed (increases per level)
+- **Ghost Piece:** Semi-transparent outline shows where piece will land when hard dropped
 - **Player Controls:**
   - **Left Arrow:** Move piece left
   - **Right Arrow:** Move piece right
@@ -113,7 +114,9 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 - Pieces stop when they collide with:
   - Bottom of grid
   - Another ball already in the grid
-- Once stopped, balls lock into position
+- **Lock Delay:** 500ms (configurable) before piece locks into position
+  - Allows player to make final adjustments
+  - Timer resets if piece moves or rotates while grounded
 
 ### 4.3 Matching & Clearing
 
@@ -140,42 +143,59 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 - Not affected by standard color matches
 - Only removed by explosions or reaching bottom
 
-### 4.4 Animation Timing
+### 4.4 Animation Timing (Implemented)
 - **Configurable delays** between:
-  - Piece lock → Match detection
-  - Match clear → Ball drop
-  - Drop complete → Next match check
-- **Default:** Instant (0ms), but configurable for visual feedback
+  - Piece lock → Match detection: `matchDetectionDelay` (default: 0ms)
+  - Match clear animation: `clearAnimationDuration` (default: 100ms)
+  - Ball drop speed: `dropAnimationSpeed` (default: 20ms per row)
+  - Drop complete → Next match check: `cascadeCheckDelay` (default: 0ms)
+
+**Clear Animation Sequence:**
+1. Flash matched balls white 3 times (alternating original color/white)
+2. Each flash: `clearAnimationDuration / 6` duration
+3. Display floating point text showing score earned
+4. Remove balls and update grid
+5. Begin gravity animation
 
 ---
 
 ## 5. Scoring System
 
-### 5.1 Base Scoring
-- **Balls 1-10 cleared:** 1 point each
-- **Balls 11-15 cleared:** 2 points each (doubles)
-- **Balls 16-20 cleared:** 4 points each (doubles again)
-- **Pattern:** Points double every 5 balls after first 10
+### 5.1 Base Scoring (Implemented)
+- **Base Points:** 1 point per ball cleared (configurable)
+- **Cascade Bonus Formula:**
+  - Single cascade (no chain): Base points only
+  - 2nd cascade in chain: +3 points (configurable)
+  - 3rd cascade in chain: +6 points (previous bonus × 2)
+  - 4th+ cascade: Bonus continues doubling
+  - Formula: `3 × 2^(cascadeLevel - 2)` for cascade level ≥ 2
 
-### 5.2 Bonus Scoring
-- **Full Row Clear:** +50 points
-- **Cascade Bonus:**
-  - 1st cascade: +3 points (configurable)
-  - 2nd cascade: +6 points (doubles)
-  - 3rd cascade: +12 points (doubles)
-  - Pattern: Cascade bonus doubles each level
+### 5.2 Visual Score Feedback (Implemented)
+- **Floating Point Text:** Shows points earned for each match
+  - Appears at center of matched balls
+  - Floats upward 50 pixels over 1.5 seconds
+  - Fades out linearly during animation
+  - White text with black outline for visibility
+  - Separate popup for each match group in multi-match clears
 
-### 5.3 Difficulty Multiplier
-- **Difficulty 1:** 1x points
+### 5.3 Difficulty Multiplier (Implemented)
+- **Difficulty 1:** 1.0x points
 - **Difficulty 2:** 1.5x points
-- **Difficulty 3:** 2x points
+- **Difficulty 3:** 2.0x points
 - **Difficulty 4:** 2.5x points
-- **Difficulty 5:** 3x points
+- **Difficulty 5:** 3.0x points
 
-### 5.4 Score Display
-- **Current Level Score:** Resets each level
-- **Total Score:** Cumulative across all levels in current session
-- **High Score:** Per (difficulty × level) combination, persisted in localStorage
+**Score Calculation:** `(ballCount × basePoints + cascadeBonuses) × difficultyMultiplier`
+
+### 5.4 Score Display (Implemented)
+- **Score Manager:** Singleton module tracking score via event system
+  - Listens for `BALLS_CLEARED` events to accumulate ball counts per cascade
+  - Listens for `CASCADE_COMPLETE` events to calculate and apply final score
+  - Emits `SCORE_UPDATE` events for UI synchronization
+- **Real-time UI Update:** Score display updates immediately after each cascade
+- **Current Level Score:** Displayed in HUD (resets per level - not yet implemented)
+- **Total Score:** Cumulative tracking (multi-level system not yet implemented)
+- **High Score:** localStorage persistence (not yet implemented)
 
 ---
 
@@ -407,6 +427,89 @@ All game parameters should be configurable via JSON:
 
 ---
 
-**Document Version:** 1.0  
-**Date:** December 19, 2025  
-**Status:** Final for Implementation
+## 14. Implementation Status
+
+### 14.1 Completed Features (Phase 1-3)
+✅ **Core Foundation**
+- Project structure with modular architecture
+- ConfigManager with config.json loading
+- Constants and EventEmitter utilities
+- Ball class with type system
+- Piece class with 8 shapes and rotation
+- Grid class with match detection
+- Renderer with Canvas API
+- InputHandler with keyboard controls
+- GameEngine with game loop
+
+✅ **Core Gameplay**
+- Piece dropping with gravity
+- Collision detection
+- Piece rotation (clockwise 90°)
+- Horizontal movement (left/right)
+- Hard drop (instant fall)
+- Piece locking with 500ms delay
+- PieceFactory with level-based color unlocking (3→8 colors)
+- Next piece preview
+- Ghost piece (drop location preview)
+- Pause functionality
+
+✅ **Matching System**
+- Match detection (horizontal, vertical, diagonal in all 4 directions)
+- Clear animation (3-flash white effect)
+- Gravity/cascade system (automatic multi-cascade loops)
+- Cascade counting
+- ScoreManager with event-driven architecture
+- Cascade bonus scoring (3 × 2^n formula)
+- Difficulty multipliers (1.0x - 3.0x)
+- Floating point text animations
+- Real-time score display updates
+
+✅ **Quality Assurance**
+- 136 unit tests across 11 test modules
+- Comprehensive test coverage:
+  - **Core Utilities:** Helpers (6 tests), EventEmitter (8 tests)
+  - **Game Entities:** Ball (12 tests), Piece (13 tests), Grid (23 tests)
+  - **Factories & Managers:** PieceFactory (13 tests), ScoreManager (13 tests), ConfigManager (12 tests), FloatingText (11 tests)
+  - **Game Systems:** InputHandler (10 tests), GameEngine (12 tests), Renderer (3 tests)
+- Test runner with async support and detailed reporting
+- All tests passing with singleton pattern support
+
+### 14.2 Pending Features (Phase 4+)
+⏳ **Special Ball Effects**
+- Exploding ball 7×7 clear behavior (type exists, effect not implemented)
+- Painter ball line painting (type exists, effect not implemented)
+- Blocking ball spawn and immunity (type exists, behavior not implemented)
+
+⏳ **Level & Difficulty System**
+- LevelManager module
+- Level timer (15 second countdown)
+- Difficulty selection (1-5)
+- Level progression and unlocking
+- Drop speed scaling
+- Blocking ball frequency scaling
+
+⏳ **UI Screens**
+- Main menu
+- Level selection screen
+- Pause overlay
+- Game over screen
+- Level complete screen
+- High score display
+
+⏳ **Audio System**
+- AudioManager module
+- Web Audio API sound generation
+- All sound effects (rotation, movement, lock, match, explosion, paint, etc.)
+- Volume control and mute
+
+⏳ **Data Persistence**
+- StorageManager module
+- LocalStorage high score tracking
+- Level unlock persistence
+- Settings persistence
+
+---
+
+**Document Version:** 1.1  
+**Last Updated:** December 19, 2025  
+**Status:** Living Document - Updated with Phase 1-3 Implementation

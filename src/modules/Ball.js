@@ -80,13 +80,11 @@ class Ball {
 	 */
 	isSpecial() {
 		const isExploding = this.type === CONSTANTS.BALL_TYPES.EXPLODING;
-		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
-		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
-		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
+		const isPainter = CONSTANTS.PAINTER_TYPES.includes(this.type);
 		const isBlocking = this.type === CONSTANTS.BALL_TYPES.BLOCKING;
 		
 		// Check if any special type
-		if (isExploding || isPainterH || isPainterV || isPainterD || isBlocking) {
+		if (isExploding || isPainter || isBlocking) {
 			return true;
 		}
 		else {
@@ -115,12 +113,10 @@ class Ball {
 	 * @returns {Boolean} True if any painter type
 	 */
 	isPainter() {
-		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
-		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
-		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
+		const isPainter = CONSTANTS.PAINTER_TYPES.includes(this.type);
 		
-		// Check if any painter type
-		if (isPainterH || isPainterV || isPainterD) {
+		// Return painter status
+		if (isPainter) {
 			return true;
 		}
 		else {
@@ -133,19 +129,19 @@ class Ball {
 	 * @returns {String|null} 'horizontal', 'vertical', 'diagonal', or null if not a painter
 	 */
 	getPainterDirection() {
-		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
-		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
-		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
+		// Map type to direction
+		const directionMap = {
+			[CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL]: 'horizontal',
+			[CONSTANTS.BALL_TYPES.PAINTER_VERTICAL]: 'vertical',
+			[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL]: 'diagonal'
+		};
 		
-		// Return appropriate direction
-		if (isPainterH) {
-			return 'horizontal';
-		}
-		else if (isPainterV) {
-			return 'vertical';
-		}
-		else if (isPainterD) {
-			return 'diagonal';
+		const direction = directionMap[this.type];
+		const hasDirection = direction !== undefined;
+		
+		// Return direction or null
+		if (hasDirection) {
+			return direction;
 		}
 		else {
 			return null;

@@ -206,6 +206,29 @@ function formatTime(seconds) {
 	}
 }
 
+/**
+ * Iterate over all balls in a piece shape and execute callback
+ * @param {Array<Array<Number>>} shape - 2D array shape matrix
+ * @param {Function} callback - Function to call for each ball: (row, col) => void
+ * @returns {void}
+ */
+function iterateShapeCells(shape, callback) {
+	// Iterate through shape matrix
+	for (let row = 0; row < shape.length; row++) {
+		for (let col = 0; col < shape[row].length; col++) {
+			const hasBall = shape[row][col] === 1;
+			
+			// Execute callback for ball cells
+			if (hasBall) {
+				callback(row, col);
+			}
+			else {
+				// Empty cell, skip
+			}
+		}
+	}
+}
+
 export {
 	getNestedProperty,
 	clamp,
@@ -215,5 +238,6 @@ export {
 	shuffleArray,
 	deepClone,
 	formatNumber,
-	formatTime
+	formatTime,
+	iterateShapeCells
 };

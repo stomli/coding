@@ -32,6 +32,11 @@ const CONSTANTS = {
 	},
 	
 	/**
+	 * Painter ball types (subset for easy checking)
+	 */
+	PAINTER_TYPES: ['PAINTER_HORIZONTAL', 'PAINTER_VERTICAL', 'PAINTER_DIAGONAL'],
+	
+	/**
 	 * Direction enumeration
 	 */
 	DIRECTIONS: {
@@ -92,6 +97,8 @@ const CONSTANTS = {
 		PIECE_LOCK: 'pieceLockEvent',
 		MATCH_FOUND: 'matchFoundEvent',
 		CASCADE: 'cascadeEvent',
+		CASCADE_COMPLETE: 'cascadeCompleteEvent',
+		BALLS_CLEARED: 'ballsClearedEvent',
 		SCORE_UPDATE: 'scoreUpdateEvent',
 		MOVE_LEFT: 'moveLeftEvent',
 		MOVE_RIGHT: 'moveRightEvent',

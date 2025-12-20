@@ -11,7 +11,7 @@
 import Ball from './Ball.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
-import { deepClone } from '../utils/Helpers.js';
+import { deepClone, iterateShapeCells } from '../utils/Helpers.js';
 
 /**
  * Piece class representing falling pieces composed of balls
@@ -262,22 +262,12 @@ class Piece {
 	getOccupiedPositions() {
 		const positions = [];
 		
-		for (let row = 0; row < this.shape.length; row++) {
-			for (let col = 0; col < this.shape[row].length; col++) {
-				const hasBall = this.shape[row][col] === 1;
-				
-				// Add position if occupied
-				if (hasBall) {
-					positions.push({ 
-						x: this.position.x + col, 
-						y: this.position.y + row 
-					});
-				}
-				else {
-					// Empty position, skip
-				}
-			}
-		}
+		iterateShapeCells(this.shape, (row, col) => {
+			positions.push({ 
+				x: this.position.x + col, 
+				y: this.position.y + row 
+			});
+		});
 		
 		return positions;
 	}

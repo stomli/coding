@@ -18,6 +18,8 @@ import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { randomInt } from '../utils/Helpers.js';
 import { PieceFactory } from './PieceFactory.js';
+import { ScoreManager } from './ScoreManager.js';
+import { FloatingTextManager } from './FloatingText.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -47,6 +49,9 @@ class GameEngineClass {
 		this.lockTimer = 0;
 		this.isLocking = false;
 		this.animationFrameId = null;
+		
+		// Floating text manager
+		this.floatingTextManager = new FloatingTextManager();
 	}
 	
 	/**
@@ -223,28 +228,46 @@ class GameEngineClass {
 		const hasPiece = this.currentPiece !== null;
 		
 		if (isPlaying && hasPiece) {
-			const pos = this.currentPiece.getPosition();
-			let finalY = pos.y;
-			
-			// Find lowest valid position
-			for (let testY = pos.y + 1; testY < this.grid.rows; testY++) {
-				this.currentPiece.setPosition(pos.x, testY);
-				
-				if (this.grid.isValidPosition(this.currentPiece)) {
-					finalY = testY;
-				}
-				else {
-					// Can't go further
-					break;
-				}
-			}
+			const ghostY = this._getGhostPieceY();
 			
 			// Move to final position
-			this.currentPiece.setPosition(pos.x, finalY);
+			this.currentPiece.setPosition(this.currentPiece.getPosition().x, ghostY);
 			
 			// Lock immediately
 			this._lockPiece();
 		}
+	}
+	
+	/**
+	 * Calculate the Y position where the piece would land
+	 * @returns {Number} Y position of ghost piece
+	 * @private
+	 */
+	_getGhostPieceY() {
+		if (!this.currentPiece) {
+			return 0;
+		}
+		
+		const pos = this.currentPiece.getPosition();
+		let ghostY = pos.y;
+		
+		// Find lowest valid position
+		for (let testY = pos.y + 1; testY < this.grid.rows; testY++) {
+			this.currentPiece.setPosition(pos.x, testY);
+			
+			if (this.grid.isValidPosition(this.currentPiece)) {
+				ghostY = testY;
+			}
+			else {
+				// Can't go further
+				break;
+			}
+		}
+		
+		// Restore original position
+		this.currentPiece.setPosition(pos.x, pos.y);
+		
+		return ghostY;
 	}
 	
 	/**
@@ -274,6 +297,9 @@ class GameEngineClass {
 		
 		// Reset PieceFactory
 		PieceFactory.reset();
+		
+		// Initialize ScoreManager
+		ScoreManager.initialize(this.difficulty);
 		
 		// Set drop speed based on difficulty
 		this.dropInterval = Math.max(200, 1000 - (difficulty * 150));
@@ -318,6 +344,17 @@ class GameEngineClass {
 			
 			const hasPiece = this.currentPiece !== null;
 			
+			// Render ghost piece (shadow showing where piece will land)
+			if (hasPiece) {
+				const pos = this.currentPiece.getPosition();
+				const ghostY = this._getGhostPieceY();
+				
+				// Only render ghost if it's below current position
+				if (ghostY > pos.y) {
+					this.renderer.renderGhostPiece(this.currentPiece, pos.x, ghostY);
+				}
+			}
+			
 			// Render current piece
 			if (hasPiece) {
 				const pos = this.currentPiece.getPosition();
@@ -339,6 +376,10 @@ class GameEngineClass {
 			else {
 				// No preview to render
 			}
+			
+			// Update and render floating texts
+			this.floatingTextManager.update();
+			this.floatingTextManager.render(this.renderer.ctx);
 		}
 		else {
 			// No renderer available
@@ -434,11 +475,12 @@ class GameEngineClass {
 	 * @returns {void}
 	 * @private
 	 */
-	_lockPiece() {
+	async _lockPiece() {
 		// Place piece on grid
 		this.grid.placePiece(this.currentPiece);
 		
-		// TODO: Check for matches (Phase 3)
+		// Check for matches and handle cascades
+		await this._handleMatching();
 		
 		// Spawn next piece
 		this.currentPiece = this.nextPiece;
@@ -463,6 +505,201 @@ class GameEngineClass {
 		else {
 			// Continue playing
 		}
+	}
+	
+	/**
+	 * Handle matching and cascading
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async _handleMatching() {
+		let cascadeCount = 0;
+		const matchDelay = ConfigManager.get('animations.matchDetectionDelay', 0);
+		const clearDelay = ConfigManager.get('animations.clearAnimationDuration', 300);
+		const cascadeDelay = ConfigManager.get('animations.cascadeCheckDelay', 0);
+		
+		// Cascade loop
+		while (true) {
+			// Wait for match detection delay
+			if (matchDelay > 0) {
+				await this._delay(matchDelay);
+			}
+			
+			// Find matches
+			const matches = this.grid.findMatches();
+			
+			if (matches.length === 0) {
+				break; // No more matches
+			}
+			
+			cascadeCount++;
+			
+			// Clear matched balls
+			await this._clearMatches(matches, clearDelay);
+			
+			// Apply gravity
+			await this._applyGravity();
+			
+			// Wait before checking for next cascade
+			if (cascadeDelay > 0) {
+				await this._delay(cascadeDelay);
+			}
+		}
+		
+		// Emit cascade event for scoring
+		if (cascadeCount > 0) {
+			EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount });
+		}
+	}
+	
+	/**
+	 * Clear matched balls from grid
+	 * @param {Array<Object>} matches - Array of match objects
+	 * @param {Number} duration - Animation duration in ms
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async _clearMatches(matches, duration) {
+		// Collect all positions to clear grouped by match
+		const matchGroups = [];
+		
+		for (const match of matches) {
+			const positions = [];
+			for (const pos of match.positions) {
+				positions.push({ row: pos.row, col: pos.col });
+			}
+			matchGroups.push({ positions, color: match.color });
+		}
+		
+		// Calculate points per ball (base points only, cascade bonus added later)
+		const basePoints = ConfigManager.get('scoring.basePointsPerBall', 1);
+		const difficultyMultiplier = ConfigManager.get(`scoring.difficultyMultipliers.difficulty${this.difficulty}`, 1.0);
+		
+		// Collect all positions to clear
+		const positionsToClear = new Set();
+		
+		for (const match of matches) {
+			for (const pos of match.positions) {
+				positionsToClear.add(`${pos.row},${pos.col}`);
+			}
+		}
+		
+		// Flash animation - mark balls for flashing
+		const ballsToFlash = [];
+		for (const posStr of positionsToClear) {
+			const [row, col] = posStr.split(',').map(Number);
+			const ball = this.grid.getBallAt(row, col);
+			if (ball) {
+				ballsToFlash.push({ row, col, ball });
+			}
+		}
+		
+		// Flash 3 times
+		const flashCount = 3;
+		const flashDuration = Math.floor(duration / (flashCount * 2));
+		
+		for (let i = 0; i < flashCount; i++) {
+			// Make balls white
+			for (const item of ballsToFlash) {
+				const originalColor = item.ball.getColor();
+				item.ball.color = '#FFFFFF';
+				item.originalColor = originalColor;
+			}
+			this.render();
+			await this._delay(flashDuration);
+			
+			// Restore original colors
+			for (const item of ballsToFlash) {
+				if (item.originalColor) {
+					item.ball.color = item.originalColor;
+				}
+			}
+			this.render();
+			await this._delay(flashDuration);
+		}
+		
+		// Add floating text for each match group
+		for (const group of matchGroups) {
+			const ballCount = group.positions.length;
+			const points = Math.floor(ballCount * basePoints * difficultyMultiplier);
+			
+			// Calculate center position of match
+			let centerRow = 0;
+			let centerCol = 0;
+			for (const pos of group.positions) {
+				centerRow += pos.row;
+				centerCol += pos.col;
+			}
+			centerRow /= group.positions.length;
+			centerCol /= group.positions.length;
+			
+			// Convert grid position to screen position
+			const screenX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
+			const screenY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
+			
+			// Add floating text
+			this.floatingTextManager.add(`+${points}`, screenX, screenY, 1500);
+		}
+		
+		// Remove balls from grid
+		for (const posStr of positionsToClear) {
+			const [row, col] = posStr.split(',').map(Number);
+			this.grid.removeBallAt(row, col);
+		}
+		
+		// Render immediately to show cleared balls
+		this.render();
+		
+		// Emit clear event
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { 
+			count: positionsToClear.size,
+			matches: matches.length 
+		});
+	}
+	
+	/**
+	 * Apply gravity to make balls fall
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	async _applyGravity() {
+		const dropSpeed = ConfigManager.get('animations.dropAnimationSpeed', 50);
+		let ballsMoved = true;
+		
+		// Keep dropping until no balls can fall
+		while (ballsMoved) {
+			ballsMoved = false;
+			
+			// Scan from bottom to top
+			for (let row = this.grid.rows - 2; row >= 0; row--) {
+				for (let col = 0; col < this.grid.cols; col++) {
+					const ball = this.grid.getBallAt(row, col);
+					
+					if (ball && this.grid.getBallAt(row + 1, col) === null) {
+						// Move ball down
+						this.grid.setBallAt(row + 1, col, ball);
+						this.grid.removeBallAt(row, col);
+						ballsMoved = true;
+					}
+				}
+			}
+			
+			// Render and wait
+			if (ballsMoved) {
+				this.render();
+				await this._delay(dropSpeed);
+			}
+		}
+	}
+	
+	/**
+	 * Helper to create a delay
+	 * @param {Number} ms - Milliseconds to wait
+	 * @returns {Promise<void>}
+	 * @private
+	 */
+	_delay(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 	
 	/**

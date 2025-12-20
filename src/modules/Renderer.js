@@ -10,6 +10,7 @@
 
 import { ConfigManager } from './ConfigManager.js';
 import { CONSTANTS } from '../utils/Constants.js';
+import { iterateShapeCells } from '../utils/Helpers.js';
 
 /**
  * Renderer class for drawing game elements to canvas
@@ -124,24 +125,43 @@ class Renderer {
 		let ballIndex = 0;
 		
 		// Draw each ball in piece
-		for (let row = 0; row < shape.length; row++) {
-			for (let col = 0; col < shape[row].length; col++) {
-				const hasBall = shape[row][col] === 1;
-				
-				// Draw ball if present
-				if (hasBall) {
-					const gridCol = x + col;
-					const gridRow = y + row;
-					const ball = balls[ballIndex];
-					
-					this._drawBall(ball, gridCol, gridRow);
-					ballIndex++;
-				}
-				else {
-					// Empty cell, skip
-				}
-			}
-		}
+		iterateShapeCells(shape, (row, col) => {
+			const gridCol = x + col;
+			const gridRow = y + row;
+			const ball = balls[ballIndex];
+			
+			this._drawBall(ball, gridCol, gridRow);
+			ballIndex++;
+		});
+	}
+	
+	/**
+	 * Render ghost piece (outline showing where piece will land)
+	 * @param {Piece} piece - Piece to render as ghost
+	 * @param {Number} x - Column position
+	 * @param {Number} y - Row position
+	 * @returns {void}
+	 */
+	renderGhostPiece(piece, x, y) {
+		const shape = piece.getShape();
+		const ballRadius = ConfigManager.get('rendering.ballRadius', 20);
+		
+		// Draw each ball position as outline
+		iterateShapeCells(shape, (row, col) => {
+			const gridCol = x + col;
+			const gridRow = y + row;
+			const centerX = gridCol * this.cellSize + this.offsetX;
+			const centerY = gridRow * this.cellSize + this.offsetY;
+			
+			// Draw semi-transparent outline
+			this.ctx.save();
+			this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+			this.ctx.lineWidth = 2;
+			this.ctx.beginPath();
+			this.ctx.arc(centerX, centerY, ballRadius * 0.9, 0, Math.PI * 2);
+			this.ctx.stroke();
+			this.ctx.restore();
+		});
 	}
 	
 	/**
@@ -175,25 +195,15 @@ class Renderer {
 		let ballIndex = 0;
 		
 		// Draw each ball in piece
-		for (let row = 0; row < shape.length; row++) {
-			for (let col = 0; col < shape[row].length; col++) {
-				const hasBall = shape[row][col] === 1;
-				
-				// Draw ball if present
-				if (hasBall) {
-					const x = offsetX + col * previewCellSize + previewCellSize / 2;
-					const y = offsetY + row * previewCellSize + previewCellSize / 2;
-					const ball = balls[ballIndex];
-					const radius = previewCellSize / 2 * 0.8;
-					
-					this._drawBallAt(ball, x, y, radius, previewCtx);
-					ballIndex++;
-				}
-				else {
-					// Empty cell, skip
-				}
-			}
-		}
+		iterateShapeCells(shape, (row, col) => {
+			const x = offsetX + col * previewCellSize + previewCellSize / 2;
+			const y = offsetY + row * previewCellSize + previewCellSize / 2;
+			const ball = balls[ballIndex];
+			const radius = previewCellSize / 2 * 0.8;
+			
+			this._drawBallAt(ball, x, y, radius, previewCtx);
+			ballIndex++;
+		});
 	}
 	
 	/**

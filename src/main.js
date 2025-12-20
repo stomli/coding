@@ -6,6 +6,8 @@
  */
 
 import GameEngine from './modules/GameEngine.js';
+import { EventEmitter } from './utils/EventEmitter.js';
+import { CONSTANTS } from './utils/Constants.js';
 
 /**
  * Initialize the game when the DOM is ready
@@ -17,6 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 		// Set up menu event listeners
 		setupMenuListeners();
+		
+		// Set up score display listener
+		setupScoreListener();
 
 		// Show the main menu
 		showScreen('menuScreen');
@@ -68,6 +73,23 @@ function showScreen(screenId) {
 			else {
 				screen.classList.add('hidden');
 			}
+		}
+	});
+}
+
+/**
+ * Set up score display listener
+ */
+function setupScoreListener() {
+	const totalScoreDisplay = document.getElementById('totalScoreDisplay');
+	const levelScoreDisplay = document.getElementById('levelScoreDisplay');
+	
+	EventEmitter.on(CONSTANTS.EVENTS.SCORE_UPDATE, (data) => {
+		if (totalScoreDisplay) {
+			totalScoreDisplay.textContent = data.score.toLocaleString();
+		}
+		if (levelScoreDisplay) {
+			levelScoreDisplay.textContent = data.score.toLocaleString();
 		}
 	});
 }

@@ -110,8 +110,8 @@
 	},
 	"animations": {
 		"matchDetectionDelay": 0,
-		"clearAnimationDuration": 300,
-		"dropAnimationSpeed": 50,
+		"clearAnimationDuration": 100,
+		"dropAnimationSpeed": 20,
 		"cascadeCheckDelay": 0,
 		"explosionDuration": 500,
 		"paintingDuration": 400,

@@ -11,6 +11,7 @@
 import Ball from './Ball.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { isInBounds } from '../utils/Helpers.js';
+import { iterateShapeCells } from '../utils/Helpers.js';
 
 /**
  * Grid class managing the game board state
@@ -53,46 +54,37 @@ class Grid {
 		}
 		
 		const shape = piece.getShape();
-		const shapeHeight = shape.length;
-		const shapeWidth = shape[0].length;
+		let isValid = true;
 		
 		// Check each occupied cell in piece
-		for (let row = 0; row < shapeHeight; row++) {
-			for (let col = 0; col < shapeWidth; col++) {
-				const hasBall = shape[row][col] === 1;
-				
-				// Check this position if occupied
-				if (hasBall) {
-					const gridRow = y + row;
-					const gridCol = x + col;
-					
-					const isInGridBounds = isInBounds(gridRow, gridCol, this.rows, this.cols);
-					
-					// Position must be in bounds
-					if (!isInGridBounds) {
-						return false;
-					}
-					else {
-						// Position is in bounds, check for collision
-					}
-					
-					const cellOccupied = this.grid[gridRow][gridCol] !== null;
-					
-					// Cell must be empty
-					if (cellOccupied) {
-						return false;
-					}
-					else {
-						// Cell is empty, continue checking
-					}
-				}
-				else {
-					// Empty cell in piece, skip
-				}
+		iterateShapeCells(shape, (row, col) => {
+			const gridRow = y + row;
+			const gridCol = x + col;
+			
+			const isInGridBounds = isInBounds(gridRow, gridCol, this.rows, this.cols);
+			
+			// Position is invalid if out of bounds
+			if (!isInGridBounds) {
+				isValid = false;
+				return;
 			}
-		}
+			else {
+				// In bounds, check for collision
+			}
+			
+			const cellOccupied = this.grid[gridRow][gridCol] !== null;
+			
+			// Position is invalid if cell is occupied
+			if (cellOccupied) {
+				isValid = false;
+				return;
+			}
+			else {
+				// Cell is free
+			}
+		});
 		
-		return true;
+		return isValid;
 	}
 	
 	/**
@@ -115,31 +107,21 @@ class Grid {
 		let ballIndex = 0;
 		
 		// Place each ball from piece into grid
-		for (let row = 0; row < shape.length; row++) {
-			for (let col = 0; col < shape[row].length; col++) {
-				const hasBall = shape[row][col] === 1;
-				
-				// Place ball if cell is occupied
-				if (hasBall) {
-					const gridRow = y + row;
-					const gridCol = x + col;
-					const isInGridBounds = isInBounds(gridRow, gridCol, this.rows, this.cols);
-					
-					// Place ball if in bounds
-					if (isInGridBounds) {
-						this.grid[gridRow][gridCol] = balls[ballIndex];
-						ballIndex++;
-					}
-					else {
-						console.warn('Grid: Attempted to place ball out of bounds', gridRow, gridCol);
-						ballIndex++;
-					}
-				}
-				else {
-					// Empty cell, skip
-				}
+		iterateShapeCells(shape, (row, col) => {
+			const gridRow = y + row;
+			const gridCol = x + col;
+			const isInGridBounds = isInBounds(gridRow, gridCol, this.rows, this.cols);
+			
+			// Place ball if in bounds
+			if (isInGridBounds) {
+				this.grid[gridRow][gridCol] = balls[ballIndex];
+				ballIndex++;
 			}
-		}
+			else {
+				console.warn('Grid: Attempted to place ball out of bounds', gridRow, gridCol);
+				ballIndex++;
+			}
+		});
 	}
 	
 	/**
@@ -362,8 +344,137 @@ class Grid {
 	_findDiagonalMatches() {
 		const matches = [];
 		
-		// TODO: Implement diagonal matching in future phase
-		// For Phase 1, return empty array
+		// Down-right diagonals (↘)
+		for (let startRow = 0; startRow < this.rows; startRow++) {
+			for (let startCol = 0; startCol < this.cols; startCol++) {
+				let currentColor = null;
+				let matchStart = { row: startRow, col: startCol };
+				let matchLength = 0;
+				
+				let row = startRow;
+				let col = startCol;
+				
+				while (row < this.rows && col < this.cols) {
+					const ball = this.grid[row][col];
+					const hasBall = ball !== null;
+					const isMatchable = hasBall && ball.isMatchable();
+					const ballColor = isMatchable ? ball.getColor() : null;
+					const colorsMatch = ballColor !== null && ballColor === currentColor;
+					
+					if (colorsMatch) {
+						matchLength++;
+					} else {
+						// Check if we have a valid match
+						if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
+							const positions = [];
+							for (let i = 0; i < matchLength; i++) {
+								positions.push({ 
+									row: matchStart.row + i, 
+									col: matchStart.col + i 
+								});
+							}
+							matches.push({
+								type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
+								color: currentColor,
+								positions: positions,
+								direction: 'diagonal'
+							});
+						}
+						
+						// Start new potential match
+						currentColor = ballColor;
+						matchStart = { row, col };
+						matchLength = isMatchable ? 1 : 0;
+					}
+					
+					row++;
+					col++;
+				}
+				
+				// Check final match
+				if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
+					const positions = [];
+					for (let i = 0; i < matchLength; i++) {
+						positions.push({ 
+							row: matchStart.row + i, 
+							col: matchStart.col + i 
+						});
+					}
+					matches.push({
+						type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
+						color: currentColor,
+						positions: positions,
+						direction: 'diagonal'
+					});
+				}
+			}
+		}
+		
+		// Down-left diagonals (↙)
+		for (let startRow = 0; startRow < this.rows; startRow++) {
+			for (let startCol = this.cols - 1; startCol >= 0; startCol--) {
+				let currentColor = null;
+				let matchStart = { row: startRow, col: startCol };
+				let matchLength = 0;
+				
+				let row = startRow;
+				let col = startCol;
+				
+				while (row < this.rows && col >= 0) {
+					const ball = this.grid[row][col];
+					const hasBall = ball !== null;
+					const isMatchable = hasBall && ball.isMatchable();
+					const ballColor = isMatchable ? ball.getColor() : null;
+					const colorsMatch = ballColor !== null && ballColor === currentColor;
+					
+					if (colorsMatch) {
+						matchLength++;
+					} else {
+						// Check if we have a valid match
+						if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
+							const positions = [];
+							for (let i = 0; i < matchLength; i++) {
+								positions.push({ 
+									row: matchStart.row + i, 
+									col: matchStart.col - i 
+								});
+							}
+							matches.push({
+								type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
+								color: currentColor,
+								positions: positions,
+								direction: 'diagonal'
+							});
+						}
+						
+						// Start new potential match
+						currentColor = ballColor;
+						matchStart = { row, col };
+						matchLength = isMatchable ? 1 : 0;
+					}
+					
+					row++;
+					col--;
+				}
+				
+				// Check final match
+				if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
+					const positions = [];
+					for (let i = 0; i < matchLength; i++) {
+						positions.push({ 
+							row: matchStart.row + i, 
+							col: matchStart.col - i 
+						});
+					}
+					matches.push({
+						type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
+						color: currentColor,
+						positions: positions,
+						direction: 'diagonal'
+					});
+				}
+			}
+		}
 		
 		return matches;
 	}
