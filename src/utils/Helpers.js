@@ -102,6 +102,16 @@ function randomInt(min, max) {
 }
 
 /**
+ * Generate a random float between min and max
+ * @param {Number} min - Minimum value
+ * @param {Number} max - Maximum value
+ * @returns {Number} Random float
+ */
+function randomFloat(min, max) {
+	return min + Math.random() * (max - min);
+}
+
+/**
  * Shuffle an array using Fisher-Yates algorithm
  * @param {Array} array - Array to shuffle
  * @returns {Array} Shuffled array (modifies original)
@@ -201,6 +211,7 @@ export {
 	clamp,
 	isInBounds,
 	randomInt,
+	randomFloat,
 	shuffleArray,
 	deepClone,
 	formatNumber,

@@ -77,7 +77,40 @@ class Piece {
 			newShape.push(newRow);
 		}
 		
+		// Reorder balls array to match rotated shape
+		// Old balls are in row-major order of old shape
+		// Need to map them to row-major order of new shape
+		const newBalls = [];
+		
+		// For each position in new shape (row-major order)
+		for (let newRow = 0; newRow < newShape.length; newRow++) {
+			for (let newCol = 0; newCol < newShape[newRow].length; newCol++) {
+				if (newShape[newRow][newCol] === 1) {
+					// Find where this position came from in old shape
+					// newShape[newRow][newCol] = oldShape[oldRow][oldCol]
+					// Due to rotation: newRow = oldCol, newCol = (oldRows - 1 - oldRow)
+					const oldCol = newRow;
+					const oldRow = oldRows - 1 - newCol;
+					
+					// Find ball index in old balls array
+					let oldBallIndex = 0;
+					for (let r = 0; r < oldRows; r++) {
+						for (let c = 0; c < oldCols; c++) {
+							if (r === oldRow && c === oldCol) {
+								newBalls.push(this.balls[oldBallIndex]);
+								break;
+							}
+							if (oldShape[r][c] === 1) {
+								oldBallIndex++;
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		this.shape = newShape;
+		this.balls = newBalls;
 	}
 	
 	/**
