@@ -24,6 +24,7 @@ import { DebugMode } from '../utils/DebugMode.js';
 import LevelManager from './LevelManager.js';
 import AnimationManager from './AnimationManager.js';
 import ParticleSystem from './ParticleSystem.js';
+import AudioManager from './AudioManager.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -53,6 +54,10 @@ class GameEngineClass {
 		this.lockTimer = 0;
 		this.isLocking = false;
 		this.animationFrameId = null;
+		
+		// Warning state tracking
+		this.lastWarningSecond = null;
+		this.lastDangerRow = null;
 		
 		// Debug mode state
 		this.waitingForDebugPiece = false;
@@ -152,6 +157,9 @@ class GameEngineClass {
 			if (!isValid) {
 				// Move back if invalid
 				this.currentPiece.setPosition(pos.x, pos.y);
+			} else {
+				// Play move sound
+				AudioManager.playMove();
 			}
 		}
 	}
@@ -174,6 +182,9 @@ class GameEngineClass {
 			if (!isValid) {
 				// Move back if invalid
 				this.currentPiece.setPosition(pos.x, pos.y);
+			} else {
+				// Play move sound
+				AudioManager.playMove();
 			}
 		}
 	}
@@ -224,6 +235,9 @@ class GameEngineClass {
 				this.currentPiece.rotate();
 				this.currentPiece.rotate();
 				this.currentPiece.setPosition(pos.x, pos.y);
+			} else {
+				// Play rotate sound on successful rotation
+				AudioManager.playRotate();
 			}
 		}
 	}
@@ -239,6 +253,9 @@ class GameEngineClass {
 		
 		if (isPlaying && hasPiece) {
 			const ghostY = this._getGhostPieceY();
+			
+			// Play drop sound when player manually drops
+			AudioManager.playDrop();
 			
 			// Move to final position
 			this.currentPiece.setPosition(this.currentPiece.getPosition().x, ghostY);
@@ -467,7 +484,17 @@ class GameEngineClass {
 		// Update timer display
 		const timerDisplay = document.getElementById('timerDisplay');
 		if (timerDisplay) {
+			const timeRemaining = LevelManager.getRemainingTime();
 			timerDisplay.textContent = LevelManager.getTimerDisplay();
+			
+			// Play warning beep in last 5 seconds
+			if (timeRemaining <= 5 && timeRemaining > 0) {
+				const currentSecond = Math.floor(timeRemaining);
+				if (!this.lastWarningSecond || this.lastWarningSecond !== currentSecond) {
+					this.lastWarningSecond = currentSecond;
+					AudioManager.playTimeWarning();
+				}
+			}
 		}
 		
 		// Update score display
@@ -587,6 +614,9 @@ class GameEngineClass {
 	 * @private
 	 */
 	async _lockPiece() {
+		// Play lock sound
+		AudioManager.playLock();
+		
 		// Place piece on grid
 		this.grid.placePiece(this.currentPiece);
 		
@@ -626,7 +656,19 @@ class GameEngineClass {
 		this._levelComplete('breach');
 	}
 	else {
-		// Continue playing
+		// Check for dangerous stack height (75% up the board = row 6 or less)
+		const highestBall = this.grid.getHighestBallRow();
+		const dangerThreshold = Math.floor(this.grid.rows * 0.25); // Top 25% of board
+		
+		if (highestBall !== -1 && highestBall <= dangerThreshold) {
+			// Stack is dangerously high - play alarm
+			if (!this.lastDangerRow || this.lastDangerRow !== highestBall) {
+				this.lastDangerRow = highestBall;
+				AudioManager.playStackDanger();
+			}
+		} else {
+			this.lastDangerRow = null; // Reset when safe
+		}
 	}
 }	/**
 	 * Handle matching and cascading
@@ -642,6 +684,9 @@ class GameEngineClass {
 		
 		this.isHandlingMatches = true;
 		console.log('🔧 Debug: _handleMatching called');
+		
+		// Track scoring events for celebration
+		let totalScoringEvents = 0;
 		
 		let cascadeCount = 0;
 		const matchDelay = ConfigManager.get('animations.matchDetectionDelay', 0);
@@ -683,6 +728,16 @@ class GameEngineClass {
 		// 1. Process explosions
 		const explodedPositions = this.grid.processExplosions(matches);
 		
+		// Count explosions as scoring events
+		if (explodedPositions.length > 0) {
+			totalScoringEvents += explodedPositions.length;
+		}
+		
+		// Play explosion sound if any balls exploded
+		if (explodedPositions.length > 0) {
+			AudioManager.playExplosion();
+		}
+		
 		// Create explosion particles and animations
 		for (const pos of explodedPositions) {
 			const screenX = pos.col * this.renderer.cellSize + this.renderer.offsetX;
@@ -699,6 +754,9 @@ class GameEngineClass {
 			// 3. Clear matched balls (standard matches)
 			await this._clearMatches(matches, clearDelay);
 			
+			// Count matches as scoring events
+			totalScoringEvents += matches.length;
+			
 			// Apply gravity
 			await this._applyGravity();
 			
@@ -708,12 +766,19 @@ class GameEngineClass {
 			}
 		}
 		
-		// Emit cascade event for scoring
-		if (cascadeCount > 0) {
-			EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount });
-		}
-		
-		// Reset step counter after cascade completes
+	// Emit cascade event for scoring
+	if (cascadeCount > 0) {
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount });
+		// Play cascade sound with escalating pitch
+		AudioManager.playCascade(cascadeCount);
+	}
+	
+	// Play celebration if we had 5+ scoring events
+	if (totalScoringEvents >= 5) {
+		AudioManager.playCelebration();
+	}
+	
+	// Reset step counter after cascade completes
 		if (DebugMode.enabled && DebugMode.stepMode) {
 			DebugMode.resetStepCounter();
 		}
@@ -730,6 +795,10 @@ class GameEngineClass {
 	 * @private
 	 */
 	async _clearMatches(matches, duration) {
+		// Play clear sound (pitch based on number of balls)
+		const totalBalls = matches.reduce((sum, match) => sum + match.positions.length, 0);
+		AudioManager.playClear(totalBalls);
+		
 		// Collect all positions to clear grouped by match
 		const matchGroups = [];
 		
@@ -906,10 +975,11 @@ class GameEngineClass {
 		// Render
 		this.render();
 		
-		// Continue loop if playing
+		// Continue loop if playing or level complete (for particles)
 		const isPlaying = this.state === CONSTANTS.GAME_STATES.PLAYING;
+		const isLevelComplete = this.state === CONSTANTS.GAME_STATES.LEVEL_COMPLETE;
 		
-		if (isPlaying) {
+		if (isPlaying || isLevelComplete) {
 			this.animationFrameId = requestAnimationFrame(() => this._gameLoop());
 		}
 		else {
@@ -1006,24 +1076,53 @@ class GameEngineClass {
 	if (reason === 'timeout') {
 		LevelManager.completeLevel();
 		
-		// Celebrate with confetti particles!
-		if (this.renderer && this.renderer.canvas) {
-			const centerX = this.renderer.canvas.width / 2;
-			const centerY = this.renderer.canvas.height / 2;
-			
-			// Create multiple confetti bursts
-			for (let i = 0; i < 5; i++) {
-				setTimeout(() => {
-					ParticleSystem.createConfetti(centerX, centerY, 40);
-				}, i * 100);
-			}
-		}
-	}		// Cancel animation frame
-		if (this.animationFrameId) {
-			cancelAnimationFrame(this.animationFrameId);
-			this.animationFrameId = null;
+		// Get current stats to check for high score
+		const currentScore = ScoreManager.getScore();
+		const bestScore = 0; // Hardcoded for now (TODO: implement persistence)
+		const isNewHighScore = currentScore > bestScore;
+		
+		// Play fanfare for new high score, otherwise normal level complete sound
+		if (isNewHighScore) {
+			AudioManager.playHighScoreFanfare();
+		} else {
+			AudioManager.playLevelComplete();
 		}
 		
+		// Celebrate with confetti particles!
+		if (this.renderer && this.renderer.canvas) {
+			if (isNewHighScore) {
+				// EPIC high score celebration - render above overlay
+				// Get screen-space position for particles
+				const canvas = this.renderer.canvas;
+				const rect = canvas.getBoundingClientRect();
+				const centerX = rect.left + rect.width / 2;
+				const centerY = rect.top + rect.height / 2;
+				
+				// More bursts, longer duration, rendered on overlay
+				for (let i = 0; i < 12; i++) {
+					setTimeout(() => {
+						// Create bigger bursts with random positions for variety
+						const offsetX = (Math.random() - 0.5) * 100;
+						const offsetY = (Math.random() - 0.5) * 50;
+						ParticleSystem.createConfetti(centerX + offsetX, centerY + offsetY, 60, true);
+					}, i * 150);
+				}
+			} else {
+				// Normal level complete - standard confetti on game canvas
+				const centerX = this.renderer.canvas.width / 2;
+				const centerY = this.renderer.canvas.height / 2;
+				
+				for (let i = 0; i < 5; i++) {
+					setTimeout(() => {
+						ParticleSystem.createConfetti(centerX, centerY, 40);
+					}, i * 100);
+				}
+			}
+		}
+	} else {
+		// Play game over sound for breach
+		AudioManager.playGameOver();
+	}		
 		// Show level complete overlay
 		const overlay = document.getElementById('levelCompleteOverlay');
 		if (overlay) {

@@ -10,6 +10,8 @@ import { EventEmitter } from './utils/EventEmitter.js';
 import { CONSTANTS } from './utils/Constants.js';
 import { DebugMode } from './utils/DebugMode.js';
 import LevelManager from './modules/LevelManager.js';
+import AudioManager from './modules/AudioManager.js';
+import ParticleSystem from './modules/ParticleSystem.js';
 
 /**
  * Initialize the game when the DOM is ready
@@ -18,6 +20,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 	try {
 		// Initialize the game engine
 		await GameEngine.initialize();
+		
+		// Initialize particle overlay canvas
+		ParticleSystem.initializeOverlay();
+		
+		// Initialize AudioManager (must be done after user interaction for browser compatibility)
+		// We'll initialize it on first button click
+		document.body.addEventListener('click', () => {
+			AudioManager.initialize();
+			AudioManager.resume();
+		}, { once: true });
 		
 		// Initialize level manager
 		LevelManager.initialize();
@@ -56,6 +68,7 @@ function setupMenuListeners() {
 	// Difficulty selection
 	difficultyButtons.forEach(btn => {
 		btn.addEventListener('click', () => {
+			AudioManager.playClick();
 			const difficulty = parseInt(btn.dataset.difficulty);
 			selectDifficulty(difficulty);
 		});
@@ -66,7 +79,15 @@ function setupMenuListeners() {
 
 	// Start new game
 	if (startBtn) {
-		startBtn.addEventListener('click', () => {
+		startBtn.addEventListener('click', async () => {
+			AudioManager.playClick();
+			console.log('Start button clicked, starting music...');
+			
+			// Ensure AudioManager is initialized
+			AudioManager.initialize();
+			await AudioManager.resume();
+			
+			await AudioManager.startMusic(); // Start background music
 			showScreen('gameScreen');
 			// Start with selected difficulty and level
 			GameEngine.start(selectedDifficulty, selectedLevel);
@@ -76,10 +97,13 @@ function setupMenuListeners() {
 	// Settings (Phase 9 - Settings UI)
 	if (settingsBtn) {
 		settingsBtn.addEventListener('click', () => {
-			// TODO: Implement in Phase 9
-			console.log('Settings - not yet implemented');
+			AudioManager.playClick();
+			showSettingsOverlay();
 		});
 	}
+	
+	// Set up settings overlay controls
+	setupSettingsControls();
 	
 	// Set up game over / pause / level complete screen buttons
 	setupGameScreenListeners();
@@ -115,12 +139,15 @@ function setupGameScreenListeners() {
 	
 	if (resumeBtn) {
 		resumeBtn.addEventListener('click', () => {
+			AudioManager.playClick();
 			GameEngine.resume();
 		});
 	}
 	
 	if (menuFromPauseBtn) {
 		menuFromPauseBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			AudioManager.stopMusic();
 			showScreen('menuScreen');
 			populateLevelGrid(); // Refresh level grid in case new levels unlocked
 		});
@@ -132,6 +159,7 @@ function setupGameScreenListeners() {
 	
 	if (restartBtn) {
 		restartBtn.addEventListener('click', () => {
+			AudioManager.playClick();
 			showScreen('gameScreen');
 			GameEngine.start(selectedDifficulty, selectedLevel);
 		});
@@ -139,6 +167,8 @@ function setupGameScreenListeners() {
 	
 	if (menuFromGameOverBtn) {
 		menuFromGameOverBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			AudioManager.stopMusic();
 			showScreen('menuScreen');
 			populateLevelGrid();
 		});
@@ -151,6 +181,7 @@ function setupGameScreenListeners() {
 	
 	if (nextLevelBtn) {
 		nextLevelBtn.addEventListener('click', () => {
+			AudioManager.playClick();
 			// Hide overlay
 			const overlay = document.getElementById('levelCompleteOverlay');
 			if (overlay) overlay.classList.add('hidden');
@@ -164,6 +195,7 @@ function setupGameScreenListeners() {
 	
 	if (replayLevelBtn) {
 		replayLevelBtn.addEventListener('click', () => {
+			AudioManager.playClick();
 			// Hide overlay
 			const overlay = document.getElementById('levelCompleteOverlay');
 			if (overlay) overlay.classList.add('hidden');
@@ -176,6 +208,8 @@ function setupGameScreenListeners() {
 	
 	if (menuFromCompleteBtn) {
 		menuFromCompleteBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			AudioManager.stopMusic();
 			// Hide overlay
 			const overlay = document.getElementById('levelCompleteOverlay');
 			if (overlay) overlay.classList.add('hidden');
@@ -232,7 +266,10 @@ function populateLevelGrid() {
 		
 		// Add click handler for unlocked levels
 		if (isUnlocked) {
-			btn.addEventListener('click', () => selectLevel(level));
+			btn.addEventListener('click', () => {
+				AudioManager.playClick();
+				selectLevel(level);
+			});
 		}
 		
 		levelGrid.appendChild(btn);
@@ -281,4 +318,111 @@ function selectDifficulty(difficulty) {
 			btn.classList.remove('selected');
 		}
 	});
+}
+
+/**
+ * Show settings overlay
+ */
+function showSettingsOverlay() {
+	const overlay = document.getElementById('settingsOverlay');
+	if (overlay) {
+		// Load current settings from AudioManager
+		const settings = AudioManager.getSettings();
+		
+		// Update UI to reflect current settings
+		const muteToggle = document.getElementById('muteToggle');
+		const masterSlider = document.getElementById('masterVolumeSlider');
+		const sfxSlider = document.getElementById('sfxVolumeSlider');
+		const musicSlider = document.getElementById('musicVolumeSlider');
+		
+		if (muteToggle) muteToggle.checked = settings.muted;
+		if (masterSlider) masterSlider.value = settings.masterVolume * 100;
+		if (sfxSlider) sfxSlider.value = settings.sfxVolume * 100;
+		if (musicSlider) musicSlider.value = settings.musicVolume * 100;
+		
+		// Update value displays
+		updateVolumeDisplay('masterVolumeValue', settings.masterVolume * 100);
+		updateVolumeDisplay('sfxVolumeValue', settings.sfxVolume * 100);
+		updateVolumeDisplay('musicVolumeValue', settings.musicVolume * 100);
+		
+		overlay.classList.remove('hidden');
+	}
+}
+
+/**
+ * Hide settings overlay
+ */
+function hideSettingsOverlay() {
+	const overlay = document.getElementById('settingsOverlay');
+	if (overlay) {
+		overlay.classList.add('hidden');
+	}
+}
+
+/**
+ * Update volume display percentage
+ */
+function updateVolumeDisplay(elementId, value) {
+	const display = document.getElementById(elementId);
+	if (display) {
+		display.textContent = Math.round(value) + '%';
+	}
+}
+
+/**
+ * Set up settings controls
+ */
+function setupSettingsControls() {
+	// Close settings button
+	const closeBtn = document.getElementById('closeSettingsButton');
+	if (closeBtn) {
+		closeBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			hideSettingsOverlay();
+		});
+	}
+	
+	// Mute toggle
+	const muteToggle = document.getElementById('muteToggle');
+	if (muteToggle) {
+		muteToggle.addEventListener('change', (e) => {
+			AudioManager.toggleMute();
+			AudioManager.playClick();
+		});
+	}
+	
+	// Master volume slider
+	const masterSlider = document.getElementById('masterVolumeSlider');
+	if (masterSlider) {
+		masterSlider.addEventListener('input', (e) => {
+			const value = e.target.value / 100;
+			AudioManager.setMasterVolume(value);
+			updateVolumeDisplay('masterVolumeValue', e.target.value);
+		});
+	}
+	
+	// SFX volume slider
+	const sfxSlider = document.getElementById('sfxVolumeSlider');
+	if (sfxSlider) {
+		sfxSlider.addEventListener('input', (e) => {
+			const value = e.target.value / 100;
+			AudioManager.setSFXVolume(value);
+			updateVolumeDisplay('sfxVolumeValue', e.target.value);
+		});
+		
+		// Play test sound on release
+		sfxSlider.addEventListener('change', () => {
+			AudioManager.playClick();
+		});
+	}
+	
+	// Music volume slider
+	const musicSlider = document.getElementById('musicVolumeSlider');
+	if (musicSlider) {
+		musicSlider.addEventListener('input', (e) => {
+			const value = e.target.value / 100;
+			AudioManager.setMusicVolume(value);
+			updateVolumeDisplay('musicVolumeValue', e.target.value);
+		});
+	}
 }

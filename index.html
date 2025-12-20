@@ -217,13 +217,34 @@
 				<h2>Settings</h2>
 				<div class="settings-options">
 					<div class="setting-item">
-						<label for="soundToggle">Sound:</label>
-						<input type="checkbox" id="soundToggle" checked>
+						<label for="muteToggle">
+							<span class="setting-icon">🔊</span> Mute All:
+						</label>
+						<input type="checkbox" id="muteToggle" class="toggle-checkbox">
 					</div>
+					
 					<div class="setting-item">
-						<label for="volumeSlider">Volume:</label>
-						<input type="range" id="volumeSlider" min="0" max="100" value="70">
-						<span id="volumeValue">70%</span>
+						<label for="masterVolumeSlider">
+							<span class="setting-icon">🎚️</span> Master Volume:
+						</label>
+						<input type="range" id="masterVolumeSlider" min="0" max="100" value="70" class="volume-slider">
+						<span id="masterVolumeValue" class="volume-value">70%</span>
+					</div>
+					
+					<div class="setting-item">
+						<label for="sfxVolumeSlider">
+							<span class="setting-icon">💥</span> Sound Effects:
+						</label>
+						<input type="range" id="sfxVolumeSlider" min="0" max="100" value="80" class="volume-slider">
+						<span id="sfxVolumeValue" class="volume-value">80%</span>
+					</div>
+					
+					<div class="setting-item">
+						<label for="musicVolumeSlider">
+							<span class="setting-icon">🎵</span> Music:
+						</label>
+						<input type="range" id="musicVolumeSlider" min="0" max="100" value="50" class="volume-slider">
+						<span id="musicVolumeValue" class="volume-value">50%</span>
 					</div>
 				</div>
 				<div class="overlay-actions">
@@ -231,6 +252,9 @@
 				</div>
 			</div>
 		</div>
+		
+		<!-- Particle Canvas Overlay (for celebrations that need to appear above overlays) -->
+		<canvas id="particleCanvas" class="particle-overlay"></canvas>
 		
 	</div>
 	

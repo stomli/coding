@@ -39,6 +39,21 @@ class Grid {
 	}
 	
 	/**
+	 * Get the highest (lowest row number) row containing a ball
+	 * @returns {Number} Row index of highest ball, or -1 if grid is empty
+	 */
+	getHighestBallRow() {
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				if (this.grid[row][col] !== null) {
+					return row;
+				}
+			}
+		}
+		return -1; // Grid is empty
+	}
+	
+	/**
 	 * Check if piece can be placed at given position without collision
 	 * @param {Piece} piece - Piece to check
 	 * @param {Number} [x] - Column position (defaults to piece.position.x)

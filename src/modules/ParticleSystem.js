@@ -50,6 +50,50 @@ class Particle {
 class ParticleSystemClass {
 	constructor() {
 		this.particles = [];
+		this.overlayParticles = []; // Particles that render above overlays
+		this.overlayCanvas = null;
+		this.overlayCtx = null;
+	}
+	
+	/**
+	 * Initialize overlay canvas for particles that need to appear above UI
+	 */
+	initializeOverlay() {
+		this.overlayCanvas = document.getElementById('particleCanvas');
+		if (this.overlayCanvas) {
+			this.overlayCtx = this.overlayCanvas.getContext('2d');
+			// Match size to window
+			this.resizeOverlay();
+			window.addEventListener('resize', () => this.resizeOverlay());
+		}
+	}
+	
+	/**
+	 * Resize overlay canvas to match window
+	 */
+	resizeOverlay() {
+		if (this.overlayCanvas) {
+			this.overlayCanvas.width = window.innerWidth;
+			this.overlayCanvas.height = window.innerHeight;
+		}
+	}
+	
+	/**
+	 * Show overlay canvas
+	 */
+	showOverlay() {
+		if (this.overlayCanvas) {
+			this.overlayCanvas.classList.add('active');
+		}
+	}
+	
+	/**
+	 * Hide overlay canvas
+	 */
+	hideOverlay() {
+		if (this.overlayCanvas) {
+			this.overlayCanvas.classList.remove('active');
+		}
 	}
 
 	/**
@@ -96,9 +140,11 @@ class ParticleSystemClass {
 	 * @param {Number} x - X position
 	 * @param {Number} y - Y position
 	 * @param {Number} count - Number of particles
+	 * @param {Boolean} overlay - Whether to render on overlay canvas (above UI)
 	 */
-	createConfetti(x, y, count = 30) {
+	createConfetti(x, y, count = 30, overlay = false) {
 		const colors = ['#00ff88', '#00ccff', '#FFD700', '#FF69B4', '#FF8800'];
+		const targetArray = overlay ? this.overlayParticles : this.particles;
 		
 		for (let i = 0; i < count; i++) {
 			const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3; // Upward cone
@@ -108,7 +154,11 @@ class ParticleSystemClass {
 			const color = colors[Math.floor(Math.random() * colors.length)];
 			const lifetime = Math.random() * 1000 + 1000; // 1000-2000ms
 			
-			this.particles.push(new Particle(x, y, vx, vy, color, lifetime));
+			targetArray.push(new Particle(x, y, vx, vy, color, lifetime));
+		}
+		
+		if (overlay) {
+			this.showOverlay();
 		}
 	}
 
@@ -135,6 +185,12 @@ class ParticleSystemClass {
 	 */
 	update(deltaTime) {
 		this.particles = this.particles.filter(particle => particle.update(deltaTime));
+		this.overlayParticles = this.overlayParticles.filter(particle => particle.update(deltaTime));
+		
+		// Hide overlay canvas when no overlay particles remain
+		if (this.overlayParticles.length === 0) {
+			this.hideOverlay();
+		}
 	}
 
 	/**
@@ -142,8 +198,19 @@ class ParticleSystemClass {
 	 * @param {CanvasRenderingContext2D} ctx - Canvas context
 	 */
 	render(ctx) {
+		// Render normal particles on game canvas
 		for (const particle of this.particles) {
 			particle.render(ctx);
+		}
+		
+		// Render overlay particles on overlay canvas
+		if (this.overlayCtx && this.overlayParticles.length > 0) {
+			// Clear overlay canvas
+			this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+			
+			for (const particle of this.overlayParticles) {
+				particle.render(this.overlayCtx);
+			}
 		}
 	}
 
