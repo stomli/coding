@@ -1,0 +1,225 @@
+{
+	"game": {
+		"gridRows": 25,
+		"gridCols": 15,
+		"levelDuration": 15,
+		"startingDropSpeed": 1000,
+		"dropSpeedDecrement": 50,
+		"minDropSpeed": 100
+	},
+	"colors": {
+		"balls": {
+			"red": "#FF0000",
+			"green": "#00FF00",
+			"blue": "#0000FF",
+			"yellow": "#FFFF00",
+			"magenta": "#FF00FF",
+			"cyan": "#00FFFF",
+			"orange": "#FF8800",
+			"purple": "#8800FF"
+		},
+		"special": {
+			"exploding": "#FFD700",
+			"painterH": "#FF69B4",
+			"painterV": "#FF69B4",
+			"painterD": "#FF69B4",
+			"blocking": "#808080"
+		},
+		"ui": {
+			"background": "#1a1a2e",
+			"gridLines": "#444444",
+			"text": "#ffffff",
+			"accent": "#00ff88"
+		}
+	},
+	"colorUnlocks": {
+		"level1": ["red", "green", "blue"],
+		"level3": ["red", "green", "blue", "yellow"],
+		"level7": ["red", "green", "blue", "yellow", "magenta"],
+		"level11": ["red", "green", "blue", "yellow", "magenta", "cyan"],
+		"level15": ["red", "green", "blue", "yellow", "magenta", "cyan", "orange"],
+		"level19": ["red", "green", "blue", "yellow", "magenta", "cyan", "orange", "purple"]
+	},
+	"specialBalls": {
+		"exploding": {
+			"spawnRate": 0.05,
+			"explosionRadius": 3
+		},
+		"painterHorizontal": {
+			"spawnRate": 0.05
+		},
+		"painterVertical": {
+			"spawnRate": 0.05
+		},
+		"painterDiagonal": {
+			"spawnRate": 0.05
+		},
+		"blocking": {
+			"baseSpawnRate": 0.005,
+			"spawnRateIncrement": 0.001,
+			"minPieceBeforeSpawn": {
+				"difficulty1": 50,
+				"difficulty2": 40,
+				"difficulty3": 30,
+				"difficulty4": 20,
+				"difficulty5": 10
+			}
+		}
+	},
+	"scoring": {
+		"basePointsPerBall": 1,
+		"pointDoublingThreshold": 5,
+		"pointDoublingStartAfter": 10,
+		"fullRowBonus": 50,
+		"cascadeBaseBonus": 3,
+		"cascadeBonusMultiplier": 2,
+		"difficultyMultipliers": {
+			"difficulty1": 1.0,
+			"difficulty2": 1.5,
+			"difficulty3": 2.0,
+			"difficulty4": 2.5,
+			"difficulty5": 3.0
+		}
+	},
+	"difficulty": {
+		"difficulty1": {
+			"name": "Easy",
+			"dropSpeedModifier": 1.0,
+			"blockingBallFrequencyModifier": 1.0
+		},
+		"difficulty2": {
+			"name": "Medium",
+			"dropSpeedModifier": 0.85,
+			"blockingBallFrequencyModifier": 1.5
+		},
+		"difficulty3": {
+			"name": "Hard",
+			"dropSpeedModifier": 0.7,
+			"blockingBallFrequencyModifier": 2.0
+		},
+		"difficulty4": {
+			"name": "Expert",
+			"dropSpeedModifier": 0.55,
+			"blockingBallFrequencyModifier": 2.5
+		},
+		"difficulty5": {
+			"name": "Master",
+			"dropSpeedModifier": 0.4,
+			"blockingBallFrequencyModifier": 3.0
+		}
+	},
+	"animations": {
+		"matchDetectionDelay": 0,
+		"clearAnimationDuration": 300,
+		"dropAnimationSpeed": 50,
+		"cascadeCheckDelay": 0,
+		"explosionDuration": 500,
+		"paintingDuration": 400,
+		"particleCount": 20
+	},
+	"audio": {
+		"enabled": true,
+		"volume": 0.7,
+		"sounds": {
+			"rotate": {
+				"frequency": 800,
+				"duration": 0.05,
+				"type": "sine"
+			},
+			"move": {
+				"frequency": 600,
+				"duration": 0.03,
+				"type": "sine"
+			},
+			"lock": {
+				"frequency": 400,
+				"duration": 0.1,
+				"type": "square"
+			},
+			"match": {
+				"baseFrequency": 500,
+				"frequencyIncrement": 100,
+				"duration": 0.15,
+				"type": "triangle"
+			},
+			"explosion": {
+				"frequency": 200,
+				"duration": 0.3,
+				"type": "sawtooth"
+			},
+			"paint": {
+				"frequency": 1000,
+				"duration": 0.2,
+				"type": "sine"
+			},
+			"levelComplete": {
+				"frequencies": [523, 659, 784, 1047],
+				"noteDuration": 0.15,
+				"type": "sine"
+			},
+			"gameOver": {
+				"startFrequency": 800,
+				"endFrequency": 200,
+				"duration": 0.5,
+				"type": "triangle"
+			}
+		}
+	},
+	"controls": {
+		"moveLeft": "ArrowLeft",
+		"moveRight": "ArrowRight",
+		"rotate": "ArrowUp",
+		"hardDrop": "ArrowDown",
+		"pause": "KeyP",
+		"restart": "KeyR"
+	},
+	"pieceShapes": {
+		"I": [
+			[1, 1, 1, 1]
+		],
+		"O": [
+			[1, 1],
+			[1, 1],
+			[1, 1]
+		],
+		"T": [
+			[0, 1, 0],
+			[1, 1, 1]
+		],
+		"L": [
+			[1, 0],
+			[1, 0],
+			[1, 1]
+		],
+		"J": [
+			[0, 1],
+			[0, 1],
+			[1, 1]
+		],
+		"S": [
+			[0, 1, 1],
+			[1, 1, 0],
+			[1, 0, 0]
+		],
+		"Z": [
+			[1, 1, 0],
+			[0, 1, 1],
+			[0, 0, 1]
+		],
+		"Single": [
+			[1]
+		]
+	},
+	"rendering": {
+		"ballRadius": 20,
+		"gridLineWidth": 1,
+		"shadowBlur": 5,
+		"glowEffect": true,
+		"particleEffects": true
+	},
+	"performance": {
+		"targetFPS": 60,
+		"maxCascadeDepth": 10,
+		"renderOptimization": true
+	}
+}

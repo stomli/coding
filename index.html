@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ball Drop Puzzle Game</title>
+	<link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+	<!-- Main Container -->
+	<div id="app">
+		
+		<!-- Menu Screen -->
+		<div id="menuScreen" class="screen">
+			<div class="menu-container">
+				<h1>Ball Drop Puzzle</h1>
+				
+				<div class="difficulty-selector">
+					<h2>Select Difficulty</h2>
+					<div class="difficulty-buttons">
+						<button class="difficulty-btn" data-difficulty="1">Easy</button>
+						<button class="difficulty-btn" data-difficulty="2">Medium</button>
+						<button class="difficulty-btn" data-difficulty="3">Hard</button>
+						<button class="difficulty-btn" data-difficulty="4">Expert</button>
+						<button class="difficulty-btn" data-difficulty="5">Master</button>
+					</div>
+				</div>
+				
+				<div class="level-selector">
+					<h2>Select Level</h2>
+					<div id="levelGrid" class="level-grid">
+						<!-- Level buttons dynamically generated -->
+					</div>
+				</div>
+				
+				<div class="menu-actions">
+					<button id="startButton" class="btn-primary">Start Game</button>
+					<button id="settingsButton" class="btn-secondary">Settings</button>
+				</div>
+				
+				<div class="high-scores">
+					<h3>High Score</h3>
+					<p id="highScoreDisplay">-</p>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Game Screen -->
+		<div id="gameScreen" class="screen hidden">
+			<!-- HUD -->
+			<div id="hud" class="hud">
+				<div class="hud-left">
+					<div class="hud-item">
+						<span class="hud-label">Difficulty:</span>
+						<span id="difficultyDisplay" class="hud-value">1</span>
+					</div>
+					<div class="hud-item">
+						<span class="hud-label">Level:</span>
+						<span id="levelDisplay" class="hud-value">1</span>
+					</div>
+				</div>
+				
+				<div class="hud-center">
+					<div class="hud-item timer">
+						<span class="hud-label">Time:</span>
+						<span id="timerDisplay" class="hud-value">15.0s</span>
+					</div>
+				</div>
+				
+				<div class="hud-right">
+					<div class="hud-item">
+						<span class="hud-label">Level Score:</span>
+						<span id="levelScoreDisplay" class="hud-value">0</span>
+					</div>
+					<div class="hud-item">
+						<span class="hud-label">Total Score:</span>
+						<span id="totalScoreDisplay" class="hud-value">0</span>
+					</div>
+				</div>
+			</div>
+			
+			<!-- Game Board Container -->
+			<div class="game-container">
+				<!-- Main Game Canvas -->
+				<canvas id="gameCanvas"></canvas>
+				
+				<!-- Next Piece Preview -->
+				<div class="preview-panel">
+					<h3>Next Piece</h3>
+					<canvas id="previewCanvas"></canvas>
+				</div>
+			</div>
+			
+			<!-- Controls Info -->
+			<div class="controls-info">
+				<p><kbd>←</kbd> <kbd>→</kbd> Move | <kbd>↑</kbd> Rotate | <kbd>↓</kbd> Drop | <kbd>P</kbd> Pause | <kbd>R</kbd> Restart</p>
+			</div>
+		</div>
+		
+		<!-- Pause Overlay -->
+		<div id="pauseOverlay" class="overlay hidden">
+			<div class="overlay-content">
+				<h2>Paused</h2>
+				<div class="overlay-actions">
+					<button id="resumeButton" class="btn-primary">Resume</button>
+					<button id="restartFromPauseButton" class="btn-secondary">Restart</button>
+					<button id="menuFromPauseButton" class="btn-secondary">Main Menu</button>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Game Over Overlay -->
+		<div id="gameOverOverlay" class="overlay hidden">
+			<div class="overlay-content">
+				<h2>Game Over</h2>
+				<div class="game-over-stats">
+					<p class="stat-label">Level Score:</p>
+					<p id="finalLevelScore" class="stat-value">0</p>
+					<p class="stat-label">Total Score:</p>
+					<p id="finalTotalScore" class="stat-value">0</p>
+					<p id="newHighScoreMessage" class="new-high-score hidden">🎉 NEW HIGH SCORE! 🎉</p>
+				</div>
+				<div class="overlay-actions">
+					<button id="retryButton" class="btn-primary">Retry</button>
+					<button id="menuFromGameOverButton" class="btn-secondary">Main Menu</button>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Level Complete Overlay -->
+		<div id="levelCompleteOverlay" class="overlay hidden">
+			<div class="overlay-content">
+				<h2>Level Complete!</h2>
+				<div class="level-complete-stats">
+					<p class="stat-label">Level Score:</p>
+					<p id="completeLevelScore" class="stat-value">0</p>
+					<p class="stat-label">Total Score:</p>
+					<p id="completeTotalScore" class="stat-value">0</p>
+					<p id="levelCompleteHighScoreMessage" class="new-high-score hidden">🎉 NEW HIGH SCORE! 🎉</p>
+				</div>
+				<div class="overlay-actions">
+					<button id="nextLevelButton" class="btn-primary">Next Level</button>
+					<button id="replayLevelButton" class="btn-secondary">Replay Level</button>
+					<button id="menuFromCompleteButton" class="btn-secondary">Main Menu</button>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Settings Overlay -->
+		<div id="settingsOverlay" class="overlay hidden">
+			<div class="overlay-content">
+				<h2>Settings</h2>
+				<div class="settings-options">
+					<div class="setting-item">
+						<label for="soundToggle">Sound:</label>
+						<input type="checkbox" id="soundToggle" checked>
+					</div>
+					<div class="setting-item">
+						<label for="volumeSlider">Volume:</label>
+						<input type="range" id="volumeSlider" min="0" max="100" value="70">
+						<span id="volumeValue">70%</span>
+					</div>
+				</div>
+				<div class="overlay-actions">
+					<button id="closeSettingsButton" class="btn-primary">Close</button>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	
+	<!-- JavaScript Modules -->
+	<script type="module" src="src/main.js"></script>
+</body>
+</html>
