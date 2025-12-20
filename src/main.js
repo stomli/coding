@@ -9,6 +9,7 @@ import GameEngine from './modules/GameEngine.js';
 import { EventEmitter } from './utils/EventEmitter.js';
 import { CONSTANTS } from './utils/Constants.js';
 import { DebugMode } from './utils/DebugMode.js';
+import LevelManager from './modules/LevelManager.js';
 
 /**
  * Initialize the game when the DOM is ready
@@ -17,9 +18,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 	try {
 		// Initialize the game engine
 		await GameEngine.initialize();
+		
+		// Initialize level manager
+		LevelManager.initialize();
 
 		// Set up menu event listeners
 		setupMenuListeners();
+		
+		// Populate level select grid
+		populateLevelGrid();
 		
 		// Set up score display listener
 		setupScoreListener();
@@ -44,13 +51,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupMenuListeners() {
 	const startBtn = document.getElementById('startButton');
 	const settingsBtn = document.getElementById('settingsButton');
+	const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+
+	// Difficulty selection
+	difficultyButtons.forEach(btn => {
+		btn.addEventListener('click', () => {
+			const difficulty = parseInt(btn.dataset.difficulty);
+			selectDifficulty(difficulty);
+		});
+	});
+	
+	// Select difficulty 1 by default
+	selectDifficulty(1);
 
 	// Start new game
 	if (startBtn) {
 		startBtn.addEventListener('click', () => {
 			showScreen('gameScreen');
-			// Start at difficulty 1, level 1
-			GameEngine.start(1, 1);
+			// Start with selected difficulty and level
+			GameEngine.start(selectedDifficulty, selectedLevel);
 		});
 	}
 
@@ -61,6 +80,9 @@ function setupMenuListeners() {
 			console.log('Settings - not yet implemented');
 		});
 	}
+	
+	// Set up game over / pause / level complete screen buttons
+	setupGameScreenListeners();
 }
 
 /**
@@ -68,7 +90,7 @@ function setupMenuListeners() {
  * @param {string} screenId - The ID of the screen to show
  */
 function showScreen(screenId) {
-	const screens = ['menuScreen', 'gameScreen', 'pauseScreen', 'gameOverScreen'];
+	const screens = ['menuScreen', 'gameScreen', 'pauseScreen', 'gameOverScreen', 'levelCompleteScreen'];
 
 	screens.forEach(id => {
 		const screen = document.getElementById(id);
@@ -84,6 +106,87 @@ function showScreen(screenId) {
 }
 
 /**
+ * Set up event listeners for game screens (pause, game over, level complete)
+ */
+function setupGameScreenListeners() {
+	// Pause screen buttons
+	const resumeBtn = document.getElementById('resumeButton');
+	const menuFromPauseBtn = document.getElementById('menuFromPauseButton');
+	
+	if (resumeBtn) {
+		resumeBtn.addEventListener('click', () => {
+			GameEngine.resume();
+		});
+	}
+	
+	if (menuFromPauseBtn) {
+		menuFromPauseBtn.addEventListener('click', () => {
+			showScreen('menuScreen');
+			populateLevelGrid(); // Refresh level grid in case new levels unlocked
+		});
+	}
+	
+	// Game over screen buttons
+	const restartBtn = document.getElementById('restartButton');
+	const menuFromGameOverBtn = document.getElementById('menuFromGameOverButton');
+	
+	if (restartBtn) {
+		restartBtn.addEventListener('click', () => {
+			showScreen('gameScreen');
+			GameEngine.start(selectedDifficulty, selectedLevel);
+		});
+	}
+	
+	if (menuFromGameOverBtn) {
+		menuFromGameOverBtn.addEventListener('click', () => {
+			showScreen('menuScreen');
+			populateLevelGrid();
+		});
+	}
+	
+	// Level complete screen buttons
+	const nextLevelBtn = document.getElementById('nextLevelButton');
+	const replayLevelBtn = document.getElementById('replayLevelButton');
+	const menuFromCompleteBtn = document.getElementById('menuFromCompleteButton');
+	
+	if (nextLevelBtn) {
+		nextLevelBtn.addEventListener('click', () => {
+			// Hide overlay
+			const overlay = document.getElementById('levelCompleteOverlay');
+			if (overlay) overlay.classList.add('hidden');
+			
+			// Advance to next level
+			selectedLevel = Math.min(selectedLevel + 1, LevelManager.getMaxLevel());
+			showScreen('gameScreen');
+			GameEngine.start(selectedDifficulty, selectedLevel);
+		});
+	}
+	
+	if (replayLevelBtn) {
+		replayLevelBtn.addEventListener('click', () => {
+			// Hide overlay
+			const overlay = document.getElementById('levelCompleteOverlay');
+			if (overlay) overlay.classList.add('hidden');
+			
+			// Replay same level
+			showScreen('gameScreen');
+			GameEngine.start(selectedDifficulty, selectedLevel);
+		});
+	}
+	
+	if (menuFromCompleteBtn) {
+		menuFromCompleteBtn.addEventListener('click', () => {
+			// Hide overlay
+			const overlay = document.getElementById('levelCompleteOverlay');
+			if (overlay) overlay.classList.add('hidden');
+			
+			showScreen('menuScreen');
+			populateLevelGrid(); // Refresh to show newly unlocked levels
+		});
+	}
+}
+
+/**
  * Set up score display listener
  */
 function setupScoreListener() {
@@ -96,6 +199,86 @@ function setupScoreListener() {
 		}
 		if (levelScoreDisplay) {
 			levelScoreDisplay.textContent = data.score.toLocaleString();
+		}
+	});
+}
+
+/**
+ * Populate the level selection grid
+ */
+function populateLevelGrid() {
+	const levelGrid = document.getElementById('levelGrid');
+	if (!levelGrid) return;
+	
+	const maxLevel = LevelManager.getMaxLevel();
+	const unlockedLevels = LevelManager.getUnlockedLevels();
+	
+	// Clear existing buttons
+	levelGrid.innerHTML = '';
+	
+	// Create button for each level
+	for (let level = 1; level <= maxLevel; level++) {
+		const btn = document.createElement('button');
+		btn.className = 'level-btn';
+		btn.textContent = level;
+		btn.dataset.level = level;
+		
+		// Check if level is unlocked
+		const isUnlocked = unlockedLevels.includes(level);
+		if (!isUnlocked) {
+			btn.classList.add('locked');
+			btn.disabled = true;
+		}
+		
+		// Add click handler for unlocked levels
+		if (isUnlocked) {
+			btn.addEventListener('click', () => selectLevel(level));
+		}
+		
+		levelGrid.appendChild(btn);
+	}
+	
+	// Select level 1 by default
+	selectLevel(1);
+}
+
+/**
+ * Select a level (updates UI and stores selection)
+ * @param {Number} level - Level number to select
+ */
+let selectedLevel = 1;
+let selectedDifficulty = 1;
+
+function selectLevel(level) {
+	if (!LevelManager.isLevelUnlocked(level)) return;
+	
+	selectedLevel = level;
+	
+	// Update UI - highlight selected level
+	const levelButtons = document.querySelectorAll('.level-btn');
+	levelButtons.forEach(btn => {
+		if (parseInt(btn.dataset.level) === level) {
+			btn.classList.add('selected');
+		} else {
+			btn.classList.remove('selected');
+		}
+	});
+}
+
+/**
+ * Select a difficulty (updates UI and stores selection)
+ * @param {Number} difficulty - Difficulty number (1-5)
+ */
+function selectDifficulty(difficulty) {
+	selectedDifficulty = difficulty;
+	
+	// Update UI - highlight selected difficulty
+	const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+	difficultyButtons.forEach(btn => {
+		if (parseInt(btn.dataset.difficulty) === difficulty) {
+			btn.classList.add('selected');
+		} else {
+			btn.classList.remove('selected');
 		}
 	});
 }

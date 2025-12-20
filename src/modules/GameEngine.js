@@ -21,6 +21,7 @@ import { PieceFactory } from './PieceFactory.js';
 import { ScoreManager } from './ScoreManager.js';
 import { FloatingTextManager } from './FloatingText.js';
 import { DebugMode } from '../utils/DebugMode.js';
+import LevelManager from './LevelManager.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -298,14 +299,12 @@ class GameEngineClass {
 					const startX = Math.floor(this.grid.cols / 2) - Math.floor(this.currentPiece.getWidth() / 2);
 					this.currentPiece.setPosition(startX, 0);
 					
-					// Check if new piece collides (game over)
-					const isValid = this.grid.isValidPosition(this.currentPiece);
-					if (!isValid) {
-						this._gameOver();
-						return;
-					}
-					
-					// Don't request next piece yet - wait until this piece locks
+				// Check if new piece collides (game over)
+				const isValid = this.grid.isValidPosition(this.currentPiece);
+				if (!isValid) {
+					this._levelComplete('breach');
+					return;
+				}					// Don't request next piece yet - wait until this piece locks
 					// The next piece will be requested in _lockPiece() after cascade completes
 				} else {
 					// This is the preview piece
@@ -340,6 +339,10 @@ class GameEngineClass {
 		// Store game state
 		this.level = level || 1;
 		this.difficulty = difficulty || 1;
+		
+		// Initialize LevelManager
+		LevelManager.setLevel(this.level);
+		LevelManager.startTimer();
 		
 		// Update available colors display
 		this._updateAvailableColorsDisplay();
@@ -439,9 +442,36 @@ class GameEngineClass {
 			// Update and render floating texts
 			this.floatingTextManager.update();
 			this.floatingTextManager.render(this.renderer.ctx);
+			
+			// Update HUD elements
+			this._updateHUD();
 		}
 		else {
 			// No renderer available
+		}
+	}
+	
+	/**
+	 * Update HUD display elements
+	 * @private
+	 */
+	_updateHUD() {
+		// Update timer display
+		const timerDisplay = document.getElementById('timerDisplay');
+		if (timerDisplay) {
+			timerDisplay.textContent = LevelManager.getTimerDisplay();
+		}
+		
+		// Update score display
+		const scoreDisplay = document.getElementById('scoreDisplay');
+		if (scoreDisplay) {
+			scoreDisplay.textContent = ScoreManager.getScore();
+		}
+		
+		// Update level display
+		const levelDisplay = document.getElementById('levelDisplay');
+		if (levelDisplay) {
+			levelDisplay.textContent = this.level;
 		}
 	}
 	
@@ -459,6 +489,14 @@ class GameEngineClass {
 		}
 		else {
 			// Game is active, update state
+		}
+		
+		// Update level timer
+		const deltaSeconds = deltaTime / 1000;
+		const timeUp = LevelManager.updateTimer(deltaSeconds);
+		if (timeUp) {
+			this._levelComplete();
+			return;
 		}
 		
 		const hasPiece = this.currentPiece !== null;
@@ -572,20 +610,17 @@ class GameEngineClass {
 		this.isLocking = false;
 		this.lockTimer = 0;
 		
-		// Check if new piece collides (game over)
-		const isValid = this.grid.isValidPosition(this.currentPiece);
-		
-		if (!isValid) {
-			// Game over
-			this.state = CONSTANTS.GAME_STATES.GAME_OVER;
-			console.log('Game Over!');
-		}
-		else {
-			// Continue playing
-		}
-	}
+	// Check if new piece collides (game over)
+	const isValid = this.grid.isValidPosition(this.currentPiece);
 	
-	/**
+	if (!isValid) {
+		// Level over - grid breached
+		this._levelComplete('breach');
+	}
+	else {
+		// Continue playing
+	}
+}	/**
 	 * Handle matching and cascading
 	 * @returns {Promise<void>}
 	 * @private
@@ -856,6 +891,9 @@ class GameEngineClass {
 		if (isPlaying) {
 			this.state = CONSTANTS.GAME_STATES.PAUSED;
 			
+			// Pause level timer
+			LevelManager.stopTimer();
+			
 			// Cancel animation frame
 			if (this.animationFrameId) {
 				cancelAnimationFrame(this.animationFrameId);
@@ -881,6 +919,9 @@ class GameEngineClass {
 		
 		if (isPaused) {
 			this.state = CONSTANTS.GAME_STATES.PLAYING;
+			
+			// Resume level timer
+			LevelManager.startTimer();
 			
 			// Hide pause overlay
 			const pauseScreen = document.getElementById('pauseScreen');
@@ -911,6 +952,89 @@ class GameEngineClass {
 		
 		// Restart with same difficulty
 		this.start(1, 1);
+	}
+	
+	/**
+	 * Handle level completion
+	 * @param {String} reason - Reason for completion ('timeout' or 'breach')
+	 * @private
+	 */
+	_levelComplete(reason = 'timeout') {
+		this.state = CONSTANTS.GAME_STATES.LEVEL_COMPLETE;
+		
+		// Stop level timer
+		const timeSurvived = LevelManager.levelTimer;
+		LevelManager.stopTimer();
+		
+		// Complete level in LevelManager (unlocks next level if timeout)
+		if (reason === 'timeout') {
+			LevelManager.completeLevel();
+		}
+		
+		// Cancel animation frame
+		if (this.animationFrameId) {
+			cancelAnimationFrame(this.animationFrameId);
+			this.animationFrameId = null;
+		}
+		
+		// Show level complete overlay
+		const overlay = document.getElementById('levelCompleteOverlay');
+		if (overlay) {
+			overlay.classList.remove('hidden');
+			
+			// Update title and reason
+			const title = document.getElementById('levelCompleteTitle');
+			const reasonText = document.getElementById('levelCompleteReason');
+			
+			if (reason === 'timeout') {
+				if (title) title.textContent = 'Level Complete!';
+				if (reasonText) reasonText.textContent = '⏱️ Time Survived!';
+			} else {
+				if (title) title.textContent = 'Level Over';
+				if (reasonText) reasonText.textContent = '⚠️ Grid Breached!';
+			}
+			
+			// Get current stats
+			const currentScore = ScoreManager.getScore();
+			
+			// Hardcoded best stats for now (TODO: implement persistence)
+			const bestScore = 0;
+			const longestTime = 0.0;
+			
+			// Update stat displays
+			const thisScoreEl = document.getElementById('completeThisScore');
+			const bestScoreEl = document.getElementById('completeBestScore');
+			const timeSurvivedEl = document.getElementById('completeTimeSurvived');
+			const longestTimeEl = document.getElementById('completeLongestTime');
+			const highScoreMsg = document.getElementById('levelCompleteHighScoreMessage');
+			
+			if (thisScoreEl) thisScoreEl.textContent = currentScore.toLocaleString();
+			if (bestScoreEl) bestScoreEl.textContent = bestScore.toLocaleString();
+			if (timeSurvivedEl) timeSurvivedEl.textContent = timeSurvived.toFixed(1) + 's';
+			if (longestTimeEl) longestTimeEl.textContent = longestTime.toFixed(1) + 's';
+			
+			// Show high score message if new best
+			if (highScoreMsg) {
+				if (currentScore > bestScore) {
+					highScoreMsg.classList.remove('hidden');
+				} else {
+					highScoreMsg.classList.add('hidden');
+				}
+			}
+			
+			// Show/hide next level button
+			const nextLevelBtn = document.getElementById('nextLevelButton');
+			if (nextLevelBtn) {
+				// Only show next level button if completed successfully (timeout) and not last level
+				if (reason === 'timeout' && this.level < LevelManager.getMaxLevel()) {
+					nextLevelBtn.classList.remove('hidden');
+				} else {
+					nextLevelBtn.classList.add('hidden');
+				}
+			}
+		}
+		
+		console.log('GameEngine: Level Complete!', reason);
 	}
 	
 	/**

@@ -182,13 +182,26 @@
 		<!-- Level Complete Overlay -->
 		<div id="levelCompleteOverlay" class="overlay hidden">
 			<div class="overlay-content">
-				<h2>Level Complete!</h2>
+				<h2 id="levelCompleteTitle">Level Complete!</h2>
+				<p id="levelCompleteReason" class="level-complete-reason"></p>
 				<div class="level-complete-stats">
-					<p class="stat-label">Level Score:</p>
-					<p id="completeLevelScore" class="stat-value">0</p>
-					<p class="stat-label">Total Score:</p>
-					<p id="completeTotalScore" class="stat-value">0</p>
-					<p id="levelCompleteHighScoreMessage" class="new-high-score hidden">🎉 NEW HIGH SCORE! 🎉</p>
+					<div class="stat-row">
+						<span class="stat-label">This Time:</span>
+						<span id="completeThisScore" class="stat-value">0</span>
+					</div>
+					<div class="stat-row">
+						<span class="stat-label">Best Score:</span>
+						<span id="completeBestScore" class="stat-value">0</span>
+					</div>
+					<div class="stat-row">
+						<span class="stat-label">Time Survived:</span>
+						<span id="completeTimeSurvived" class="stat-value">0.0s</span>
+					</div>
+					<div class="stat-row">
+						<span class="stat-label">Longest Time:</span>
+						<span id="completeLongestTime" class="stat-value">0.0s</span>
+					</div>
+					<p id="levelCompleteHighScoreMessage" class="new-high-score hidden">🎉 NEW BEST SCORE! 🎉</p>
 				</div>
 				<div class="overlay-actions">
 					<button id="nextLevelButton" class="btn-primary">Next Level</button>

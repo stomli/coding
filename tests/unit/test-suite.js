@@ -16,6 +16,7 @@ import testInputHandler from './test-input-handler.js';
 import testFloatingText from './test-floating-text.js';
 import testGameEngine from './test-game-engine.js';
 import testSpecialBalls from './test-special-balls.js';
+import { runLevelManagerTests } from './test-level-manager.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -55,6 +56,18 @@ export async function runAllTests() {
 	
 	const specialBallsResults = await runAsyncTestSuite(testSpecialBalls);
 	suites.push({ name: testSpecialBalls.name, tests: specialBallsResults });
+	
+	// Run LevelManager tests
+	console.log('\n');
+	const levelManagerResults = runLevelManagerTests();
+	const levelManagerTests = [];
+	for (let i = 0; i < levelManagerResults.passed; i++) {
+		levelManagerTests.push({ name: `Test ${i+1}`, pass: true });
+	}
+	for (let i = 0; i < levelManagerResults.failed; i++) {
+		levelManagerTests.push({ name: `Test ${levelManagerResults.passed + i + 1}`, pass: false });
+	}
+	suites.push({ name: 'LevelManager', tests: levelManagerTests });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

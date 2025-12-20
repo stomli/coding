@@ -128,11 +128,31 @@ body {
 	border-radius: 5px;
 }
 
+.level-btn.locked {
+	background-color: #2a2a2e;
+	color: #555555;
+	cursor: not-allowed;
+	border-color: #333333;
+	opacity: 0.5;
+}
+
 .level-btn.unlocked {
 	background-color: #2a2a3e;
 	color: #ffffff;
 	cursor: pointer;
 	border-color: #666666;
+}
+
+.level-btn:not(.locked) {
+	background-color: #2a2a3e;
+	color: #ffffff;
+	cursor: pointer;
+	border-color: #666666;
+}
+
+.level-btn:not(.locked):hover {
+	background-color: #3a3a4e;
+	border-color: #00ff88;
 }
 
 .level-btn.unlocked:hover {
@@ -422,17 +442,32 @@ body {
 	margin: 1.5rem 0;
 }
 
+.level-complete-reason {
+	font-size: 1.2rem;
+	color: #00ff88;
+	margin-bottom: 1.5rem;
+	font-style: italic;
+}
+
+.stat-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+	padding: 0.5rem;
+	background-color: rgba(255, 255, 255, 0.05);
+	border-radius: 5px;
+}
+
 .stat-label {
 	font-size: 1rem;
 	color: #aaaaaa;
-	margin-bottom: 0.5rem;
 }
 
 .stat-value {
-	font-size: 2rem;
+	font-size: 1.5rem;
 	font-weight: bold;
 	color: #ffffff;
-	margin-bottom: 1rem;
 }
 
 .new-high-score {
