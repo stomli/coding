@@ -5,7 +5,8 @@
 		"levelDuration": 15,
 		"startingDropSpeed": 1000,
 		"dropSpeedDecrement": 50,
-		"minDropSpeed": 100
+		"minDropSpeed": 100,
+		"maxSpecialBallsPerPiece": 2
 	},
 	"colors": {
 		"balls": {

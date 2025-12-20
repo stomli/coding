@@ -53,10 +53,12 @@
 					<div class="hud-item">
 						<span class="hud-label">Difficulty:</span>
 						<span id="difficultyDisplay" class="hud-value">1</span>
+						<input type="number" id="difficultyInput" class="hud-input" min="1" max="5" value="1" style="display: none;">
 					</div>
 					<div class="hud-item">
 						<span class="hud-label">Level:</span>
 						<span id="levelDisplay" class="hud-value">1</span>
+						<input type="number" id="levelInput" class="hud-input" min="1" max="20" value="1" style="display: none;">
 					</div>
 				</div>
 				
@@ -77,14 +79,64 @@
 						<span id="totalScoreDisplay" class="hud-value">0</span>
 					</div>
 				</div>
+		</div>
+		
+		<!-- Game Board Container -->
+		<div class="game-container">
+			<!-- Ball Types Legend -->
+			<div class="ball-legend">
+				<h3>Ball Types</h3>
+				<div class="legend-item">
+					<div class="legend-ball normal-ball"></div>
+					<div class="legend-text">
+						<strong>Normal</strong>
+						<span>Standard ball</span>
+					</div>
+				</div>
+				<div class="legend-item">
+					<div class="legend-ball exploding-ball">✱</div>
+					<div class="legend-text">
+						<strong>Exploding</strong>
+						<span>Destroys nearby balls</span>
+					</div>
+				</div>
+				<div class="legend-item">
+					<div class="legend-ball blocking-ball">✕</div>
+					<div class="legend-text">
+						<strong>Blocking</strong>
+						<span>Can't be cleared</span>
+					</div>
+				</div>
+				<div class="legend-item">
+					<div class="legend-ball painter-ball">─</div>
+					<div class="legend-text">
+						<strong>Painter H</strong>
+						<span>Paints row same color</span>
+					</div>
+				</div>
+				<div class="legend-item">
+					<div class="legend-ball painter-ball">│</div>
+					<div class="legend-text">
+						<strong>Painter V</strong>
+						<span>Paints column same color</span>
+					</div>
+				</div>
+				<div class="legend-item">
+					<div class="legend-ball painter-ball">╲</div>
+					<div class="legend-text">
+						<strong>Painter D</strong>
+						<span>Paints diagonal same color</span>
+					</div>
+				</div>
+				
+				<h3 style="margin-top: 1.5rem;">Available Colors</h3>
+				<div id="availableColors" class="available-colors">
+					<!-- Colors will be populated by JavaScript -->
+				</div>
 			</div>
 			
-			<!-- Game Board Container -->
-			<div class="game-container">
-				<!-- Main Game Canvas -->
-				<canvas id="gameCanvas"></canvas>
-				
-				<!-- Next Piece Preview -->
+			<!-- Main Game Canvas -->
+			<canvas id="gameCanvas"></canvas>				<!-- Next Piece Preview -->
 				<div class="preview-panel">
 					<h3>Next Piece</h3>
 					<canvas id="previewCanvas"></canvas>

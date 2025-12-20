@@ -13,6 +13,7 @@ import Piece from './Piece.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
 import { randomInt, randomFloat } from '../utils/Helpers.js';
+import { DebugMode } from '../utils/DebugMode.js';
 
 /**
  * PieceFactory class for generating random pieces
@@ -22,6 +23,16 @@ class PieceFactoryClass {
 	constructor() {
 		// Track pieces dropped for blocking ball spawn logic
 		this.piecesDropped = 0;
+		// Track current level for color selection
+		this.currentLevel = 1;
+	}
+	
+	/**
+	 * Reset factory state
+	 */
+	reset() {
+		this.piecesDropped = 0;
+		this.currentLevel = 1;
 	}
 	
 	/**
@@ -89,6 +100,9 @@ class PieceFactoryClass {
 	 * @returns {Ball} A special ball or null if none should spawn
 	 */
 	generateSpecialBall(difficulty) {
+		// Get available colors for random selection
+		const availableColors = this.getAvailableColors(this.currentLevel || 1);
+		
 		// Check blocking ball first (difficulty-dependent)
 		if (this.shouldSpawnBlockingBall(difficulty)) {
 			const color = ConfigManager.get('colors.special.blocking', '#808080');
@@ -97,10 +111,10 @@ class PieceFactoryClass {
 		
 		// Check other special types
 		const specialTypes = [
-			{ type: CONSTANTS.BALL_TYPES.EXPLODING, config: 'exploding', colorKey: 'exploding' },
-			{ type: CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, config: 'painterHorizontal', colorKey: 'painterH' },
-			{ type: CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, config: 'painterVertical', colorKey: 'painterV' },
-			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, config: 'painterDiagonal', colorKey: 'painterD' }
+			{ type: CONSTANTS.BALL_TYPES.EXPLODING, config: 'exploding' },
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, config: 'painterHorizontal' },
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, config: 'painterVertical' },
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, config: 'painterDiagonal' }
 		];
 		
 		// Shuffle to randomize priority
@@ -112,7 +126,8 @@ class PieceFactoryClass {
 		// Check each type
 		for (const special of specialTypes) {
 			if (this.shouldSpawnSpecialBall(special.config)) {
-				const color = ConfigManager.get(`colors.special.${special.colorKey}`, '#FFD700');
+				// Use random color from available colors
+				const color = availableColors[randomInt(0, availableColors.length - 1)];
 				return new Ball(special.type, color);
 			}
 		}
@@ -124,16 +139,56 @@ class PieceFactoryClass {
 	 * Generate a random piece for the current game state
 	 * @param {Number} level - Current game level
 	 * @param {Number} difficulty - Current difficulty level (1-5)
-	 * @returns {Piece} A new random piece
+	 * @param {Function} callback - Optional callback for async piece generation (debug mode)
+	 * @returns {Piece|null} A new random piece, or null if waiting for debug selection
 	 */
-	generatePiece(level, difficulty) {
+	generatePiece(level, difficulty, callback = null) {
+		// In debug mode, show palette and wait for selection
+		if (DebugMode.isEnabled() && callback) {
+			DebugMode.requestPiece((shape, ballConfigs) => {
+				console.log('🔧 Debug: PieceFactory received selection', { shape, ballConfigs });
+				// User made selection, generate piece with overrides
+				const piece = this._generatePieceInternal(level, difficulty, shape, ballConfigs);
+				console.log('🔧 Debug: PieceFactory calling callback with piece', piece);
+				callback(piece);
+			});
+			return null; // Will callback with piece later
+		}
+		
+		// Normal synchronous generation
+		return this._generatePieceInternal(level, difficulty, null, null);
+	}
+	
+	/**
+	 * Internal piece generation logic
+	 * @private
+	 */
+	_generatePieceInternal(level, difficulty, debugShape = null, debugBallConfigs = null) {
+		// Store current level for color selection
+		this.currentLevel = level;
+		
 		// Increment pieces dropped counter
 		this.piecesDropped++;
 		
-		// Choose random piece shape
-		const pieceTypes = Object.values(CONSTANTS.PIECE_TYPES);
-		const randomIndex = randomInt(0, pieceTypes.length - 1);
-		const shapeType = pieceTypes[randomIndex];
+		// Choose piece shape (allow debug override)
+		let shapeType;
+		if (debugShape || (DebugMode.isEnabled() && DebugMode.getShape())) {
+			shapeType = debugShape || DebugMode.getShape();
+			console.log('🔧 Debug: Forcing shape:', shapeType);
+		} else {
+			// Only select from standard Tetris pieces, exclude SINGLE
+			const pieceTypes = [
+				CONSTANTS.PIECE_TYPES.I,
+				CONSTANTS.PIECE_TYPES.O,
+				CONSTANTS.PIECE_TYPES.T,
+				CONSTANTS.PIECE_TYPES.L,
+				CONSTANTS.PIECE_TYPES.J,
+				CONSTANTS.PIECE_TYPES.S,
+				CONSTANTS.PIECE_TYPES.Z
+			];
+			const randomIndex = randomInt(0, pieceTypes.length - 1);
+			shapeType = pieceTypes[randomIndex];
+		}
 		
 		// Get shape definition
 		const shapeDefinition = ConfigManager.get(`pieceShapes.${shapeType}`);
@@ -159,20 +214,115 @@ class PieceFactoryClass {
 		
 		// Generate balls
 		const balls = [];
+		let specialBallCount = 0;
+		const maxSpecialBalls = ConfigManager.get('game.maxSpecialBallsPerPiece', 2);
+		
 		for (let i = 0; i < ballCount; i++) {
-			// Check if this ball should be special
-			const specialBall = this.generateSpecialBall(difficulty);
+			let ballType = CONSTANTS.BALL_TYPES.NORMAL;
+			let ballColor;
 			
-			if (specialBall) {
-				balls.push(specialBall);
+			// Check if we have per-ball debug configs
+			if (debugBallConfigs && debugBallConfigs.length > i) {
+				// Use the specific config for this ball
+				const config = debugBallConfigs[i];
+				ballType = config.type;
+				
+				// Resolve color name to hex
+				if (config.color.startsWith('#')) {
+					ballColor = config.color;
+				} else {
+					ballColor = ConfigManager.get(`colors.balls.${config.color.toLowerCase()}`);
+					if (!ballColor) {
+						ballColor = this._getColorForBallType(ballType, availableColors);
+					}
+				}
+				
+				if (i === 0) console.log('🔧 Debug: Using ball configs per ball');
+			} else if (DebugMode.isEnabled() && (DebugMode.getType() || DebugMode.getColors())) {
+				// Legacy query string debug mode (applies same type/color to all balls)
+				const typeToUse = DebugMode.getType();
+				if (typeToUse !== null && typeToUse !== undefined) {
+					ballType = typeToUse;
+					if (i === 0) console.log('🔧 Debug: Forcing ball type:', typeToUse);
+				} else {
+					// Check if this ball should be special (only if under limit)
+					if (specialBallCount < maxSpecialBalls) {
+						const specialBall = this.generateSpecialBall(difficulty);
+						if (specialBall) {
+							ballType = specialBall.getType();
+							specialBallCount++;
+						}
+					}
+				}
+				
+				// Override color if specified
+				const colorsToUse = DebugMode.getColors();
+				if (colorsToUse && colorsToUse.length > 0) {
+					const colorIndex = i % colorsToUse.length;
+					const colorValue = colorsToUse[colorIndex];
+					
+					// Resolve color name to hex
+					if (colorValue.startsWith('#')) {
+						ballColor = colorValue;
+					} else {
+						ballColor = ConfigManager.get(`colors.balls.${colorValue.toLowerCase()}`);
+						if (!ballColor) {
+							ballColor = this._getColorForBallType(ballType, availableColors);
+						}
+					}
+					if (i === 0) console.log('🔧 Debug: Forcing ball color:', ballColor);
+				} else {
+					// Use default color for ball type
+					ballColor = this._getColorForBallType(ballType, availableColors);
+				}
 			} else {
-				// Generate normal ball with random color
-				const randomColor = availableColors[randomInt(0, availableColors.length - 1)];
-				balls.push(new Ball(CONSTANTS.BALL_TYPES.NORMAL, randomColor));
+				// Normal generation (no debug mode)
+				// Check if this ball should be special (respect limit)
+				if (specialBallCount < maxSpecialBalls) {
+					const specialBall = this.generateSpecialBall(difficulty);
+					
+					if (specialBall) {
+						ballType = specialBall.getType();
+						ballColor = specialBall.getColor();
+						specialBallCount++;
+					} else {
+						// Generate normal ball with random color
+						ballColor = availableColors[randomInt(0, availableColors.length - 1)];
+					}
+				} else {
+					// Already at limit, must be normal ball
+					ballColor = availableColors[randomInt(0, availableColors.length - 1)];
+				}
 			}
+			
+			balls.push(new Ball(ballType, ballColor));
 		}
 		
 		return new Piece(shapeType, balls);
+	}
+	
+	/**
+	 * Get appropriate color for a ball type
+	 * @param {String} ballType - Type of ball
+	 * @param {Array<String>} availableColors - Available normal colors
+	 * @returns {String} Hex color code
+	 * @private
+	 */
+	_getColorForBallType(ballType, availableColors) {
+		switch (ballType) {
+			case CONSTANTS.BALL_TYPES.EXPLODING:
+				return ConfigManager.get('colors.special.exploding', '#FFD700');
+			case CONSTANTS.BALL_TYPES.BLOCKING:
+				return ConfigManager.get('colors.special.blocking', '#808080');
+			case CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL:
+				return ConfigManager.get('colors.special.painterH', '#FF00FF');
+			case CONSTANTS.BALL_TYPES.PAINTER_VERTICAL:
+				return ConfigManager.get('colors.special.painterV', '#00FFFF');
+			case CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL:
+				return ConfigManager.get('colors.special.painterD', '#FFFF00');
+			default:
+				return availableColors[randomInt(0, availableColors.length - 1)];
+		}
 	}
 	
 	/**

@@ -15,6 +15,7 @@ import testConfigManager from './test-config-manager.js';
 import testInputHandler from './test-input-handler.js';
 import testFloatingText from './test-floating-text.js';
 import testGameEngine from './test-game-engine.js';
+import testSpecialBalls from './test-special-balls.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -51,6 +52,9 @@ export async function runAllTests() {
 	
 	const gameEngineResults = await runAsyncTestSuite(testGameEngine);
 	suites.push({ name: testGameEngine.name, tests: gameEngineResults });
+	
+	const specialBallsResults = await runAsyncTestSuite(testSpecialBalls);
+	suites.push({ name: testSpecialBalls.name, tests: specialBallsResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

@@ -582,6 +582,155 @@ class Grid {
 		return this.grid;
 	}
 	
+	/**
+	 * Process exploding balls in matches and clear 7×7 areas
+	 * @param {Array<Object>} matches - Array of match objects
+	 * @returns {Array<Object>} Positions cleared by explosions with {row, col}
+	 */
+	processExplosions(matches) {
+		const explodedPositions = [];
+		const positionsToExplode = new Set();
+		
+		// Find all exploding balls in matches
+		for (const match of matches) {
+			for (const pos of match.positions) {
+				const ball = this.getBallAt(pos.row, pos.col);
+				if (ball && ball.isExploding()) {
+					// Mark this position for explosion
+					positionsToExplode.add(`${pos.row},${pos.col}`);
+				}
+			}
+		}
+		
+		// Process each explosion
+		for (const posStr of positionsToExplode) {
+			const [row, col] = posStr.split(',').map(Number);
+			
+			// Clear 7×7 area centered on explosion
+			const radius = 3; // 7×7 = 3 cells in each direction from center
+			
+			for (let r = row - radius; r <= row + radius; r++) {
+				for (let c = col - radius; c <= col + radius; c++) {
+					// Check bounds
+					if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) {
+						const ball = this.getBallAt(r, c);
+						
+						// Clear all balls (including blocking balls in explosion radius)
+						if (ball) {
+							explodedPositions.push({ row: r, col: c });
+							this.removeBallAt(r, c);
+						}
+					}
+				}
+			}
+		}
+		
+		return explodedPositions;
+	}
+	
+	/**
+	 * Process painting balls in matches and paint entire lines
+	 * @param {Array<Object>} matches - Array of match objects
+	 * @returns {Array<Object>} Positions painted with {row, col, oldColor, newColor}
+	 */
+	processPainters(matches) {
+		const paintedPositions = [];
+		
+		// Find all painter balls in matches
+		for (const match of matches) {
+			// Check if any ball in this match is a painter
+			for (const pos of match.positions) {
+				const ball = this.getBallAt(pos.row, pos.col);
+				
+				if (ball && ball.isPainter()) {
+					const painterColor = ball.getColor();
+					const painterDirection = ball.getPainterDirection();
+					
+					// Paint the appropriate line based on painter type
+					if (painterDirection === 'horizontal') {
+						// Paint entire row
+						for (let c = 0; c < this.cols; c++) {
+							const targetBall = this.getBallAt(pos.row, c);
+							if (targetBall && targetBall.getType() !== CONSTANTS.BALL_TYPES.BLOCKING) {
+								const oldColor = targetBall.getColor();
+								targetBall.setColor(painterColor);
+								paintedPositions.push({
+									row: pos.row,
+									col: c,
+									oldColor,
+									newColor: painterColor
+								});
+							}
+						}
+					}
+					else if (painterDirection === 'vertical') {
+						// Paint entire column
+						for (let r = 0; r < this.rows; r++) {
+							const targetBall = this.getBallAt(r, pos.col);
+							if (targetBall && targetBall.getType() !== CONSTANTS.BALL_TYPES.BLOCKING) {
+								const oldColor = targetBall.getColor();
+								targetBall.setColor(painterColor);
+								paintedPositions.push({
+									row: r,
+									col: pos.col,
+									oldColor,
+									newColor: painterColor
+								});
+							}
+						}
+					}
+					else if (painterDirection === 'diagonal') {
+						// Paint diagonal line through this position
+						// Paint both diagonals for simplicity
+						
+						// Down-right diagonal (↘)
+						for (let offset = -Math.max(this.rows, this.cols); offset < Math.max(this.rows, this.cols); offset++) {
+							const r = pos.row + offset;
+							const c = pos.col + offset;
+							if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) {
+								const targetBall = this.getBallAt(r, c);
+								if (targetBall && targetBall.getType() !== CONSTANTS.BALL_TYPES.BLOCKING) {
+									const oldColor = targetBall.getColor();
+									targetBall.setColor(painterColor);
+									paintedPositions.push({
+										row: r,
+										col: c,
+										oldColor,
+										newColor: painterColor
+									});
+								}
+							}
+						}
+						
+						// Down-left diagonal (↙)
+						for (let offset = -Math.max(this.rows, this.cols); offset < Math.max(this.rows, this.cols); offset++) {
+							const r = pos.row + offset;
+							const c = pos.col - offset;
+							if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) {
+								const targetBall = this.getBallAt(r, c);
+								if (targetBall && targetBall.getType() !== CONSTANTS.BALL_TYPES.BLOCKING) {
+									const oldColor = targetBall.getColor();
+									targetBall.setColor(painterColor);
+									paintedPositions.push({
+										row: r,
+										col: c,
+										oldColor,
+										newColor: painterColor
+									});
+								}
+							}
+						}
+					}
+					
+					// Only process one painter per match
+					break;
+				}
+			}
+		}
+		
+		return paintedPositions;
+	}
+	
 }
 
 export default Grid;

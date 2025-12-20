@@ -273,9 +273,9 @@ class Renderer {
 	_drawSpecialIndicator(ball, x, y, radius, ctx) {
 		const ballType = ball.getType();
 		const isExploding = ballType === CONSTANTS.BALL_TYPES.EXPLODING;
-		const isPainterH = ballType === CONSTANTS.BALL_TYPES.PAINTER_H;
-		const isPainterV = ballType === CONSTANTS.BALL_TYPES.PAINTER_V;
-		const isPainterD = ballType === CONSTANTS.BALL_TYPES.PAINTER_D;
+		const isPainterH = ballType === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
+		const isPainterV = ballType === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
+		const isPainterD = ballType === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
 		const isBlocking = ballType === CONSTANTS.BALL_TYPES.BLOCKING;
 		
 		ctx.strokeStyle = '#FFFFFF';
@@ -330,27 +330,21 @@ class Renderer {
 	 * @private
 	 */
 	_drawStar(x, y, radius, ctx) {
-		const points = 5;
-		const innerRadius = radius * 0.5;
+		const spikes = 8;
+		const step = Math.PI / spikes;
 		
 		ctx.beginPath();
 		
-		for (let i = 0; i < points * 2; i++) {
-			const angle = (i * Math.PI) / points - Math.PI / 2;
-			const isOuterPoint = i % 2 === 0;
-			const r = isOuterPoint ? radius : innerRadius;
+		for (let i = 0; i < spikes * 2; i++) {
+			const r = i % 2 === 0 ? radius : radius * 0.5;
+			const angle = i * step - Math.PI / 2;
+			const px = x + Math.cos(angle) * r;
+			const py = y + Math.sin(angle) * r;
 			
-			const pointX = x + r * Math.cos(angle);
-			const pointY = y + r * Math.sin(angle);
-			
-			const isFirstPoint = i === 0;
-			
-			// Move or draw line
-			if (isFirstPoint) {
-				ctx.moveTo(pointX, pointY);
-			}
-			else {
-				ctx.lineTo(pointX, pointY);
+			if (i === 0) {
+				ctx.moveTo(px, py);
+			} else {
+				ctx.lineTo(px, py);
 			}
 		}
 		

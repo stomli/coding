@@ -20,6 +20,7 @@ import { randomInt } from '../utils/Helpers.js';
 import { PieceFactory } from './PieceFactory.js';
 import { ScoreManager } from './ScoreManager.js';
 import { FloatingTextManager } from './FloatingText.js';
+import { DebugMode } from '../utils/DebugMode.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -50,8 +51,14 @@ class GameEngineClass {
 		this.isLocking = false;
 		this.animationFrameId = null;
 		
+		// Debug mode state
+		this.waitingForDebugPiece = false;
+		
 		// Floating text manager
 		this.floatingTextManager = new FloatingTextManager();
+		
+		// Guard to prevent concurrent cascade processing
+		this.isHandlingMatches = false;
 	}
 	
 	/**
@@ -271,6 +278,48 @@ class GameEngineClass {
 	}
 	
 	/**
+	 * Request next piece from PieceFactory (handles debug mode)
+	 * @private
+	 */
+	_requestNextPiece() {
+		if (DebugMode.isEnabled()) {
+			console.log('🔧 Debug: GameEngine requesting next piece');
+			this.waitingForDebugPiece = true;
+			PieceFactory.generatePiece(this.level, this.difficulty, (piece) => {
+				console.log('🔧 Debug: GameEngine received piece from callback', piece);
+				
+				// If currentPiece is null (waiting for this piece), spawn it now
+				if (!this.currentPiece) {
+					console.log('🔧 Debug: No current piece, spawning selected piece immediately');
+					this.currentPiece = piece;
+					this.waitingForDebugPiece = false;
+					
+					// Position at top center
+					const startX = Math.floor(this.grid.cols / 2) - Math.floor(this.currentPiece.getWidth() / 2);
+					this.currentPiece.setPosition(startX, 0);
+					
+					// Check if new piece collides (game over)
+					const isValid = this.grid.isValidPosition(this.currentPiece);
+					if (!isValid) {
+						this._gameOver();
+						return;
+					}
+					
+					// Don't request next piece yet - wait until this piece locks
+					// The next piece will be requested in _lockPiece() after cascade completes
+				} else {
+					// This is the preview piece
+					this.nextPiece = piece;
+					this.waitingForDebugPiece = false;
+					console.log('🔧 Debug: waitingForDebugPiece set to false');
+				}
+			});
+		} else {
+			this.nextPiece = PieceFactory.generatePiece(this.level, this.difficulty);
+		}
+	}
+	
+	/**
 	 * Start a new game
 	 * @param {Number} difficulty - Difficulty level (1-5)
 	 * @param {Number} level - Starting level number
@@ -292,6 +341,9 @@ class GameEngineClass {
 		this.level = level || 1;
 		this.difficulty = difficulty || 1;
 		
+		// Update available colors display
+		this._updateAvailableColorsDisplay();
+		
 		// Clear grid
 		this.grid.clear();
 		
@@ -304,13 +356,19 @@ class GameEngineClass {
 		// Set drop speed based on difficulty
 		this.dropInterval = Math.max(200, 1000 - (difficulty * 150));
 		
-		// Generate pieces
-		this.currentPiece = PieceFactory.generatePiece(this.level, this.difficulty);
-		this.nextPiece = PieceFactory.generatePiece(this.level, this.difficulty);
-		
-		// Position current piece at top center
-		const startX = Math.floor(this.grid.cols / 2) - Math.floor(this.currentPiece.getWidth() / 2);
-		this.currentPiece.setPosition(startX, 0);
+		// Generate pieces (in debug mode, this will be async via callback)
+		if (DebugMode.isEnabled()) {
+			// In debug mode, request current piece (it will be spawned via callback)
+			this._requestNextPiece();
+		} else {
+			// Normal mode: generate synchronously
+			this.currentPiece = PieceFactory.generatePiece(this.level, this.difficulty);
+			this._requestNextPiece();
+			
+			// Position current piece at top center
+			const startX = Math.floor(this.grid.cols / 2) - Math.floor(this.currentPiece.getWidth() / 2);
+			this.currentPiece.setPosition(startX, 0);
+		}
 		
 		// Reset timers
 		this.dropTimer = 0;
@@ -364,13 +422,14 @@ class GameEngineClass {
 				// No piece to render
 			}
 			
-			// Render next piece preview
+			// Render next piece preview (skip if debug mode is waiting for selection)
 			const hasNextPiece = this.nextPiece !== null;
 			const previewCanvas = document.getElementById('previewCanvas');
 			const hasPreviewCanvas = previewCanvas !== null;
+			const isDebugWaiting = DebugMode.isEnabled() && this.waitingForDebugPiece;
 			
-			// Render preview if available
-			if (hasNextPiece && hasPreviewCanvas) {
+			// Render preview if available and not in debug selection mode
+			if (hasNextPiece && hasPreviewCanvas && !isDebugWaiting) {
 				this.renderer.renderNextPiece(this.nextPiece, previewCanvas);
 			}
 			else {
@@ -403,6 +462,12 @@ class GameEngineClass {
 		}
 		
 		const hasPiece = this.currentPiece !== null;
+		
+		// Pause if waiting for debug piece selection AND we don't have a current piece
+		// (Only block when waiting for the CURRENT piece, not the preview piece)
+		if (this.waitingForDebugPiece && !hasPiece) {
+			return;
+		}
 		
 		// Can't update without a piece
 		if (!hasPiece) {
@@ -482,9 +547,22 @@ class GameEngineClass {
 		// Check for matches and handle cascades
 		await this._handleMatching();
 		
-		// Spawn next piece
+		// Spawn next piece (handle debug mode)
 		this.currentPiece = this.nextPiece;
-		this.nextPiece = PieceFactory.generatePiece(this.level, this.difficulty);
+		
+		// Request next piece (may be async in debug mode)
+		// Don't request if already waiting for one
+		if (!this.waitingForDebugPiece) {
+			this._requestNextPiece();
+		}
+		
+		// If currentPiece is null (debug mode waiting), skip positioning until piece is ready
+		if (!this.currentPiece) {
+			console.log('🔧 Debug: No next piece available, waiting for selection');
+			this.isLocking = false;
+			this.lockTimer = 0;
+			return;
+		}
 		
 		// Position at top center
 		const startX = Math.floor(this.grid.cols / 2) - Math.floor(this.currentPiece.getWidth() / 2);
@@ -513,10 +591,28 @@ class GameEngineClass {
 	 * @private
 	 */
 	async _handleMatching() {
+		// Prevent concurrent cascade processing
+		if (this.isHandlingMatches) {
+			console.log('🔧 Debug: Already handling matches, skipping duplicate call');
+			return;
+		}
+		
+		this.isHandlingMatches = true;
+		console.log('🔧 Debug: _handleMatching called');
+		
 		let cascadeCount = 0;
 		const matchDelay = ConfigManager.get('animations.matchDetectionDelay', 0);
 		const clearDelay = ConfigManager.get('animations.clearAnimationDuration', 300);
 		const cascadeDelay = ConfigManager.get('animations.cascadeCheckDelay', 0);
+		
+		// Import DebugMode dynamically
+		const DebugModeModule = await import('../utils/DebugMode.js');
+		const DebugMode = DebugModeModule.default;
+		
+		// Reset step counter at start of cascade
+		if (DebugMode.enabled && DebugMode.stepMode) {
+			DebugMode.resetStepCounter();
+		}
 		
 		// Cascade loop
 		while (true) {
@@ -534,7 +630,20 @@ class GameEngineClass {
 			
 			cascadeCount++;
 			
-			// Clear matched balls
+			// DEBUG: Wait for user to advance step
+			if (DebugMode.enabled && DebugMode.stepMode) {
+				console.log(`🔧 Debug: Cascade step ${cascadeCount} - found ${matches.length} match(es)`);
+				await DebugMode.waitForStep();
+			}
+			
+			// Process special balls FIRST (priority order)
+			// 1. Process explosions
+			const explodedPositions = this.grid.processExplosions(matches);
+			
+			// 2. Process painters (paint lines before clearing)
+			const paintedPositions = this.grid.processPainters(matches);
+			
+			// 3. Clear matched balls (standard matches)
 			await this._clearMatches(matches, clearDelay);
 			
 			// Apply gravity
@@ -550,6 +659,14 @@ class GameEngineClass {
 		if (cascadeCount > 0) {
 			EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount });
 		}
+		
+		// Reset step counter after cascade completes
+		if (DebugMode.enabled && DebugMode.stepMode) {
+			DebugMode.resetStepCounter();
+		}
+		
+		// Release the guard
+		this.isHandlingMatches = false;
 	}
 	
 	/**
@@ -794,6 +911,29 @@ class GameEngineClass {
 		
 		// Restart with same difficulty
 		this.start(1, 1);
+	}
+	
+	/**
+	 * Update available colors display
+	 * @private
+	 */
+	_updateAvailableColorsDisplay() {
+		const container = document.getElementById('availableColors');
+		if (!container) return;
+		
+		// Get available colors for current level
+		const colors = PieceFactory.getAvailableColors(this.level);
+		
+		// Clear existing
+		container.innerHTML = '';
+		
+		// Add color balls
+		colors.forEach(color => {
+			const ball = document.createElement('div');
+			ball.className = 'color-ball';
+			ball.style.backgroundColor = color;
+			container.appendChild(ball);
+		});
 	}
 	
 }

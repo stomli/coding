@@ -8,6 +8,7 @@
 import GameEngine from './modules/GameEngine.js';
 import { EventEmitter } from './utils/EventEmitter.js';
 import { CONSTANTS } from './utils/Constants.js';
+import { DebugMode } from './utils/DebugMode.js';
 
 /**
  * Initialize the game when the DOM is ready
@@ -22,6 +23,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 		
 		// Set up score display listener
 		setupScoreListener();
+
+		// Show debug overlay if enabled
+		if (DebugMode.isEnabled()) {
+			DebugMode.showDebugInfo();
+		}
 
 		// Show the main menu
 		showScreen('menuScreen');
