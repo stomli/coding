@@ -1,0 +1,363 @@
+/**
+ * Renderer.js
+ * 
+ * Description: Visual rendering of game state using Canvas API
+ * 
+ * Dependencies: ConfigManager, Constants
+ * 
+ * Exports: Renderer class
+ */
+
+import { ConfigManager } from './ConfigManager.js';
+import { CONSTANTS } from '../utils/Constants.js';
+
+/**
+ * Renderer class for drawing game elements to canvas
+ */
+class Renderer {
+	
+	/**
+	 * Create a new renderer
+	 * @param {HTMLCanvasElement} canvasElement - Main game canvas
+	 */
+	constructor(canvasElement) {
+		this.canvas = canvasElement;
+		this.ctx = canvasElement.getContext('2d');
+		this.cellSize = 0;
+		this.offsetX = 0;
+		this.offsetY = 0;
+	}
+	
+	/**
+	 * Initialize renderer with configuration
+	 * @returns {void}
+	 */
+	initialize() {
+		const gridRows = ConfigManager.get('game.gridRows', CONSTANTS.GRID_ROWS);
+		const gridCols = ConfigManager.get('game.gridCols', CONSTANTS.GRID_COLS);
+		const ballRadius = ConfigManager.get('rendering.ballRadius', 20);
+		
+		// Calculate cell size and canvas dimensions
+		this.cellSize = ballRadius * 2;
+		const canvasWidth = gridCols * this.cellSize;
+		const canvasHeight = gridRows * this.cellSize;
+		
+		// Set canvas size
+		this.canvas.width = canvasWidth;
+		this.canvas.height = canvasHeight;
+		
+		// Center offset for balls within cells
+		this.offsetX = this.cellSize / 2;
+		this.offsetY = this.cellSize / 2;
+	}
+	
+	/**
+	 * Clear the entire canvas
+	 * @returns {void}
+	 */
+	clear() {
+		const bgColor = ConfigManager.get('colors.ui.background', '#0f0f1e');
+		
+		this.ctx.fillStyle = bgColor;
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+	}
+	
+	/**
+	 * Render the grid with all locked balls
+	 * @param {Grid} grid - Grid object to render
+	 * @returns {void}
+	 */
+	renderGrid(grid) {
+		const gridData = grid.getGrid();
+		const gridLineColor = ConfigManager.get('colors.ui.gridLines', '#444444');
+		const gridLineWidth = ConfigManager.get('rendering.gridLineWidth', 1);
+		
+		// Draw grid lines
+		this.ctx.strokeStyle = gridLineColor;
+		this.ctx.lineWidth = gridLineWidth;
+		
+		// Vertical lines
+		for (let col = 0; col <= grid.cols; col++) {
+			const x = col * this.cellSize;
+			this.ctx.beginPath();
+			this.ctx.moveTo(x, 0);
+			this.ctx.lineTo(x, this.canvas.height);
+			this.ctx.stroke();
+		}
+		
+		// Horizontal lines
+		for (let row = 0; row <= grid.rows; row++) {
+			const y = row * this.cellSize;
+			this.ctx.beginPath();
+			this.ctx.moveTo(0, y);
+			this.ctx.lineTo(this.canvas.width, y);
+			this.ctx.stroke();
+		}
+		
+		// Draw all balls
+		for (let row = 0; row < grid.rows; row++) {
+			for (let col = 0; col < grid.cols; col++) {
+				const ball = gridData[row][col];
+				const hasBall = ball !== null;
+				
+				// Draw ball if present
+				if (hasBall) {
+					this._drawBall(ball, col, row);
+				}
+				else {
+					// Empty cell, skip
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Render a falling piece at specified position
+	 * @param {Piece} piece - Piece to render
+	 * @param {Number} x - Column position
+	 * @param {Number} y - Row position
+	 * @returns {void}
+	 */
+	renderPiece(piece, x, y) {
+		const shape = piece.getShape();
+		const balls = piece.getBalls();
+		let ballIndex = 0;
+		
+		// Draw each ball in piece
+		for (let row = 0; row < shape.length; row++) {
+			for (let col = 0; col < shape[row].length; col++) {
+				const hasBall = shape[row][col] === 1;
+				
+				// Draw ball if present
+				if (hasBall) {
+					const gridCol = x + col;
+					const gridRow = y + row;
+					const ball = balls[ballIndex];
+					
+					this._drawBall(ball, gridCol, gridRow);
+					ballIndex++;
+				}
+				else {
+					// Empty cell, skip
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Render next piece preview
+	 * @param {Piece} piece - Piece to preview
+	 * @param {HTMLCanvasElement} previewCanvas - Preview canvas element
+	 * @returns {void}
+	 */
+	renderNextPiece(piece, previewCanvas) {
+		const previewCtx = previewCanvas.getContext('2d');
+		const shape = piece.getShape();
+		const balls = piece.getBalls();
+		
+		// Calculate preview size
+		const pieceWidth = shape[0].length;
+		const pieceHeight = shape.length;
+		const previewCellSize = Math.min(
+			previewCanvas.width / pieceWidth,
+			previewCanvas.height / pieceHeight
+		);
+		
+		// Clear preview canvas
+		const bgColor = ConfigManager.get('colors.ui.background', '#0f0f1e');
+		previewCtx.fillStyle = bgColor;
+		previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+		
+		// Center piece in preview
+		const offsetX = (previewCanvas.width - pieceWidth * previewCellSize) / 2;
+		const offsetY = (previewCanvas.height - pieceHeight * previewCellSize) / 2;
+		
+		let ballIndex = 0;
+		
+		// Draw each ball in piece
+		for (let row = 0; row < shape.length; row++) {
+			for (let col = 0; col < shape[row].length; col++) {
+				const hasBall = shape[row][col] === 1;
+				
+				// Draw ball if present
+				if (hasBall) {
+					const x = offsetX + col * previewCellSize + previewCellSize / 2;
+					const y = offsetY + row * previewCellSize + previewCellSize / 2;
+					const ball = balls[ballIndex];
+					const radius = previewCellSize / 2 * 0.8;
+					
+					this._drawBallAt(ball, x, y, radius, previewCtx);
+					ballIndex++;
+				}
+				else {
+					// Empty cell, skip
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Draw a ball at grid position
+	 * @param {Ball} ball - Ball to draw
+	 * @param {Number} col - Column position
+	 * @param {Number} row - Row position
+	 * @returns {void}
+	 * @private
+	 */
+	_drawBall(ball, col, row) {
+		const x = col * this.cellSize + this.offsetX;
+		const y = row * this.cellSize + this.offsetY;
+		const radius = this.cellSize / 2 * 0.85;
+		
+		this._drawBallAt(ball, x, y, radius, this.ctx);
+	}
+	
+	/**
+	 * Draw a ball at specific pixel coordinates
+	 * @param {Ball} ball - Ball to draw
+	 * @param {Number} x - X coordinate
+	 * @param {Number} y - Y coordinate
+	 * @param {Number} radius - Ball radius
+	 * @param {CanvasRenderingContext2D} ctx - Canvas context
+	 * @returns {void}
+	 * @private
+	 */
+	_drawBallAt(ball, x, y, radius, ctx) {
+		const color = ball.getColor();
+		const ballType = ball.getType();
+		const glowEffect = ConfigManager.get('rendering.glowEffect', true);
+		const shadowBlur = ConfigManager.get('rendering.shadowBlur', 5);
+		
+		// Draw ball shadow/glow
+		if (glowEffect) {
+			ctx.shadowBlur = shadowBlur;
+			ctx.shadowColor = color;
+		}
+		else {
+			ctx.shadowBlur = 0;
+		}
+		
+		// Draw ball circle
+		ctx.fillStyle = color;
+		ctx.beginPath();
+		ctx.arc(x, y, radius, 0, Math.PI * 2);
+		ctx.fill();
+		
+		// Reset shadow
+		ctx.shadowBlur = 0;
+		
+		// Draw special ball indicators
+		this._drawSpecialIndicator(ball, x, y, radius, ctx);
+	}
+	
+	/**
+	 * Draw special ball type indicators
+	 * @param {Ball} ball - Ball to check
+	 * @param {Number} x - X coordinate
+	 * @param {Number} y - Y coordinate
+	 * @param {Number} radius - Ball radius
+	 * @param {CanvasRenderingContext2D} ctx - Canvas context
+	 * @returns {void}
+	 * @private
+	 */
+	_drawSpecialIndicator(ball, x, y, radius, ctx) {
+		const ballType = ball.getType();
+		const isExploding = ballType === CONSTANTS.BALL_TYPES.EXPLODING;
+		const isPainterH = ballType === CONSTANTS.BALL_TYPES.PAINTER_H;
+		const isPainterV = ballType === CONSTANTS.BALL_TYPES.PAINTER_V;
+		const isPainterD = ballType === CONSTANTS.BALL_TYPES.PAINTER_D;
+		const isBlocking = ballType === CONSTANTS.BALL_TYPES.BLOCKING;
+		
+		ctx.strokeStyle = '#FFFFFF';
+		ctx.lineWidth = 2;
+		
+		// Draw exploding indicator (star burst)
+		if (isExploding) {
+			this._drawStar(x, y, radius * 0.6, ctx);
+		}
+		else if (isPainterH) {
+			// Horizontal line
+			ctx.beginPath();
+			ctx.moveTo(x - radius * 0.6, y);
+			ctx.lineTo(x + radius * 0.6, y);
+			ctx.stroke();
+		}
+		else if (isPainterV) {
+			// Vertical line
+			ctx.beginPath();
+			ctx.moveTo(x, y - radius * 0.6);
+			ctx.lineTo(x, y + radius * 0.6);
+			ctx.stroke();
+		}
+		else if (isPainterD) {
+			// Diagonal line
+			ctx.beginPath();
+			ctx.moveTo(x - radius * 0.5, y - radius * 0.5);
+			ctx.lineTo(x + radius * 0.5, y + radius * 0.5);
+			ctx.stroke();
+		}
+		else if (isBlocking) {
+			// X mark
+			ctx.beginPath();
+			ctx.moveTo(x - radius * 0.5, y - radius * 0.5);
+			ctx.lineTo(x + radius * 0.5, y + radius * 0.5);
+			ctx.moveTo(x + radius * 0.5, y - radius * 0.5);
+			ctx.lineTo(x - radius * 0.5, y + radius * 0.5);
+			ctx.stroke();
+		}
+		else {
+			// Normal ball, no indicator
+		}
+	}
+	
+	/**
+	 * Draw a star shape
+	 * @param {Number} x - Center X
+	 * @param {Number} y - Center Y
+	 * @param {Number} radius - Star radius
+	 * @param {CanvasRenderingContext2D} ctx - Canvas context
+	 * @returns {void}
+	 * @private
+	 */
+	_drawStar(x, y, radius, ctx) {
+		const points = 5;
+		const innerRadius = radius * 0.5;
+		
+		ctx.beginPath();
+		
+		for (let i = 0; i < points * 2; i++) {
+			const angle = (i * Math.PI) / points - Math.PI / 2;
+			const isOuterPoint = i % 2 === 0;
+			const r = isOuterPoint ? radius : innerRadius;
+			
+			const pointX = x + r * Math.cos(angle);
+			const pointY = y + r * Math.sin(angle);
+			
+			const isFirstPoint = i === 0;
+			
+			// Move or draw line
+			if (isFirstPoint) {
+				ctx.moveTo(pointX, pointY);
+			}
+			else {
+				ctx.lineTo(pointX, pointY);
+			}
+		}
+		
+		ctx.closePath();
+		ctx.stroke();
+	}
+	
+	/**
+	 * Render animation (placeholder for Phase 3)
+	 * @param {String} animationType - Type of animation
+	 * @param {Object} data - Animation data
+	 * @returns {void}
+	 */
+	renderAnimation(animationType, data) {
+		// TODO: Implement animations in Phase 3
+	}
+	
+}
+
+export default Renderer;

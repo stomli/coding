@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Quick Test</title>
+	<style>
+		body { background: #1a1a1a; color: #0f0; font-family: monospace; padding: 20px; }
+		.error { color: #f00; }
+		.success { color: #0f0; }
+	</style>
+</head>
+<body>
+	<h1>Quick Module Test</h1>
+	<div id="log"></div>
+
+	<script type="module">
+		const log = document.getElementById('log');
+		
+		function write(msg, isError = false) {
+			const div = document.createElement('div');
+			div.className = isError ? 'error' : 'success';
+			div.textContent = msg;
+			log.appendChild(div);
+		}
+
+		async function test() {
+			try {
+				write('1. Loading ConfigManager...');
+				const ConfigManager = (await import('./src/modules/ConfigManager.js')).default;
+				write('   ✓ ConfigManager imported');
+				
+				write('2. Loading config.json...');
+				await ConfigManager.loadConfig();
+				write('   ✓ Config loaded');
+				
+				write('3. Loading Ball...');
+				const Ball = (await import('./src/modules/Ball.js')).default;
+				const { BALL_TYPES } = await import('./src/utils/Constants.js');
+				const ball = new Ball(BALL_TYPES.NORMAL, '#FF0000');
+				write(`   ✓ Ball created: ${ball.getColor()}`);
+				
+				write('4. Loading Piece...');
+				const Piece = (await import('./src/modules/Piece.js')).default;
+				const shape = [[1]];
+				const balls = [new Ball(BALL_TYPES.NORMAL, '#00FF00')];
+				const piece = new Piece('TEST', shape, balls);
+				write(`   ✓ Piece created: ${piece.getType()}`);
+				
+				write('5. Loading Grid...');
+				const Grid = (await import('./src/modules/Grid.js')).default;
+				const grid = new Grid(25, 15);
+				write(`   ✓ Grid created: ${grid.rows}x${grid.cols}`);
+				
+				write('\n✅ ALL MODULES WORKING!', false);
+				
+			} catch (error) {
+				write(`\n❌ ERROR: ${error.message}`, true);
+				write(`Stack: ${error.stack}`, true);
+				console.error(error);
+			}
+		}
+
+		test();
+	</script>
+</body>
+</html>

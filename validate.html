@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Quick Validation</title>
+	<style>
+		body {
+			font-family: monospace;
+			background: #1a1a1a;
+			color: #0f0;
+			padding: 20px;
+		}
+		.pass { color: #0f0; }
+		.fail { color: #f00; }
+	</style>
+</head>
+<body>
+	<h1>Ball Drop Puzzle - Module Validation</h1>
+	<div id="output"></div>
+
+	<script type="module">
+		const output = document.getElementById('output');
+		
+		async function validate() {
+			const results = [];
+			
+			try {
+				// Test 1: Load config
+				output.innerHTML += '📦 Loading config.json...<br>';
+				const { ConfigManager } = await import('./src/modules/ConfigManager.js');
+				await ConfigManager.loadConfig();
+				const config = ConfigManager.getAll();
+				results.push({ name: 'Config loaded', pass: config !== null });
+				
+				// Test 2: Constants
+				output.innerHTML += '🔧 Checking Constants...<br>';
+				const { CONSTANTS, BALL_TYPES } = await import('./src/utils/Constants.js');
+				results.push({ name: 'CONSTANTS imported', pass: CONSTANTS !== undefined });
+				results.push({ name: 'BALL_TYPES exported', pass: BALL_TYPES !== undefined });
+				
+				// Test 3: Ball class
+				output.innerHTML += '⚽ Testing Ball class...<br>';
+				const Ball = (await import('./src/modules/Ball.js')).default;
+				const ball = new Ball(BALL_TYPES.NORMAL, '#FF0000');
+				results.push({ name: 'Ball created', pass: ball.getColor() === '#FF0000' });
+				
+				// Test 4: Piece class
+				output.innerHTML += '🧩 Testing Piece class...<br>';
+				const Piece = (await import('./src/modules/Piece.js')).default;
+				const shape = [[1]];
+				const balls = [new Ball(BALL_TYPES.NORMAL, '#00FF00')];
+				const piece = new Piece('S', shape, balls);
+				results.push({ name: 'Piece created', pass: piece.getType() === 'S' });
+				
+				// Test 5: Grid class
+				output.innerHTML += '🎮 Testing Grid class...<br>';
+				const Grid = (await import('./src/modules/Grid.js')).default;
+				const grid = new Grid(25, 15);
+				results.push({ name: 'Grid created', pass: grid.rows === 25 && grid.cols === 15 });
+				
+				// Test 6: Renderer
+				output.innerHTML += '🎨 Testing Renderer...<br>';
+				const Renderer = (await import('./src/modules/Renderer.js')).default;
+				const canvas = document.createElement('canvas');
+				const renderer = new Renderer(canvas);
+				renderer.initialize();
+				results.push({ name: 'Renderer initialized', pass: canvas.width > 0 });
+				
+			// Test 7: EventEmitter
+			output.innerHTML += '📡 Testing EventEmitter...<br>';
+			const EventEmitter = (await import('./src/utils/EventEmitter.js')).default;
+			results.push({ name: 'EventEmitter imported', pass: EventEmitter !== undefined });
+			if (EventEmitter && EventEmitter.on) {
+				let called = false;
+				EventEmitter.on('test', () => called = true);
+				EventEmitter.emit('test');
+				results.push({ name: 'EventEmitter works', pass: called });
+			}
+			else {
+				results.push({ name: 'EventEmitter works', pass: false });
+			}				// Test 8: Helpers
+				output.innerHTML += '🛠️ Testing Helpers...<br>';
+				const { clamp } = await import('./src/utils/Helpers.js');
+				results.push({ name: 'Helpers loaded', pass: clamp(15, 10, 20) === 15 });
+				
+				// Test 9: GameEngine
+				output.innerHTML += '🎯 Testing GameEngine...<br>';
+				const GameEngine = (await import('./src/modules/GameEngine.js')).default;
+				results.push({ name: 'GameEngine loaded', pass: GameEngine !== undefined });
+				
+			} catch (error) {
+				output.innerHTML += `<span class="fail">❌ ERROR: ${error.message}</span><br>`;
+				console.error(error);
+			}
+			
+			// Display results
+			output.innerHTML += '<br><h2>Results:</h2>';
+			let passed = 0;
+			results.forEach(r => {
+				if (r.pass) {
+					passed++;
+					output.innerHTML += `<span class="pass">✓ ${r.name}</span><br>`;
+				} else {
+					output.innerHTML += `<span class="fail">✗ ${r.name}</span><br>`;
+				}
+			});
+			
+			output.innerHTML += `<br><h2>${passed}/${results.length} tests passed</h2>`;
+			
+			if (passed === results.length) {
+				output.innerHTML += '<h3 class="pass">🎉 All modules loaded successfully!</h3>';
+				output.innerHTML += '<p>You can now run:</p>';
+				output.innerHTML += '<ul><li>index.html - Main game</li>';
+				output.innerHTML += '<li>debug.html - Visual debugging</li>';
+				output.innerHTML += '<li>tests/test-runner.html - Unit tests</li></ul>';
+			}
+		}
+		
+		validate();
+	</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ball Drop Puzzle - Debug</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			padding: 20px;
+			background-color: #1a1a1a;
+			color: #e0e0e0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+		h1 {
+			color: #61dafb;
+		}
+		.debug-container {
+			background-color: #2a2a2a;
+			padding: 20px;
+			border-radius: 8px;
+			margin: 20px 0;
+		}
+		canvas {
+			border: 2px solid #444;
+			display: block;
+			margin: 10px auto;
+		}
+		.controls {
+			margin: 20px 0;
+		}
+		button {
+			background-color: #61dafb;
+			color: #1a1a1a;
+			border: none;
+			padding: 10px 20px;
+			margin: 5px;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 16px;
+		}
+		button:hover {
+			background-color: #4fa8c5;
+		}
+		.log {
+			background-color: #1a1a1a;
+			padding: 15px;
+			border-radius: 4px;
+			font-family: monospace;
+			font-size: 14px;
+			max-height: 400px;
+			overflow-y: auto;
+			white-space: pre-wrap;
+		}
+		.log-entry {
+			margin: 5px 0;
+			padding: 5px;
+		}
+		.log-entry.error {
+			color: #f44336;
+		}
+		.log-entry.success {
+			color: #4caf50;
+		}
+		.log-entry.info {
+			color: #61dafb;
+		}
+	</style>
+</head>
+<body>
+	<h1>🔍 Ball Drop Puzzle - Debug Mode</h1>
+	
+	<div class="debug-container">
+		<h2>Canvas Test</h2>
+		<canvas id="debugCanvas"></canvas>
+		
+		<div class="controls">
+			<button id="testGrid">Test Grid Rendering</button>
+			<button id="testPiece">Test Piece Rendering</button>
+			<button id="testSpecialBalls">Test Special Balls</button>
+			<button id="testRotation">Test Rotation</button>
+			<button id="clearCanvas">Clear Canvas</button>
+		</div>
+	</div>
+
+	<div class="debug-container" style="width: 80%; max-width: 800px;">
+		<h2>Console Log</h2>
+		<div id="consoleLog" class="log"></div>
+	</div>
+
+	<script type="module">
+		import Grid from './src/modules/Grid.js';
+		import Piece from './src/modules/Piece.js';
+		import Ball from './src/modules/Ball.js';
+		import Renderer from './src/modules/Renderer.js';
+		import ConfigManager from './src/modules/ConfigManager.js';
+		import { BALL_TYPES } from './src/utils/Constants.js';
+
+		const canvas = document.getElementById('debugCanvas');
+		const logDiv = document.getElementById('consoleLog');
+		let renderer = null;
+		let grid = null;
+
+		function log(message, type = 'info') {
+			const entry = document.createElement('div');
+			entry.className = `log-entry ${type}`;
+			entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+			logDiv.insertBefore(entry, logDiv.firstChild);
+		}
+
+		async function initialize() {
+			try {
+				log('Initializing debug environment...', 'info');
+				
+				// Load config
+				await ConfigManager.loadConfig();
+				log('Config loaded successfully', 'success');
+
+				// Create grid
+				grid = new Grid(25, 15);
+				log('Grid created: 25 rows x 15 columns', 'success');
+
+				// Create renderer
+				renderer = new Renderer(canvas);
+				await renderer.initialize();
+				log('Renderer initialized', 'success');
+
+				log('Debug environment ready!', 'success');
+			}
+			catch (error) {
+				log(`Initialization failed: ${error.message}`, 'error');
+				console.error(error);
+			}
+		}
+
+		// Test grid rendering
+		document.getElementById('testGrid').addEventListener('click', () => {
+			try {
+				log('Testing grid rendering...', 'info');
+				
+				// Add some random balls to the grid
+				const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
+				for (let i = 0; i < 20; i++) {
+					const y = Math.floor(Math.random() * 25);
+					const x = Math.floor(Math.random() * 15);
+					const color = colors[Math.floor(Math.random() * colors.length)];
+					grid.setBallAt(y, x, new Ball(BALL_TYPES.NORMAL, color));
+				}
+				
+				renderer.renderGrid(grid);
+				log(`Grid rendered with random balls`, 'success');
+			}
+			catch (error) {
+				log(`Grid rendering failed: ${error.message}`, 'error');
+				console.error(error);
+			}
+		});
+
+		// Test piece rendering
+		document.getElementById('testPiece').addEventListener('click', () => {
+			try {
+				log('Testing piece rendering...', 'info');
+				
+				// Create a T-piece
+				const shape = [
+					[0, 1, 0],
+					[1, 1, 1]
+				];
+				const balls = [
+					new Ball(BALL_TYPES.NORMAL, '#FF0000'),
+					new Ball(BALL_TYPES.NORMAL, '#FF0000'),
+					new Ball(BALL_TYPES.NORMAL, '#FF0000'),
+					new Ball(BALL_TYPES.NORMAL, '#FF0000')
+				];
+				const piece = new Piece('T', shape, balls);
+				piece.position = { x: 7, y: 5 };
+				
+				renderer.renderGrid(grid);
+				renderer.renderPiece(piece);
+				log('T-piece rendered at position (7, 5)', 'success');
+			}
+			catch (error) {
+				log(`Piece rendering failed: ${error.message}`, 'error');
+				console.error(error);
+			}
+		});
+
+		// Test special balls
+		document.getElementById('testSpecialBalls').addEventListener('click', () => {
+			try {
+				log('Testing special ball rendering...', 'info');
+				
+				grid.clear();
+				
+				// Add exploding ball
+				grid.setBallAt(5, 5, new Ball(BALL_TYPES.EXPLODING, '#FF0000'));
+				
+				// Add painter balls
+				grid.setBallAt(5, 7, new Ball(BALL_TYPES.PAINTER_HORIZONTAL, '#00FF00'));
+				grid.setBallAt(5, 9, new Ball(BALL_TYPES.PAINTER_VERTICAL, '#0000FF'));
+				grid.setBallAt(5, 11, new Ball(BALL_TYPES.PAINTER_DIAGONAL, '#FFFF00'));
+				
+				// Add blocking ball
+				grid.setBallAt(5, 13, new Ball(BALL_TYPES.BLOCKING, '#888888'));
+				
+				renderer.renderGrid(grid);
+				log('Special balls rendered (Exploding, Painters, Blocking)', 'success');
+			}
+			catch (error) {
+				log(`Special ball rendering failed: ${error.message}`, 'error');
+				console.error(error);
+			}
+		});
+
+		// Test rotation
+		let testPiece = null;
+		document.getElementById('testRotation').addEventListener('click', () => {
+			try {
+				log('Testing rotation...', 'info');
+				
+				if (!testPiece) {
+					// Create an L-piece
+					const shape = [
+						[1, 0],
+						[1, 0],
+						[1, 1]
+					];
+					const balls = [
+						new Ball(BALL_TYPES.NORMAL, '#FF00FF'),
+						new Ball(BALL_TYPES.NORMAL, '#FF00FF'),
+						new Ball(BALL_TYPES.NORMAL, '#FF00FF'),
+						new Ball(BALL_TYPES.NORMAL, '#FF00FF')
+					];
+					testPiece = new Piece('L', shape, balls);
+					testPiece.position = { x: 7, y: 10 };
+				}
+				
+				testPiece.rotate();
+				
+				grid.clear();
+				renderer.renderGrid(grid);
+				renderer.renderPiece(testPiece);
+				log('Piece rotated', 'success');
+			}
+			catch (error) {
+				log(`Rotation failed: ${error.message}`, 'error');
+				console.error(error);
+			}
+		});
+
+		// Clear canvas
+		document.getElementById('clearCanvas').addEventListener('click', () => {
+			try {
+				grid.clear();
+				renderer.renderGrid(grid);
+				testPiece = null;
+				log('Canvas cleared', 'success');
+			}
+			catch (error) {
+				log(`Clear failed: ${error.message}`, 'error');
+			}
+		});
+
+		// Initialize on load
+		initialize();
+	</script>
+</body>
+</html>

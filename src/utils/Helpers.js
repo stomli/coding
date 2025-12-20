@@ -166,7 +166,7 @@ function formatNumber(num) {
 }
 
 /**
- * Format time in seconds to MM:SS.S format
+ * Format time in seconds to M:SS.S or S.S format
  * @param {Number} seconds - Time in seconds
  * @returns {String} Formatted time string
  */
@@ -185,10 +185,15 @@ function formatTime(seconds) {
 	const secs = Math.floor(seconds % 60);
 	const tenths = Math.floor((seconds % 1) * 10);
 	
-	const minutesStr = minutes.toString().padStart(2, '0');
-	const secsStr = secs.toString().padStart(2, '0');
-	
-	return `${minutesStr}:${secsStr}.${tenths}`;
+	// If less than 60 seconds, show S.S format
+	if (minutes === 0) {
+		return `${secs}.${tenths}`;
+	}
+	else {
+		// Show M:SS.S format
+		const secsStr = secs.toString().padStart(2, '0');
+		return `${minutes}:${secsStr}.${tenths}`;
+	}
 }
 
 export {

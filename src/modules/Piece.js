@@ -8,7 +8,7 @@
  * Exports: Piece class
  */
 
-import { Ball } from './Ball.js';
+import Ball from './Ball.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
 import { deepClone } from '../utils/Helpers.js';
@@ -21,24 +21,37 @@ class Piece {
 	/**
 	 * Create a new piece
 	 * @param {String} shapeType - Piece shape type from CONSTANTS.PIECE_TYPES
-	 * @param {Array<Ball>} balls - Array of Ball objects
+	 * @param {Array<Array<Number>>|Array<Ball>} shapeOrBalls - Shape matrix or Ball array
+	 * @param {Array<Ball>} [balls] - Array of Ball objects (if first param is shape)
 	 */
-	constructor(shapeType, balls) {
+	constructor(shapeType, shapeOrBalls, balls) {
 		this.shapeType = shapeType;
-		this.balls = balls;
 		this.position = { x: 0, y: 0 };
 		
-		// Load shape definition from config
-		const shapeDefinition = ConfigManager.get(`pieceShapes.${shapeType}`);
-		const hasShape = shapeDefinition !== null;
+		// Check if second parameter is a shape matrix or ball array
+		const isShapeMatrix = Array.isArray(shapeOrBalls) && Array.isArray(shapeOrBalls[0]);
 		
-		// Initialize shape matrix
-		if (hasShape) {
-			this.shape = deepClone(shapeDefinition);
+		if (isShapeMatrix && balls) {
+			// Old signature: (type, shape, balls)
+			this.shape = deepClone(shapeOrBalls);
+			this.balls = balls;
 		}
 		else {
-			console.error(`Piece: Shape type ${shapeType} not found in config`);
-			this.shape = [[1]];
+			// New signature: (type, balls)
+			this.balls = shapeOrBalls;
+			
+			// Load shape definition from config
+			const shapeDefinition = ConfigManager.get(`pieceShapes.${shapeType}`);
+			const hasShape = shapeDefinition !== null;
+			
+			// Initialize shape matrix
+			if (hasShape) {
+				this.shape = deepClone(shapeDefinition);
+			}
+			else {
+				console.error(`Piece: Shape type ${shapeType} not found in config`);
+				this.shape = [[1]];
+			}
 		}
 	}
 	
@@ -73,6 +86,14 @@ class Piece {
 	 */
 	getShape() {
 		return this.shape;
+	}
+	
+	/**
+	 * Get the piece type
+	 * @returns {String} Shape type identifier
+	 */
+	getType() {
+		return this.shapeType;
 	}
 	
 	/**
@@ -203,7 +224,7 @@ class Piece {
 	
 	/**
 	 * Get all occupied positions relative to piece origin
-	 * @returns {Array<Object>} Array of {row, col} positions
+	 * @returns {Array<Object>} Array of {x, y} positions (x=col, y=row)
 	 */
 	getOccupiedPositions() {
 		const positions = [];
@@ -214,7 +235,10 @@ class Piece {
 				
 				// Add position if occupied
 				if (hasBall) {
-					positions.push({ row, col });
+					positions.push({ 
+						x: this.position.x + col, 
+						y: this.position.y + row 
+					});
 				}
 				else {
 					// Empty position, skip
@@ -227,4 +251,4 @@ class Piece {
 	
 }
 
-export { Piece };
+export default Piece;

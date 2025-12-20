@@ -39,7 +39,7 @@ class ConfigManagerClass {
 		}
 		
 		try {
-			const response = await fetch('../config.json');
+			const response = await fetch('/config.json');
 			const isSuccess = response.ok;
 			
 			// Parse JSON if successful
@@ -100,4 +100,5 @@ class ConfigManagerClass {
 // Create singleton instance
 const ConfigManager = new ConfigManagerClass();
 
+export default ConfigManager;
 export { ConfigManager };

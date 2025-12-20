@@ -80,12 +80,13 @@ class Ball {
 	 */
 	isSpecial() {
 		const isExploding = this.type === CONSTANTS.BALL_TYPES.EXPLODING;
-		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_H;
-		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_V;
-		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_D;
+		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
+		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
+		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
+		const isBlocking = this.type === CONSTANTS.BALL_TYPES.BLOCKING;
 		
 		// Check if any special type
-		if (isExploding || isPainterH || isPainterV || isPainterD) {
+		if (isExploding || isPainterH || isPainterV || isPainterD || isBlocking) {
 			return true;
 		}
 		else {
@@ -114,9 +115,9 @@ class Ball {
 	 * @returns {Boolean} True if any painter type
 	 */
 	isPainter() {
-		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_H;
-		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_V;
-		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_D;
+		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
+		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
+		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
 		
 		// Check if any painter type
 		if (isPainterH || isPainterV || isPainterD) {
@@ -129,22 +130,22 @@ class Ball {
 	
 	/**
 	 * Get the painter direction if this is a painter ball
-	 * @returns {String|null} 'H', 'V', 'D', or null if not a painter
+	 * @returns {String|null} 'horizontal', 'vertical', 'diagonal', or null if not a painter
 	 */
 	getPainterDirection() {
-		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_H;
-		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_V;
-		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_D;
+		const isPainterH = this.type === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
+		const isPainterV = this.type === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
+		const isPainterD = this.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
 		
 		// Return appropriate direction
 		if (isPainterH) {
-			return 'H';
+			return 'horizontal';
 		}
 		else if (isPainterV) {
-			return 'V';
+			return 'vertical';
 		}
 		else if (isPainterD) {
-			return 'D';
+			return 'diagonal';
 		}
 		else {
 			return null;
@@ -153,4 +154,4 @@ class Ball {
 	
 }
 
-export { Ball };
+export default Ball;

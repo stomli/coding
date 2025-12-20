@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ball Drop Puzzle - Unit Tests</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			padding: 20px;
+			background-color: #1a1a1a;
+			color: #e0e0e0;
+		}
+		h1 {
+			color: #61dafb;
+		}
+		.test-suite {
+			margin: 20px 0;
+			border: 1px solid #333;
+			border-radius: 4px;
+			background-color: #2a2a2a;
+		}
+		.test-suite-header {
+			padding: 10px 15px;
+			background-color: #333;
+			font-weight: bold;
+			font-size: 1.1em;
+		}
+		.test-case {
+			padding: 8px 15px;
+			border-top: 1px solid #333;
+			display: flex;
+			align-items: center;
+		}
+		.test-case.pass {
+			background-color: rgba(0, 255, 0, 0.05);
+		}
+		.test-case.fail {
+			background-color: rgba(255, 0, 0, 0.05);
+		}
+		.test-icon {
+			margin-right: 10px;
+			font-weight: bold;
+			font-size: 1.2em;
+		}
+		.test-icon.pass {
+			color: #4caf50;
+		}
+		.test-icon.fail {
+			color: #f44336;
+		}
+		.test-name {
+			flex: 1;
+		}
+		.test-error {
+			margin-left: 30px;
+			padding: 10px;
+			background-color: rgba(255, 0, 0, 0.1);
+			border-left: 3px solid #f44336;
+			font-family: monospace;
+			font-size: 0.9em;
+			white-space: pre-wrap;
+		}
+		.summary {
+			margin: 20px 0;
+			padding: 15px;
+			background-color: #2a2a2a;
+			border-radius: 4px;
+			font-size: 1.1em;
+		}
+		.summary.pass {
+			border-left: 5px solid #4caf50;
+		}
+		.summary.fail {
+			border-left: 5px solid #f44336;
+		}
+	</style>
+</head>
+<body>
+	<h1>🧪 Ball Drop Puzzle - Unit Tests</h1>
+	<div id="test-output"></div>
+	<div id="summary"></div>
+
+	<script type="module">
+		import { runAllTests } from './unit/test-suite.js';
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			const output = document.getElementById('test-output');
+			const summary = document.getElementById('summary');
+
+			try {
+				const results = await runAllTests();
+				
+				// Render test results
+				results.suites.forEach(suite => {
+					const suiteDiv = document.createElement('div');
+					suiteDiv.className = 'test-suite';
+					
+					const header = document.createElement('div');
+					header.className = 'test-suite-header';
+					const passCount = suite.tests.filter(t => t.pass).length;
+					header.textContent = `${suite.name} (${passCount}/${suite.tests.length} passed)`;
+					suiteDiv.appendChild(header);
+					
+					suite.tests.forEach(test => {
+						const testDiv = document.createElement('div');
+						testDiv.className = `test-case ${test.pass ? 'pass' : 'fail'}`;
+						
+						const icon = document.createElement('span');
+						icon.className = `test-icon ${test.pass ? 'pass' : 'fail'}`;
+						icon.textContent = test.pass ? '✓' : '✗';
+						testDiv.appendChild(icon);
+						
+						const name = document.createElement('span');
+						name.className = 'test-name';
+						name.textContent = test.name;
+						testDiv.appendChild(name);
+						
+						suiteDiv.appendChild(testDiv);
+						
+						if (!test.pass && test.error) {
+							const error = document.createElement('div');
+							error.className = 'test-error';
+							error.textContent = test.error;
+							suiteDiv.appendChild(error);
+						}
+					});
+					
+					output.appendChild(suiteDiv);
+				});
+				
+				// Render summary
+				const summaryDiv = document.createElement('div');
+				summaryDiv.className = `summary ${results.allPassed ? 'pass' : 'fail'}`;
+				summaryDiv.innerHTML = `
+					<strong>Test Summary:</strong><br>
+					Total: ${results.total} | 
+					Passed: <span style="color: #4caf50">${results.passed}</span> | 
+					Failed: <span style="color: #f44336">${results.failed}</span>
+				`;
+				summary.appendChild(summaryDiv);
+				
+			} catch (error) {
+				output.innerHTML = `<div class="test-error">Failed to run tests: ${error.message}</div>`;
+			}
+		});
+	</script>
+</body>
+</html>

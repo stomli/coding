@@ -8,7 +8,7 @@
  * Exports: Grid class
  */
 
-import { Ball } from './Ball.js';
+import Ball from './Ball.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { isInBounds } from '../utils/Helpers.js';
 
@@ -40,11 +40,18 @@ class Grid {
 	/**
 	 * Check if piece can be placed at given position without collision
 	 * @param {Piece} piece - Piece to check
-	 * @param {Number} x - Column position
-	 * @param {Number} y - Row position
+	 * @param {Number} [x] - Column position (defaults to piece.position.x)
+	 * @param {Number} [y] - Row position (defaults to piece.position.y)
 	 * @returns {Boolean} True if position is valid, false otherwise
 	 */
 	isValidPosition(piece, x, y) {
+		// Use piece position if x,y not provided
+		if (x === undefined || y === undefined) {
+			const pos = piece.getPosition();
+			x = pos.x;
+			y = pos.y;
+		}
+		
 		const shape = piece.getShape();
 		const shapeHeight = shape.length;
 		const shapeWidth = shape[0].length;
@@ -91,11 +98,18 @@ class Grid {
 	/**
 	 * Place piece balls into grid at specified position
 	 * @param {Piece} piece - Piece to place
-	 * @param {Number} x - Column position
-	 * @param {Number} y - Row position
+	 * @param {Number} [x] - Column position (defaults to piece.position.x)
+	 * @param {Number} [y] - Row position (defaults to piece.position.y)
 	 * @returns {void}
 	 */
 	placePiece(piece, x, y) {
+		// Use piece position if x,y not provided
+		if (x === undefined || y === undefined) {
+			const pos = piece.getPosition();
+			x = pos.x;
+			y = pos.y;
+		}
+		
 		const shape = piece.getShape();
 		const balls = piece.getBalls();
 		let ballIndex = 0;
@@ -176,6 +190,37 @@ class Grid {
 	}
 	
 	/**
+	 * Alias for getBall - get ball at position (row, col)
+	 * @param {Number} row - Row index
+	 * @param {Number} col - Column index
+	 * @returns {Ball|null} Ball object or null if empty
+	 */
+	getBallAt(row, col) {
+		return this.getBall(row, col);
+	}
+	
+	/**
+	 * Alias for setBall - set ball at position (row, col)
+	 * @param {Number} row - Row index
+	 * @param {Number} col - Column index
+	 * @param {Ball|null} ball - Ball to place or null to clear
+	 * @returns {void}
+	 */
+	setBallAt(row, col, ball) {
+		this.setBall(row, col, ball);
+	}
+	
+	/**
+	 * Alias for removeBall - remove ball at position (row, col)
+	 * @param {Number} row - Row index
+	 * @param {Number} col - Column index
+	 * @returns {void}
+	 */
+	removeBallAt(row, col) {
+		this.removeBall(row, col);
+	}
+	
+	/**
 	 * Find all color matches in the grid (3+ in a row)
 	 * @returns {Array<Object>} Array of match objects
 	 */
@@ -235,7 +280,7 @@ class Grid {
 							type: CONSTANTS.MATCH_DIRECTIONS.HORIZONTAL,
 							color: currentColor,
 							positions: positions,
-							direction: null
+							direction: 'horizontal'
 						});
 					}
 					else {
@@ -291,7 +336,7 @@ class Grid {
 							type: CONSTANTS.MATCH_DIRECTIONS.VERTICAL,
 							color: currentColor,
 							positions: positions,
-							direction: null
+							direction: 'vertical'
 						});
 					}
 					else {
@@ -428,4 +473,4 @@ class Grid {
 	
 }
 
-export { Grid };
+export default Grid;

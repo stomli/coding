@@ -103,4 +103,5 @@ class EventEmitterClass {
 // Create singleton instance
 const EventEmitter = new EventEmitterClass();
 
+export default EventEmitter;
 export { EventEmitter };
