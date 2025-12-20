@@ -86,14 +86,15 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
 
-        .cell.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a); }
-        .cell.blue { background: radial-gradient(circle at 30% 30%, #4dabf7, #1864ab); }
-        .cell.green { background: radial-gradient(circle at 30% 30%, #51cf66, #2b8a3e); }
-        .cell.yellow { background: radial-gradient(circle at 30% 30%, #ffd43b, #f59f00); }
-        .cell.purple { background: radial-gradient(circle at 30% 30%, #da77f2, #9c36b5); }
-        .cell.orange { background: radial-gradient(circle at 30% 30%, #ff922b, #d9480f); }
-        .cell.cyan { background: radial-gradient(circle at 30% 30%, #22d3ee, #0891b2); }
-        .cell.pink { background: radial-gradient(circle at 30% 30%, #ff6ec7, #d6336c); }
+        /* Shared color classes for both game cells and preview cells */
+        .cell.red, .preview-cell.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a); }
+        .cell.blue, .preview-cell.blue { background: radial-gradient(circle at 30% 30%, #4dabf7, #1864ab); }
+        .cell.green, .preview-cell.green { background: radial-gradient(circle at 30% 30%, #51cf66, #2b8a3e); }
+        .cell.yellow, .preview-cell.yellow { background: radial-gradient(circle at 30% 30%, #ffd43b, #f59f00); }
+        .cell.purple, .preview-cell.purple { background: radial-gradient(circle at 30% 30%, #da77f2, #9c36b5); }
+        .cell.orange, .preview-cell.orange { background: radial-gradient(circle at 30% 30%, #ff922b, #d9480f); }
+        .cell.cyan, .preview-cell.cyan { background: radial-gradient(circle at 30% 30%, #22d3ee, #0891b2); }
+        .cell.pink, .preview-cell.pink { background: radial-gradient(circle at 30% 30%, #ff6ec7, #d6336c); }
 
         .side-panel {
             display: flex;
@@ -132,15 +133,6 @@
         .preview-cell.filled {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3);
         }
-
-        .preview-cell.red { background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a); }
-        .preview-cell.blue { background: radial-gradient(circle at 30% 30%, #4dabf7, #1864ab); }
-        .preview-cell.green { background: radial-gradient(circle at 30% 30%, #51cf66, #2b8a3e); }
-        .preview-cell.yellow { background: radial-gradient(circle at 30% 30%, #ffd43b, #f59f00); }
-        .preview-cell.purple { background: radial-gradient(circle at 30% 30%, #da77f2, #9c36b5); }
-        .preview-cell.orange { background: radial-gradient(circle at 30% 30%, #ff922b, #d9480f); }
-        .preview-cell.cyan { background: radial-gradient(circle at 30% 30%, #22d3ee, #0891b2); }
-        .preview-cell.pink { background: radial-gradient(circle at 30% 30%, #ff6ec7, #d6336c); }
 
         .controls {
             background: white;
