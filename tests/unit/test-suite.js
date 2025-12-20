@@ -17,6 +17,8 @@ import testFloatingText from './test-floating-text.js';
 import testGameEngine from './test-game-engine.js';
 import testSpecialBalls from './test-special-balls.js';
 import { runLevelManagerTests } from './test-level-manager.js';
+import { runAnimationManagerTests } from './test-animation-manager.js';
+import { runParticleSystemTests } from './test-particle-system.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -68,6 +70,30 @@ export async function runAllTests() {
 		levelManagerTests.push({ name: `Test ${levelManagerResults.passed + i + 1}`, pass: false });
 	}
 	suites.push({ name: 'LevelManager', tests: levelManagerTests });
+	
+	// Run AnimationManager tests
+	console.log('\n');
+	const animationManagerResults = runAnimationManagerTests();
+	const animationManagerTests = [];
+	for (let i = 0; i < animationManagerResults.passed; i++) {
+		animationManagerTests.push({ name: `Test ${i+1}`, pass: true });
+	}
+	for (let i = 0; i < animationManagerResults.failed; i++) {
+		animationManagerTests.push({ name: `Test ${animationManagerResults.passed + i + 1}`, pass: false });
+	}
+	suites.push({ name: 'AnimationManager', tests: animationManagerTests });
+	
+	// Run ParticleSystem tests
+	console.log('\n');
+	const particleSystemResults = runParticleSystemTests();
+	const particleSystemTests = [];
+	for (let i = 0; i < particleSystemResults.passed; i++) {
+		particleSystemTests.push({ name: `Test ${i+1}`, pass: true });
+	}
+	for (let i = 0; i < particleSystemResults.failed; i++) {
+		particleSystemTests.push({ name: `Test ${particleSystemResults.passed + i + 1}`, pass: false });
+	}
+	suites.push({ name: 'ParticleSystem', tests: particleSystemTests });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

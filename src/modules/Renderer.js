@@ -11,6 +11,7 @@
 import { ConfigManager } from './ConfigManager.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { iterateShapeCells } from '../utils/Helpers.js';
+import AnimationManager from './AnimationManager.js';
 
 /**
  * Renderer class for drawing game elements to canvas
@@ -346,22 +347,149 @@ class Renderer {
 			} else {
 				ctx.lineTo(px, py);
 			}
+	}
+	
+	ctx.closePath();
+	ctx.stroke();
+}
+
+/**
+ * Render all active animations
+ * @returns {void}
+ */
+renderAnimations() {
+	const animations = AnimationManager.getActiveAnimations();
+	
+	for (const anim of animations) {
+		switch (anim.type) {
+			case 'clearBalls':
+				this._renderClearAnimation(anim);
+				break;
+			case 'explosion':
+				this._renderExplosionAnimation(anim);
+				break;
+			case 'pieceDrop':
+				this._renderPieceDropAnimation(anim);
+				break;
+			case 'levelComplete':
+				this._renderLevelCompleteAnimation(anim);
+				break;
 		}
+	}
+}
+
+/**
+ * Render ball clearing animation
+ * @private
+ */
+_renderClearAnimation(anim) {
+	const alpha = 1 - anim.progress;
+	const scale = 1 + (anim.progress * 0.5); // Grow by 50%
+	
+	this.ctx.save();
+	this.ctx.globalAlpha = alpha;
+	
+	for (const pos of anim.positions) {
+		const x = pos.col * this.cellSize + this.offsetX;
+		const y = pos.row * this.cellSize + this.offsetY;
+		const radius = (this.cellSize / 2 - 2) * scale;
 		
-		ctx.closePath();
-		ctx.stroke();
+		// Draw expanding, fading circle
+		this.ctx.beginPath();
+		this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+		this.ctx.fillStyle = '#ffffff';
+		this.ctx.fill();
+		
+		// Glow effect
+		this.ctx.shadowBlur = 20 * anim.progress;
+		this.ctx.shadowColor = '#00ff88';
 	}
 	
-	/**
-	 * Render animation (placeholder for Phase 3)
-	 * @param {String} animationType - Type of animation
-	 * @param {Object} data - Animation data
-	 * @returns {void}
-	 */
-	renderAnimation(animationType, data) {
-		// TODO: Implement animations in Phase 3
+	this.ctx.restore();
+}
+
+/**
+ * Render explosion animation
+ * @private
+ */
+_renderExplosionAnimation(anim) {
+	const eased = AnimationManager.easeOutCubic(anim.progress);
+	const maxRadius = anim.radius * this.cellSize;
+	const currentRadius = maxRadius * eased;
+	const alpha = 1 - anim.progress;
+	
+	const x = anim.col * this.cellSize + this.offsetX;
+	const y = anim.row * this.cellSize + this.offsetY;
+	
+	this.ctx.save();
+	this.ctx.globalAlpha = alpha;
+	
+	// Outer ring
+	this.ctx.beginPath();
+	this.ctx.arc(x, y, currentRadius, 0, Math.PI * 2);
+	this.ctx.strokeStyle = '#FFD700';
+	this.ctx.lineWidth = 3;
+	this.ctx.stroke();
+	
+	// Inner glow
+	const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, currentRadius);
+	gradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
+	gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+	this.ctx.fillStyle = gradient;
+	this.ctx.fill();
+	
+	this.ctx.restore();
+}
+
+/**
+ * Render piece drop animation
+ * @private
+ */
+_renderPieceDropAnimation(anim) {
+	const eased = AnimationManager.easeOutCubic(anim.progress);
+	const currentY = anim.fromY + (anim.toY - anim.fromY) * eased;
+	
+	// This would render the piece at the interpolated position
+	// For now, we'll handle this differently in GameEngine
+}
+
+/**
+ * Render level complete celebration animation
+ * @private
+ */
+_renderLevelCompleteAnimation(anim) {
+	// Draw particles or flashes across the screen
+	const numParticles = 20;
+	
+	this.ctx.save();
+	
+	for (let i = 0; i < numParticles; i++) {
+		const x = (this.canvas.width / numParticles) * i;
+		const offset = Math.sin(anim.progress * Math.PI * 2 + i) * 50;
+		const y = this.canvas.height / 2 + offset;
+		const alpha = Math.sin(anim.progress * Math.PI);
+		
+		this.ctx.globalAlpha = alpha;
+		this.ctx.fillStyle = i % 2 === 0 ? '#00ff88' : '#00ccff';
+		this.ctx.beginPath();
+		this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+		this.ctx.fill();
 	}
 	
+	this.ctx.restore();
+}
+
+/**
+ * Render animation (for backward compatibility)
+ * @param {String} animationType - Type of animation
+ * @param {Object} data - Animation data
+ * @returns {void}
+ */
+renderAnimation(animationType, data) {
+	// Use AnimationManager instead
+	this.renderAnimations();
+}
+
 }
 
 export default Renderer;

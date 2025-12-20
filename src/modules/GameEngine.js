@@ -22,6 +22,8 @@ import { ScoreManager } from './ScoreManager.js';
 import { FloatingTextManager } from './FloatingText.js';
 import { DebugMode } from '../utils/DebugMode.js';
 import LevelManager from './LevelManager.js';
+import AnimationManager from './AnimationManager.js';
+import ParticleSystem from './ParticleSystem.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -443,6 +445,12 @@ class GameEngineClass {
 			this.floatingTextManager.update();
 			this.floatingTextManager.render(this.renderer.ctx);
 			
+			// Render animations
+			this.renderer.renderAnimations();
+			
+			// Render particles
+			ParticleSystem.render(this.renderer.ctx);
+			
 			// Update HUD elements
 			this._updateHUD();
 		}
@@ -671,11 +679,21 @@ class GameEngineClass {
 				await DebugMode.waitForStep();
 			}
 			
-			// Process special balls FIRST (priority order)
-			// 1. Process explosions
-			const explodedPositions = this.grid.processExplosions(matches);
+		// Process special balls FIRST (priority order)
+		// 1. Process explosions
+		const explodedPositions = this.grid.processExplosions(matches);
+		
+		// Create explosion particles and animations
+		for (const pos of explodedPositions) {
+			const screenX = pos.col * this.renderer.cellSize + this.renderer.offsetX;
+			const screenY = pos.row * this.renderer.cellSize + this.renderer.offsetY;
 			
-			// 2. Process painters (paint lines before clearing)
+			// Create explosion particles (golden/orange burst)
+			ParticleSystem.createExplosion(screenX, screenY, '#FFD700', 30);
+			
+			// Trigger explosion animation
+			AnimationManager.animateExplosion(pos.row, pos.col, 3, null);
+		}			// 2. Process painters (paint lines before clearing)
 			const paintedPositions = this.grid.processPainters(matches);
 			
 			// 3. Clear matched balls (standard matches)
@@ -791,7 +809,21 @@ class GameEngineClass {
 			
 			// Add floating text
 			this.floatingTextManager.add(`+${points}`, screenX, screenY, 1500);
+			
+			// Create particle burst for each ball
+			for (const pos of group.positions) {
+				const x = pos.col * this.renderer.cellSize + this.renderer.offsetX;
+				const y = pos.row * this.renderer.cellSize + this.renderer.offsetY;
+				ParticleSystem.createBurst(x, y, [group.color, '#ffffff', '#00ff88']);
+			}
 		}
+		
+		// Animate clearing
+		const positions = Array.from(positionsToClear).map(posStr => {
+			const [row, col] = posStr.split(',').map(Number);
+			return { row, col };
+		});
+		AnimationManager.animateClearBalls(positions, null);
 		
 		// Remove balls from grid
 		for (const posStr of positionsToClear) {
@@ -863,6 +895,10 @@ class GameEngineClass {
 		const currentTime = performance.now();
 		const deltaTime = currentTime - this.lastUpdateTime;
 		this.lastUpdateTime = currentTime;
+		
+		// Update animations and particles
+		AnimationManager.update(currentTime);
+		ParticleSystem.update(deltaTime);
 		
 		// Update game state
 		this.update(deltaTime);
@@ -966,12 +1002,23 @@ class GameEngineClass {
 		const timeSurvived = LevelManager.levelTimer;
 		LevelManager.stopTimer();
 		
-		// Complete level in LevelManager (unlocks next level if timeout)
-		if (reason === 'timeout') {
-			LevelManager.completeLevel();
-		}
+	// Complete level in LevelManager (unlocks next level if timeout)
+	if (reason === 'timeout') {
+		LevelManager.completeLevel();
 		
-		// Cancel animation frame
+		// Celebrate with confetti particles!
+		if (this.renderer && this.renderer.canvas) {
+			const centerX = this.renderer.canvas.width / 2;
+			const centerY = this.renderer.canvas.height / 2;
+			
+			// Create multiple confetti bursts
+			for (let i = 0; i < 5; i++) {
+				setTimeout(() => {
+					ParticleSystem.createConfetti(centerX, centerY, 40);
+				}, i * 100);
+			}
+		}
+	}		// Cancel animation frame
 		if (this.animationFrameId) {
 			cancelAnimationFrame(this.animationFrameId);
 			this.animationFrameId = null;
