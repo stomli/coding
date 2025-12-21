@@ -12,6 +12,7 @@ import { DebugMode } from './utils/DebugMode.js';
 import LevelManager from './modules/LevelManager.js';
 import AudioManager from './modules/AudioManager.js';
 import ParticleSystem from './modules/ParticleSystem.js';
+import WeatherBackground from './modules/WeatherBackground.js';
 
 /**
  * Initialize the game when the DOM is ready
@@ -20,6 +21,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	try {
 		// Initialize the game engine
 		await GameEngine.initialize();
+		
+		// Initialize weather background
+		WeatherBackground.initialize();
 		
 		// Initialize particle overlay canvas
 		ParticleSystem.initializeOverlay();

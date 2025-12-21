@@ -306,6 +306,28 @@ class DebugModeClass {
 			Step Mode: ${stepText}
 		</button><br>`;
 		
+		// Weather control dropdown
+		info += `<div style="margin: 10px 0;">
+			<label style="display: block; margin-bottom: 5px;">🌤️ Weather Override:</label>
+			<select id="debugWeatherSelect" onchange="window.debugModeSetWeather(this.value)" 
+				style="width: 100%; padding: 8px; background: #2a2a3e; color: #00ff88; 
+				border: 1px solid #00ff88; border-radius: 5px; cursor: pointer; font-size: 11px;">
+				<option value="">Auto (Real Weather)</option>
+				<option value="clear-day">☀️ Clear Day</option>
+				<option value="clear-night">🌙 Clear Night</option>
+				<option value="cloudy-day">☁️ Cloudy Day</option>
+				<option value="cloudy-night">☁️ Cloudy Night</option>
+				<option value="rainy-day">🌧️ Rainy Day</option>
+				<option value="rainy-night">🌧️ Rainy Night</option>
+				<option value="snowy-day">❄️ Snowy Day</option>
+				<option value="snowy-night">❄️ Snowy Night</option>
+				<option value="stormy-day">⛈️ Stormy Day</option>
+				<option value="stormy-night">⛈️ Stormy Night</option>
+				<option value="foggy-day">🌫️ Foggy Day</option>
+				<option value="foggy-night">🌫️ Foggy Night</option>
+			</select>
+		</div>`;
+		
 		// Step counter (shown when step mode is active)
 		if (this.stepMode) {
 			info += `<div id="debugStepCounterOverlay" style="text-align: center; padding: 5px; 
@@ -982,6 +1004,58 @@ class DebugModeClass {
 			paletteCounter.textContent = stepText;
 		}
 	}
+	
+	/**
+	 * Set weather override for testing
+	 * @param {String} weatherOverride - Weather condition string (e.g., "clear-day", "rainy-night")
+	 */
+	setWeather(weatherOverride) {
+		console.log('🔧 Debug: Setting weather to', weatherOverride || 'auto');
+		
+		// Import WeatherBackground dynamically to avoid circular dependency
+		import('../modules/WeatherBackground.js').then(module => {
+			const WeatherBackground = module.default;
+			
+			if (!weatherOverride) {
+				// Reset to auto - fetch real weather
+				WeatherBackground.updateWeather();
+			} else {
+				// Parse the override string (e.g., "clear-day" -> condition: "clear", isDay: true)
+				const parts = weatherOverride.split('-');
+				const condition = parts[0];
+				const isDay = parts[1] === 'day';
+				
+				// Create fake weather data
+				WeatherBackground.currentWeather = {
+					temperature: 20,
+					weatherCode: this._getWeatherCode(condition),
+					isDay: isDay,
+					cloudCover: condition === 'cloudy' ? 75 : 20,
+					location: 'Debug Mode',
+					timestamp: new Date()
+				};
+				
+				// Apply the weather
+				WeatherBackground.applyWeatherBackground();
+			}
+		});
+	}
+	
+	/**
+	 * Get weather code from condition name
+	 * @private
+	 */
+	_getWeatherCode(condition) {
+		const codes = {
+			'clear': 0,
+			'cloudy': 3,
+			'rainy': 61,
+			'snowy': 71,
+			'stormy': 95,
+			'foggy': 45
+		};
+		return codes[condition] || 0;
+	}
 }
 
 // Export singleton instance
@@ -997,6 +1071,7 @@ if (typeof window !== 'undefined') {
 	window.debugModeToggleStepMode = () => DebugMode.toggleStepMode();
 	window.debugModeNextStep = () => DebugMode.nextStep();
 	window.debugModeContinueSteps = () => DebugMode.continueSteps();
+	window.debugModeSetWeather = (weatherOverride) => DebugMode.setWeather(weatherOverride);
 }
 
 export default DebugMode;
