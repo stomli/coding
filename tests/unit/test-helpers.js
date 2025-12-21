@@ -249,8 +249,9 @@ export function testHelpers() {
 	tests.push({
 		name: 'deepClone - handles nested arrays',
 		pass: (() => {
-			const nested = deepClone([[1, 2], [3, 4]]);
-			return nested[0][0] === 1 && nested[1][1] === 4 && nested !== [[1,2],[3,4]];
+			const original = [[1, 2], [3, 4]];
+			const nested = deepClone(original);
+			return nested[0][0] === 1 && nested[1][1] === 4 && nested !== original && nested[0] !== original[0];
 		})(),
 		error: null
 	});

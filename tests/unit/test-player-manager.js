@@ -51,6 +51,8 @@ export function runPlayerManagerTests() {
 	function beforeTests() {
 		// Clear localStorage for clean test environment
 		localStorage.clear();
+		// Force PlayerManager to reload with clean state
+		PlayerManager.loadPlayers();
 	}
 	
 	function afterTests() {
@@ -60,6 +62,10 @@ export function runPlayerManagerTests() {
 	
 	// Test: PlayerManager initializes with Guest player
 	test('PlayerManager initializes with Guest player', () => {
+		// Reset to clean state
+		localStorage.clear();
+		PlayerManager.loadPlayers();
+		
 		const players = PlayerManager.getPlayerNames();
 		assertArrayContains(players, 'Guest', 'Should have Guest player');
 		assertEquals(PlayerManager.getCurrentPlayerName(), 'Guest', 'Current player should be Guest');
