@@ -44,7 +44,6 @@ class AudioManagerClass {
 			const AudioContext = window.AudioContext || window.webkitAudioContext;
 			this.audioContext = new AudioContext();
 			this.isInitialized = true;
-			console.log('AudioManager: Initialized');
 		} catch (error) {
 			console.error('AudioManager: Failed to initialize Web Audio API', error);
 		}
@@ -55,7 +54,6 @@ class AudioManagerClass {
 	 */
 	async resume() {
 		if (this.audioContext) {
-			console.log('AudioManager: resume called, state =', this.audioContext.state);
 			if (this.audioContext.state === 'suspended') {
 				await this.audioContext.resume();
 				console.log('AudioManager: resumed, new state =', this.audioContext.state);
@@ -615,9 +613,7 @@ class AudioManagerClass {
 		// Try to resume context if suspended
 		if (this.audioContext && this.audioContext.state === 'suspended') {
 			try {
-				console.log('AudioManager: Resuming suspended audio context...');
 				await this.audioContext.resume();
-				console.log('AudioManager: Audio context resumed, state =', this.audioContext.state);
 			} catch (error) {
 				console.warn('AudioManager: Could not resume audio context', error);
 			}
@@ -672,10 +668,6 @@ class AudioManagerClass {
 	 * @private
 	 */
 	_playMusicLoop() {
-		console.log('AudioManager: _playMusicLoop called', {
-			musicPlaying: this.musicPlaying,
-			canPlaySound: this.canPlaySound()
-		});
 		
 		if (!this.musicPlaying || !this.canPlaySound()) return;
 		
@@ -683,8 +675,6 @@ class AudioManagerClass {
 		const tempo = 150; // BPM - even faster for rock energy
 		const beatDuration = 60 / tempo;
 		const measureDuration = beatDuration * 4;
-		
-		console.log('AudioManager: Starting music loop at', now, 'with volume', this.masterVolume * this.musicVolume);
 		
 		// Track loop count for variation
 		if (!this.musicLoopCount) this.musicLoopCount = 0;

@@ -140,6 +140,16 @@ class GameEngineClass {
 		
 		// Restart
 		EventEmitter.on(CONSTANTS.EVENTS.RESTART, () => this.restart());
+		
+		// Cascade complete - show bonus floating text
+		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, (data) => {
+			if (data.cascadeCount > 1) {
+				// Show cascade bonus in center of grid in blue
+				const centerX = this.renderer.offsetX + (this.grid.cols * this.renderer.cellSize) / 2;
+				const centerY = this.renderer.offsetY + (this.grid.rows * this.renderer.cellSize) / 2;
+				this.floatingTextManager.add(`${data.cascadeCount}x CASCADE!`, centerX, centerY, 2000, '#4080FF');
+			}
+		});
 	}
 	
 	/**
@@ -729,6 +739,14 @@ class GameEngineClass {
 		// 1. Process explosions
 		const explodedPositions = this.grid.processExplosions(matches);
 		
+		// Emit BALLS_CLEARED event for exploded balls
+		if (explodedPositions.length > 0) {
+			EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { 
+				count: explodedPositions.length,
+				matches: 0 // Explosions don't count as matches
+			});
+		}
+		
 		// Count explosions as scoring events
 		if (explodedPositions.length > 0) {
 			totalScoringEvents += explodedPositions.length;
@@ -739,21 +757,45 @@ class GameEngineClass {
 			AudioManager.playExplosion();
 		}
 		
-		// Create explosion particles and animations
-		for (const pos of explodedPositions) {
-			const screenX = pos.col * this.renderer.cellSize + this.renderer.offsetX;
-			const screenY = pos.row * this.renderer.cellSize + this.renderer.offsetY;
+		// Create explosion particles, animations, and floating text
+		if (explodedPositions.length > 0) {
+			// Calculate center of all exploded positions
+			let totalRow = 0;
+			let totalCol = 0;
+			for (const pos of explodedPositions) {
+				totalRow += pos.row;
+				totalCol += pos.col;
+				
+				const screenX = pos.col * this.renderer.cellSize + this.renderer.offsetX;
+				const screenY = pos.row * this.renderer.cellSize + this.renderer.offsetY;
+				
+				// Create explosion particles (golden/orange burst)
+				ParticleSystem.createExplosion(screenX, screenY, '#FFD700', 30);
+				
+				// Trigger explosion animation
+				AnimationManager.animateExplosion(pos.row, pos.col, 3, null);
+			}
 			
-			// Create explosion particles (golden/orange burst)
-			ParticleSystem.createExplosion(screenX, screenY, '#FFD700', 30);
-			
-			// Trigger explosion animation
-			AnimationManager.animateExplosion(pos.row, pos.col, 3, null);
-		}			// 2. Process painters (paint lines before clearing)
-			const paintedPositions = this.grid.processPainters(matches);
-			
-			// 3. Clear matched balls (standard matches)
-			await this._clearMatches(matches, clearDelay);
+			// Show floating text with count of exploded balls at center
+			const centerRow = totalRow / explodedPositions.length;
+			const centerCol = totalCol / explodedPositions.length;
+			const centerX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
+			const centerY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
+			this.floatingTextManager.add(`${explodedPositions.length}`, centerX, centerY, 1500, '#FFD700');
+		}
+		
+		// 2. Process painters (paint lines before clearing)
+		const paintedPositions = this.grid.processPainters(matches);
+		
+		// 3. Re-find matches after painting to include newly painted lines
+		let matchesToClear = matches;
+		if (paintedPositions.length > 0) {
+			// Find all matches again after painting
+			matchesToClear = this.grid.findMatches();
+		}
+		
+		// 4. Clear matched balls (original matches + any new matches from painting)
+		await this._clearMatches(matchesToClear, clearDelay);
 			
 			// Count matches as scoring events
 			totalScoringEvents += matches.length;
@@ -860,32 +902,33 @@ class GameEngineClass {
 		
 		// Add floating text for each match group
 		for (const group of matchGroups) {
-			const ballCount = group.positions.length;
-			const points = Math.floor(ballCount * basePoints * difficultyMultiplier);
-			
-			// Calculate center position of match
-			let centerRow = 0;
-			let centerCol = 0;
-			for (const pos of group.positions) {
-				centerRow += pos.row;
-				centerCol += pos.col;
-			}
-			centerRow /= group.positions.length;
-			centerCol /= group.positions.length;
-			
-			// Convert grid position to screen position
-			const screenX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
-			const screenY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
-			
-			// Add floating text
-			this.floatingTextManager.add(`+${points}`, screenX, screenY, 1500);
-			
 			// Create particle burst for each ball
 			for (const pos of group.positions) {
 				const x = pos.col * this.renderer.cellSize + this.renderer.offsetX;
 				const y = pos.row * this.renderer.cellSize + this.renderer.offsetY;
 				ParticleSystem.createBurst(x, y, [group.color, '#ffffff', '#00ff88']);
 			}
+		}
+		
+		// Show single floating text with total ball count at center of all cleared positions
+		if (positionsToClear.size > 0) {
+			// Calculate center position of all cleared balls
+			let totalRow = 0;
+			let totalCol = 0;
+			for (const posStr of positionsToClear) {
+				const [row, col] = posStr.split(',').map(Number);
+				totalRow += row;
+				totalCol += col;
+			}
+			const centerRow = totalRow / positionsToClear.size;
+			const centerCol = totalCol / positionsToClear.size;
+			
+			// Convert grid position to screen position
+			const screenX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
+			const screenY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
+			
+			// Add floating text showing ball count
+			this.floatingTextManager.add(`${positionsToClear.size}`, screenX, screenY, 1500);
 		}
 		
 		// Animate clearing

@@ -130,7 +130,7 @@ class StatisticsTrackerClass {
 			html += '<tr>';
 			html += `<td class="stats-type-cell" title="${typeData.name}">${typeData.symbol}</td>`;
 			colors.forEach(color => {
-				const count = this.stats[typeData.type][color] || 0;
+				const count = this.stats[typeData.type]?.[color] || 0;
 				const cellClass = count > 0 ? 'stat-value has-matches' : 'stat-value';
 				html += `<td class="${cellClass}" id="stat-${typeData.type}-${color.replace('#', '')}">${count}</td>`;
 			});

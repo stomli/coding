@@ -72,13 +72,29 @@ class ScoreManagerClass {
 		// Store data for cascade scoring
 		if (!this.currentCascadeData) {
 			this.currentCascadeData = {
-				totalBalls: 0,
-				cascadeLevel: 0
+				ballsPerLevel: [] // Track balls cleared at each cascade level
 			};
 		}
 		
-		this.currentCascadeData.totalBalls += data.count;
-		this.currentCascadeData.cascadeLevel++;
+		// Add balls to current cascade level (sum all BALLS_CLEARED in this iteration)
+		const currentLevel = this.currentCascadeData.ballsPerLevel.length;
+		if (!this.currentCascadeData.ballsPerLevel[currentLevel]) {
+			this.currentCascadeData.ballsPerLevel[currentLevel] = 0;
+		}
+		this.currentCascadeData.ballsPerLevel[currentLevel] += data.count;
+		
+		console.log(`⚽ BALLS_CLEARED: ${data.count} balls, level ${currentLevel} now has ${this.currentCascadeData.ballsPerLevel[currentLevel]} balls`);
+	}
+	
+	/**
+	 * Signal start of new cascade level (called between cascade iterations)
+	 * This should be called when gravity completes and we're about to check for new matches
+	 */
+	_onCascadeLevelComplete() {
+		if (this.currentCascadeData) {
+			// Just a marker - next BALLS_CLEARED will start a new level
+			console.log(`📊 Cascade level ${this.currentCascadeData.ballsPerLevel.length} complete`);
+		}
 	}
 	
 	/**
@@ -91,10 +107,13 @@ class ScoreManagerClass {
 			return;
 		}
 		
-		// Calculate score for this cascade sequence
+		// Use cascade count from GameEngine (actual cascade iterations)
+		const cascadeCount = data.cascadeCount;
+		
+		// Calculate score using progressive multipliers per level
 		const points = this._calculateCascadeScore(
-			this.currentCascadeData.totalBalls,
-			data.cascadeCount
+			this.currentCascadeData.ballsPerLevel,
+			cascadeCount
 		);
 		
 		this.score += points;
@@ -107,7 +126,7 @@ class ScoreManagerClass {
 			score: this.score,
 			bestScore: bestScore,
 			points: points,
-			cascadeCount: data.cascadeCount
+			cascadeCount: cascadeCount
 		});
 		
 		// Reset cascade data
@@ -116,30 +135,32 @@ class ScoreManagerClass {
 	
 	/**
 	 * Calculate score for a cascade sequence
-	 * @param {Number} ballCount - Total balls cleared
+	 * @param {Array<Number>} ballsPerLevel - Balls cleared at each cascade level
 	 * @param {Number} cascadeCount - Number of cascades
 	 * @returns {Number} Points earned
 	 * @private
 	 */
-	_calculateCascadeScore(ballCount, cascadeCount) {
+	_calculateCascadeScore(ballsPerLevel, cascadeCount) {
 		const basePoints = ConfigManager.get('scoring.basePointsPerBall', 1);
-		const cascadeBase = ConfigManager.get('scoring.cascadeBaseBonus', 3);
-		const cascadeMultiplier = ConfigManager.get('scoring.cascadeBonusMultiplier', 2);
 		const difficultyMultiplier = ConfigManager.get(`scoring.difficultyMultipliers.difficulty${this.difficulty}`, 1.0);
 		
-		// Base score from balls
-		let score = ballCount * basePoints;
+		let score = 0;
+		let breakdown = [];
 		
-		// Cascade bonus: each cascade after first multiplies the bonus
-		if (cascadeCount > 1) {
-			for (let i = 1; i < cascadeCount; i++) {
-				const cascadeBonus = cascadeBase * Math.pow(cascadeMultiplier, i - 1);
-				score += cascadeBonus;
-			}
+		// Each cascade level gets progressively higher multiplier
+		for (let level = 0; level < ballsPerLevel.length; level++) {
+			const balls = ballsPerLevel[level] || 0;
+			const multiplier = (level + 1); // 1x, 2x, 3x, 4x, etc.
+			const levelScore = balls * basePoints * multiplier;
+			score += levelScore;
+			breakdown.push(`L${level + 1}(${balls}×${multiplier}=${levelScore})`);
 		}
 		
 		// Apply difficulty multiplier
 		score = Math.floor(score * difficultyMultiplier);
+		
+		const totalBalls = ballsPerLevel.reduce((sum, b) => sum + b, 0);
+		console.log(`🎯 SCORE CALC: ${totalBalls} balls, ${cascadeCount}x cascade, ${breakdown.join(' + ')}, difficulty=${difficultyMultiplier}x, TOTAL=${score}`);
 		
 		return score;
 	}

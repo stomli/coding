@@ -21,7 +21,6 @@ class WeatherBackgroundClass {
 	 * Initialize weather background system
 	 */
 	async initialize() {
-		console.log('WeatherBackground: Initializing...');
 		
 		// Create background element
 		this.createBackgroundElement();
@@ -72,7 +71,6 @@ class WeatherBackgroundClass {
 	 */
 	async updateWeather() {
 		try {
-			console.log('WeatherBackground: Fetching weather data...');
 			
 			// Use ipapi.co for IP geolocation (free, no API key required)
 			const geoResponse = await fetch('https://ipapi.co/json/');
@@ -83,8 +81,6 @@ class WeatherBackgroundClass {
 				this.applyDefaultBackground();
 				return;
 			}
-
-			console.log(`WeatherBackground: Location detected - ${geoData.city}, ${geoData.region}`);
 
 			// Use Open-Meteo API (free, no API key required)
 			// Request both Celsius and Fahrenheit
@@ -106,7 +102,6 @@ class WeatherBackgroundClass {
 					timestamp: new Date()
 				};
 
-				console.log('WeatherBackground: Weather data received', this.currentWeather);
 				this.applyWeatherBackground();
 				this.lastUpdate = Date.now();
 				
@@ -141,8 +136,6 @@ class WeatherBackgroundClass {
 		
 		// Apply weather effects
 		this.applyWeatherEffects(condition, isDay, cloudCover);
-		
-		console.log(`WeatherBackground: Applied ${isDay ? 'day' : 'night'} ${condition} theme`);
 	}
 	
 	/**

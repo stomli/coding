@@ -12,7 +12,7 @@
  * Represents a single floating text element
  */
 class FloatingText {
-	constructor(text, x, y, duration = 1000) {
+	constructor(text, x, y, duration = 1000, color = '#FFFFFF') {
 		this.text = text;
 		this.startX = x;
 		this.startY = y;
@@ -21,6 +21,7 @@ class FloatingText {
 		this.duration = duration;
 		this.createdAt = Date.now();
 		this.opacity = 1.0;
+		this.color = color;
 	}
 	
 	/**
@@ -59,9 +60,10 @@ class FloatingTextManager {
 	 * @param {Number} x - X position
 	 * @param {Number} y - Y position
 	 * @param {Number} duration - Animation duration in ms
+	 * @param {String} color - Text color (default white)
 	 */
-	add(text, x, y, duration = 1000) {
-		this.texts.push(new FloatingText(text, x, y, duration));
+	add(text, x, y, duration = 1000, color = '#FFFFFF') {
+		this.texts.push(new FloatingText(text, x, y, duration, color));
 	}
 	
 	/**
@@ -81,7 +83,9 @@ class FloatingTextManager {
 			
 			// Set text style
 			ctx.font = 'bold 20px Arial';
-			ctx.fillStyle = `rgba(255, 255, 255, ${text.opacity})`;
+			// Parse color for rgba
+			const rgb = this._hexToRgb(text.color);
+			ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${text.opacity})`;
 			ctx.strokeStyle = `rgba(0, 0, 0, ${text.opacity})`;
 			ctx.lineWidth = 3;
 			ctx.textAlign = 'center';
@@ -100,6 +104,21 @@ class FloatingTextManager {
 	 */
 	clear() {
 		this.texts = [];
+	}
+	
+	/**
+	 * Convert hex color to RGB
+	 * @param {String} hex - Hex color code
+	 * @returns {Object} RGB values
+	 * @private
+	 */
+	_hexToRgb(hex) {
+		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return result ? {
+			r: parseInt(result[1], 16),
+			g: parseInt(result[2], 16),
+			b: parseInt(result[3], 16)
+		} : { r: 255, g: 255, b: 255 };
 	}
 }
 
