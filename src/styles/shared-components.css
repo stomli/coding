@@ -1,0 +1,131 @@
+/* ============================================
+   Shared Component Styles
+   ============================================ */
+
+/* Import Variables */
+@import url('shared-variables.css');
+
+/* ============================================
+   Orb Rendering Styles
+   ============================================ */
+
+/* Base orb classes */
+.orb-red {
+	background: var(--color-orb-red);
+	box-shadow: var(--glow-red), var(--shadow-small);
+}
+
+.orb-blue {
+	background: var(--color-orb-blue);
+	box-shadow: var(--glow-blue), var(--shadow-small);
+}
+
+.orb-green {
+	background: var(--color-orb-green);
+	box-shadow: var(--glow-green), var(--shadow-small);
+}
+
+.orb-yellow {
+	background: var(--color-orb-yellow);
+	box-shadow: var(--glow-yellow), var(--shadow-small);
+}
+
+.orb-orange {
+	background: var(--color-orb-orange);
+	box-shadow: var(--glow-orange), var(--shadow-small);
+}
+
+.orb-purple {
+	background: var(--color-orb-purple);
+	box-shadow: var(--glow-purple), var(--shadow-small);
+}
+
+.orb-gray {
+	background: var(--color-orb-gray);
+	box-shadow: var(--glow-gray), var(--shadow-small);
+}
+
+/* ============================================
+   Glow Animations
+   ============================================ */
+
+@keyframes glow-red {
+	0%, 100% { box-shadow: 0 0 15px var(--color-orb-red), var(--shadow-medium); }
+	50% { box-shadow: var(--glow-red-enhanced), var(--shadow-medium); }
+}
+
+@keyframes glow-blue {
+	0%, 100% { box-shadow: 0 0 15px var(--color-orb-blue), var(--shadow-medium); }
+	50% { box-shadow: var(--glow-blue-enhanced), var(--shadow-medium); }
+}
+
+@keyframes glow-green {
+	0%, 100% { box-shadow: 0 0 15px var(--color-orb-green), var(--shadow-medium); }
+	50% { box-shadow: var(--glow-green-enhanced), var(--shadow-medium); }
+}
+
+@keyframes glow-yellow {
+	0%, 100% { box-shadow: 0 0 15px var(--color-orb-yellow), var(--shadow-medium); }
+	50% { box-shadow: var(--glow-yellow-enhanced), var(--shadow-medium); }
+}
+
+@keyframes glow-orange {
+	0%, 100% { box-shadow: 0 0 15px var(--color-orb-orange), var(--shadow-medium); }
+	50% { box-shadow: var(--glow-orange-enhanced), var(--shadow-medium); }
+}
+
+@keyframes glow-purple {
+	0%, 100% { box-shadow: 0 0 15px var(--color-orb-purple), var(--shadow-medium); }
+	50% { box-shadow: var(--glow-purple-enhanced), var(--shadow-medium); }
+}
+
+@keyframes glow-gray {
+	0%, 100% { box-shadow: 0 0 15px var(--color-orb-gray), var(--shadow-medium); }
+	50% { box-shadow: var(--glow-gray-enhanced), var(--shadow-medium); }
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+.btn-primary {
+	background: var(--gradient-primary);
+	color: white;
+	padding: 15px 40px;
+	border-radius: 50px;
+	font-size: 1.2em;
+	font-weight: bold;
+	box-shadow: var(--shadow-medium);
+	transition: all var(--transition-medium);
+	border: none;
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-block;
+	text-align: center;
+}
+
+.btn-primary:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary {
+	background: transparent;
+	color: var(--color-primary);
+	border: 2px solid var(--color-primary);
+	padding: 12px 30px;
+	border-radius: 50px;
+	font-size: 1em;
+	font-weight: bold;
+	transition: all var(--transition-medium);
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-block;
+	text-align: center;
+}
+
+.btn-secondary:hover {
+	background: var(--color-primary);
+	color: white;
+	transform: translateY(-2px);
+}

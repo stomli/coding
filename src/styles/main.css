@@ -2,6 +2,9 @@
    Ball Drop Puzzle Game - Main Styles
    ============================================ */
 
+/* Import Shared Variables */
+@import url('shared-variables.css');
+
 /* ============================================
    Reset & Base Styles
    ============================================ */
@@ -58,7 +61,7 @@ body {
 }
 
 .weather-background.day.cloudy {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: var(--gradient-primary);
 }
 
 .weather-background.day.rainy {
@@ -696,7 +699,7 @@ body {
 	width: 32px;
 	height: 32px;
 	border-radius: 50%;
-	background-color: #FF0000;
+	background-color: var(--color-orb-red);
 	border: 2px solid #666;
 	display: flex;
 	align-items: center;
@@ -705,17 +708,17 @@ body {
 	font-weight: bold;
 	color: #ffffff;
 	flex-shrink: 0;
-	box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+	box-shadow: var(--glow-red);
 }
 
 .legend-ball.normal-ball {
-	background-color: #FF0000;
-	box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+	background-color: var(--color-orb-red);
+	box-shadow: var(--glow-red);
 }
 
 .legend-ball.exploding-ball {
-	background-color: #FF0000;
-	box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);
+	background-color: var(--color-orb-red);
+	box-shadow: var(--glow-red);
 	position: relative;
 }
 
@@ -733,28 +736,28 @@ body {
 }
 
 .legend-ball.blocking-ball {
-	background-color: #808080;
-	box-shadow: 0 0 8px rgba(128, 128, 128, 0.5);
+	background-color: var(--color-orb-gray);
+	box-shadow: var(--glow-gray);
 }
 
 .legend-ball.painter-h {
-	background-color: #00FF00;
-	box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+	background-color: var(--color-orb-green);
+	box-shadow: var(--glow-green);
 }
 
 .legend-ball.painter-v {
-	background-color: #0000FF;
-	box-shadow: 0 0 8px rgba(0, 0, 255, 0.5);
+	background-color: var(--color-orb-blue);
+	box-shadow: var(--glow-blue);
 }
 
 .legend-ball.painter-dne {
-	background-color: #FF8800;
-	box-shadow: 0 0 8px rgba(255, 136, 0, 0.5);
+	background-color: var(--color-orb-orange);
+	box-shadow: var(--glow-orange);
 }
 
 .legend-ball.painter-dnw {
-	background-color: #8800FF;
-	box-shadow: 0 0 8px rgba(136, 0, 255, 0.5);
+	background-color: var(--color-orb-purple);
+	box-shadow: var(--glow-purple);
 }
 
 .legend-text {
