@@ -13,6 +13,7 @@ import LevelManager from './modules/LevelManager.js';
 import AudioManager from './modules/AudioManager.js';
 import ParticleSystem from './modules/ParticleSystem.js';
 import WeatherBackground from './modules/WeatherBackground.js';
+import PlayerManager from './modules/PlayerManager.js';
 
 /**
  * Initialize the game when the DOM is ready
@@ -31,7 +32,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 		// Initialize AudioManager immediately (browser may require user interaction to play)
 		AudioManager.initialize();
 		
-		// Try to resume audio context on first user interaction
+	// Load current player's settings and apply to AudioManager
+	const playerSettings = PlayerManager.getSettings();
+	AudioManager.setMasterVolume(playerSettings.masterVolume);
+	AudioManager.setSFXVolume(playerSettings.sfxVolume);
+	AudioManager.setMusicVolume(playerSettings.musicVolume);
+	AudioManager.setMute(playerSettings.isMuted);		// Try to resume audio context on first user interaction
 		const resumeAudio = async () => {
 			await AudioManager.resume();
 			document.body.removeEventListener('click', resumeAudio);
@@ -41,10 +47,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 		// Initialize level manager
 		LevelManager.initialize();
 
-		// Set up menu event listeners
+		// Set up menu event listeners (this sets default difficulty)
 		setupMenuListeners();
 		
-		// Populate level select grid
+		// Set up player management
+		setupPlayerManagement();
+		
+		// Populate level select grid (after difficulty is set)
 		populateLevelGrid();
 		
 		// Set up score display listener
@@ -239,15 +248,15 @@ function setupGameScreenListeners() {
  * Set up score display listener
  */
 function setupScoreListener() {
-	const totalScoreDisplay = document.getElementById('totalScoreDisplay');
-	const levelScoreDisplay = document.getElementById('levelScoreDisplay');
+	const currentScoreDisplay = document.getElementById('currentScoreDisplay');
+	const bestScoreDisplay = document.getElementById('bestScoreDisplay');
 	
 	EventEmitter.on(CONSTANTS.EVENTS.SCORE_UPDATE, (data) => {
-		if (totalScoreDisplay) {
-			totalScoreDisplay.textContent = data.score.toLocaleString();
+		if (currentScoreDisplay) {
+			currentScoreDisplay.textContent = data.score.toLocaleString();
 		}
-		if (levelScoreDisplay) {
-			levelScoreDisplay.textContent = data.score.toLocaleString();
+		if (bestScoreDisplay && data.bestScore !== undefined) {
+			bestScoreDisplay.textContent = data.bestScore.toLocaleString();
 		}
 	});
 }
@@ -260,7 +269,11 @@ function populateLevelGrid() {
 	if (!levelGrid) return;
 	
 	const maxLevel = LevelManager.getMaxLevel();
-	const unlockedLevels = LevelManager.getUnlockedLevels();
+	// Get unlocked levels for current difficulty from current player's data
+	const playerData = PlayerManager.getCurrentPlayerData();
+	const difficultyKey = String(selectedDifficulty);
+	const unlockedLevels = (playerData.levelProgress.unlockedLevelsByDifficulty && 
+	                        playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) || [1];
 	
 	// Clear existing buttons
 	levelGrid.innerHTML = '';
@@ -277,6 +290,17 @@ function populateLevelGrid() {
 		if (!isUnlocked) {
 			btn.classList.add('locked');
 			btn.disabled = true;
+		} else {
+			// Check if this difficulty+level has been completed
+			const isCompleted = PlayerManager.isLevelCompleted(selectedDifficulty, level);
+			if (isCompleted) {
+				btn.classList.add('completed');
+			}
+		}
+		
+		// Highlight if this is the currently selected level
+		if (level === selectedLevel) {
+			btn.classList.add('selected');
 		}
 		
 		// Add click handler for unlocked levels
@@ -290,8 +314,10 @@ function populateLevelGrid() {
 		levelGrid.appendChild(btn);
 	}
 	
-	// Select level 1 by default
-	selectLevel(1);
+	// If no level is selected yet, or selected level is locked, select level 1
+	if (!selectedLevel || !unlockedLevels.includes(selectedLevel)) {
+		selectLevel(1);
+	}
 }
 
 /**
@@ -302,7 +328,12 @@ let selectedLevel = 1;
 let selectedDifficulty = 1;
 
 function selectLevel(level) {
-	if (!LevelManager.isLevelUnlocked(level)) return;
+	// Check if level is unlocked for current player and difficulty
+	const playerData = PlayerManager.getCurrentPlayerData();
+	const difficultyKey = String(selectedDifficulty);
+	const unlockedLevels = (playerData.levelProgress.unlockedLevelsByDifficulty && 
+	                        playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) || [1];
+	if (!unlockedLevels.includes(level)) return;
 	
 	selectedLevel = level;
 	
@@ -333,6 +364,9 @@ function selectDifficulty(difficulty) {
 			btn.classList.remove('selected');
 		}
 	});
+	
+	// Refresh level grid to update completion checkmarks for this difficulty
+	populateLevelGrid();
 }
 
 /**
@@ -341,8 +375,8 @@ function selectDifficulty(difficulty) {
 function showSettingsOverlay() {
 	const overlay = document.getElementById('settingsOverlay');
 	if (overlay) {
-		// Load current settings from AudioManager
-		const settings = AudioManager.getSettings();
+		// Load current player's settings from PlayerManager
+		const settings = PlayerManager.getSettings();
 		
 		// Update UI to reflect current settings
 		const muteToggle = document.getElementById('muteToggle');
@@ -401,8 +435,11 @@ function setupSettingsControls() {
 	const muteToggle = document.getElementById('muteToggle');
 	if (muteToggle) {
 		muteToggle.addEventListener('change', (e) => {
+			const isMuted = e.target.checked;
 			AudioManager.toggleMute();
 			AudioManager.playClick();
+			// Save to current player's settings
+			PlayerManager.updateSettings({ isMuted });
 		});
 	}
 	
@@ -413,6 +450,8 @@ function setupSettingsControls() {
 			const value = e.target.value / 100;
 			AudioManager.setMasterVolume(value);
 			updateVolumeDisplay('masterVolumeValue', e.target.value);
+			// Save to current player's settings
+			PlayerManager.updateSettings({ masterVolume: value });
 		});
 	}
 	
@@ -423,6 +462,8 @@ function setupSettingsControls() {
 			const value = e.target.value / 100;
 			AudioManager.setSFXVolume(value);
 			updateVolumeDisplay('sfxVolumeValue', e.target.value);
+			// Save to current player's settings
+			PlayerManager.updateSettings({ sfxVolume: value });
 		});
 		
 		// Play test sound on release
@@ -438,6 +479,38 @@ function setupSettingsControls() {
 			const value = e.target.value / 100;
 			AudioManager.setMusicVolume(value);
 			updateVolumeDisplay('musicVolumeValue', e.target.value);
+			// Save to current player's settings
+			PlayerManager.updateSettings({ musicVolume: value });
+		});
+	}
+	
+	// Reset player data button
+	const resetBtn = document.getElementById('resetPlayerButton');
+	if (resetBtn) {
+		resetBtn.addEventListener('click', () => {
+			const playerName = PlayerManager.getCurrentPlayerName();
+			const confirmed = confirm(
+				`Are you sure you want to reset ALL stats and progress for "${playerName}"?\n\n` +
+				`This will clear:\n` +
+				`• High scores\n` +
+				`• Games played\n` +
+				`• Level progress\n` +
+				`• Unlocked levels\n\n` +
+				`Your audio settings will be preserved.\n\n` +
+				`This action cannot be undone!`
+			);
+			
+			if (confirmed) {
+				PlayerManager.resetPlayerData();
+				AudioManager.playClick();
+				
+				// Refresh UI
+				populateLevelGrid();
+				updateHighScoreDisplay();
+				
+				// Show success message
+				alert(`Player data has been reset for "${playerName}".`);
+			}
 		});
 	}
 }
@@ -518,4 +591,169 @@ function setupClockAndWeather() {
 	
 	// Update weather every minute
 	setInterval(updateWeather, 60000);
+}
+
+/**
+ * Update high score display
+ */
+function updateHighScoreDisplay() {
+	const highScoreDisplay = document.getElementById('highScoreDisplay');
+	if (highScoreDisplay) {
+		const highScore = PlayerManager.getHighScore();
+		highScoreDisplay.textContent = highScore > 0 ? highScore.toLocaleString() : '-';
+	}
+}
+
+/**
+ * Set up player management UI
+ */
+function setupPlayerManagement() {
+	const playerSelect = document.getElementById('playerSelect');
+	const addPlayerButton = document.getElementById('addPlayerButton');
+	const deletePlayerButton = document.getElementById('deletePlayerButton');
+	
+	// Populate player dropdown
+	function populatePlayerSelect() {
+		const players = PlayerManager.getPlayerNames();
+		const currentPlayer = PlayerManager.getCurrentPlayerName();
+		
+		playerSelect.innerHTML = '';
+		players.forEach(name => {
+			const option = document.createElement('option');
+			option.value = name;
+			option.textContent = name;
+			if (name === currentPlayer) {
+				option.selected = true;
+			}
+			playerSelect.appendChild(option);
+		});
+		
+		// Update high score display
+		updateHighScoreDisplay();
+	}
+	
+	// Handle player selection change
+	playerSelect.addEventListener('change', (e) => {
+		const playerName = e.target.value;
+		if (PlayerManager.switchPlayer(playerName)) {
+			console.log(`Switched to player: ${playerName}`);
+			
+		// Load new player's settings and apply to AudioManager
+		const settings = PlayerManager.getSettings();
+		AudioManager.setMasterVolume(settings.masterVolume);
+		AudioManager.setSFXVolume(settings.sfxVolume);
+		AudioManager.setMusicVolume(settings.musicVolume);
+		AudioManager.setMute(settings.isMuted);			updateHighScoreDisplay();
+			// Refresh level grid to show player's unlocked levels
+			populateLevelGrid();
+		}
+	});
+	
+	// Handle add player button
+	const addPlayerOverlay = document.getElementById('addPlayerOverlay');
+	const newPlayerNameInput = document.getElementById('newPlayerName');
+	const addPlayerError = document.getElementById('addPlayerError');
+	const confirmAddPlayerButton = document.getElementById('confirmAddPlayer');
+	const cancelAddPlayerButton = document.getElementById('cancelAddPlayer');
+	
+	addPlayerButton.addEventListener('click', () => {
+		// Show overlay
+		addPlayerOverlay.classList.remove('hidden');
+		newPlayerNameInput.value = '';
+		addPlayerError.classList.add('hidden');
+		newPlayerNameInput.focus();
+	});
+	
+	confirmAddPlayerButton.addEventListener('click', () => {
+		const playerName = newPlayerNameInput.value.trim();
+		if (playerName === '') {
+			addPlayerError.textContent = 'Please enter a player name.';
+			addPlayerError.classList.remove('hidden');
+			return;
+		}
+		
+		if (PlayerManager.addPlayer(playerName)) {
+			populatePlayerSelect();
+			// Switch to new player
+			PlayerManager.switchPlayer(playerName);
+			playerSelect.value = playerName;
+			populateLevelGrid();
+			// Close overlay
+			addPlayerOverlay.classList.add('hidden');
+		} else {
+			addPlayerError.textContent = `Player "${playerName}" already exists or is invalid.`;
+			addPlayerError.classList.remove('hidden');
+		}
+	});
+	
+	cancelAddPlayerButton.addEventListener('click', () => {
+		addPlayerOverlay.classList.add('hidden');
+	});
+	
+	// Allow Enter key to submit
+	newPlayerNameInput.addEventListener('keypress', (e) => {
+		if (e.key === 'Enter') {
+			confirmAddPlayerButton.click();
+		}
+	});
+	
+	// Handle delete player button
+	const deletePlayerOverlay = document.getElementById('deletePlayerOverlay');
+	const deletePlayerMessage = document.getElementById('deletePlayerMessage');
+	const confirmDeletePlayerButton = document.getElementById('confirmDeletePlayer');
+	const cancelDeletePlayerButton = document.getElementById('cancelDeletePlayer');
+	let playerToDelete = null;
+	
+	deletePlayerButton.addEventListener('click', () => {
+		const currentPlayer = PlayerManager.getCurrentPlayerName();
+		const players = PlayerManager.getPlayerNames();
+		
+		// Can't delete if only one player or if current is Guest
+		if (players.length <= 1) {
+			deletePlayerMessage.textContent = 'Cannot delete the last player!';
+			deletePlayerMessage.className = 'error-message';
+			deletePlayerOverlay.classList.remove('hidden');
+			confirmDeletePlayerButton.style.display = 'none';
+			cancelDeletePlayerButton.textContent = 'OK';
+			return;
+		}
+		
+		if (currentPlayer === 'Guest') {
+			deletePlayerMessage.textContent = 'Cannot delete the Guest player!';
+			deletePlayerMessage.className = 'error-message';
+			deletePlayerOverlay.classList.remove('hidden');
+			confirmDeletePlayerButton.style.display = 'none';
+			cancelDeletePlayerButton.textContent = 'OK';
+			return;
+		}
+		
+		// Show confirmation
+		playerToDelete = currentPlayer;
+		deletePlayerMessage.textContent = `Are you sure you want to delete player "${currentPlayer}"? This cannot be undone.`;
+		deletePlayerMessage.className = 'warning-message';
+		deletePlayerOverlay.classList.remove('hidden');
+		confirmDeletePlayerButton.style.display = '';
+		cancelDeletePlayerButton.textContent = 'Cancel';
+	});
+	
+	confirmDeletePlayerButton.addEventListener('click', () => {
+		if (playerToDelete) {
+			// Switch to Guest before deleting
+			PlayerManager.switchPlayer('Guest');
+			if (PlayerManager.deletePlayer(playerToDelete)) {
+				populatePlayerSelect();
+				populateLevelGrid();
+			}
+			playerToDelete = null;
+		}
+		deletePlayerOverlay.classList.add('hidden');
+	});
+	
+	cancelDeletePlayerButton.addEventListener('click', () => {
+		deletePlayerOverlay.classList.add('hidden');
+		playerToDelete = null;
+	});
+	
+	// Initial population
+	populatePlayerSelect();
 }

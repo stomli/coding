@@ -15,6 +15,18 @@
 			<div class="menu-container">
 				<img src="src/img/Logotrans.png" alt="Ball Drop Puzzle Logo" class="game-logo">
 				
+			<!-- Player Selection -->
+			<div class="player-selection">
+				<h2>Player</h2>
+				<div class="player-controls">
+						<select id="playerSelect" class="player-select">
+							<!-- Options populated by JavaScript -->
+						</select>
+						<button id="addPlayerButton" class="btn-icon" title="Add New Player">➕</button>
+						<button id="deletePlayerButton" class="btn-icon" title="Delete Player">🗑️</button>
+					</div>
+				</div>
+				
 				<div class="difficulty-selector">
 					<h2>Select Difficulty</h2>
 					<div class="difficulty-buttons">
@@ -37,11 +49,6 @@
 					<button id="startButton" class="btn-primary">Start Game</button>
 					<button id="settingsButton" class="btn-secondary">Settings</button>
 				</div>
-				
-				<div class="high-scores">
-					<h3>High Score</h3>
-					<p id="highScoreDisplay">-</p>
-				</div>
 			</div>
 		</div>
 		
@@ -60,25 +67,23 @@
 						<span id="levelDisplay" class="hud-value">1</span>
 						<input type="number" id="levelInput" class="hud-input" min="1" max="20" value="1" style="display: none;">
 					</div>
+			</div>
+			
+		<div class="hud-center">
+			<div class="hud-item timer">
+				<span id="timerDisplay" class="hud-value timer-value">15.0s</span>
+			</div>
+		</div>				<div class="hud-right">
+				<div class="hud-item">
+					<span class="hud-label">Score:</span>
+					<span id="currentScoreDisplay" class="hud-value">0</span>
 				</div>
-				
-			<div class="hud-center">
-				<div class="hud-item timer">
-					<span id="timerDisplay" class="hud-value timer-value">15.0s</span>
+				<div class="hud-item">
+					<span class="hud-label">Best:</span>
+					<span id="bestScoreDisplay" class="hud-value">0</span>
 				</div>
-			</div>				<div class="hud-right">
-					<div class="hud-item">
-						<span class="hud-label">Level Score:</span>
-						<span id="levelScoreDisplay" class="hud-value">0</span>
-					</div>
-					<div class="hud-item">
-						<span class="hud-label">Total Score:</span>
-						<span id="totalScoreDisplay" class="hud-value">0</span>
-					</div>
-				</div>
-		</div>
-		
-		<!-- Game Board Container -->
+			</div>
+	</div>		<!-- Game Board Container -->
 		<div class="game-container">
 			<!-- Ball Types Legend -->
 			<div class="ball-legend">
@@ -266,17 +271,52 @@
 						<input type="range" id="musicVolumeSlider" min="0" max="100" value="50" class="volume-slider">
 						<span id="musicVolumeValue" class="volume-value">50%</span>
 					</div>
+					
+					<div class="setting-item setting-danger">
+						<label>
+							<span class="setting-icon">⚠️</span> Reset Player Data:
+						</label>
+						<button id="resetPlayerButton" class="btn-danger">Reset All Stats & Progress</button>
+					</div>
 				</div>
 				<div class="overlay-actions">
-					<button id="closeSettingsButton" class="btn-primary">Close</button>
-				</div>
+				<button id="closeSettingsButton" class="btn-primary">Close</button>
 			</div>
 		</div>
-		
-		<!-- Particle Canvas Overlay (for celebrations that need to appear above overlays) -->
-		<canvas id="particleCanvas" class="particle-overlay"></canvas>
-		
 	</div>
+	
+	<!-- Add Player Overlay -->
+	<div id="addPlayerOverlay" class="overlay hidden">
+		<div class="overlay-content">
+			<h2>Add New Player</h2>
+			<div class="player-form">
+				<label for="newPlayerName">Player Name:</label>
+				<input type="text" id="newPlayerName" class="player-input" maxlength="20" placeholder="Enter player name..." />
+				<p id="addPlayerError" class="error-message hidden"></p>
+			</div>
+			<div class="overlay-actions">
+				<button id="confirmAddPlayer" class="btn-primary">Add Player</button>
+				<button id="cancelAddPlayer" class="btn-secondary">Cancel</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Delete Player Overlay -->
+	<div id="deletePlayerOverlay" class="overlay hidden">
+		<div class="overlay-content">
+			<h2>Delete Player</h2>
+			<div class="player-form">
+				<p id="deletePlayerMessage" class="warning-message"></p>
+			</div>
+			<div class="overlay-actions">
+				<button id="confirmDeletePlayer" class="btn-danger">Delete</button>
+				<button id="cancelDeletePlayer" class="btn-secondary">Cancel</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Particle Canvas Overlay (for celebrations that need to appear above overlays) -->
+	<canvas id="particleCanvas" class="particle-overlay"></canvas>	</div>
 	
 	<!-- JavaScript Modules -->
 	<script type="module" src="src/main.js"></script>

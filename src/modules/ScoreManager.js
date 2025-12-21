@@ -11,6 +11,7 @@
 import { ConfigManager } from './ConfigManager.js';
 import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
+import PlayerManager from './PlayerManager.js';
 
 /**
  * ScoreManager class for tracking and calculating scores
@@ -20,6 +21,7 @@ class ScoreManagerClass {
 	constructor() {
 		this.score = 0;
 		this.difficulty = 1;
+		this.level = 1;
 		this.currentCascadeData = null;
 		this.isInitialized = false;
 		
@@ -31,10 +33,12 @@ class ScoreManagerClass {
 	/**
 	 * Initialize score manager and set up event listeners
 	 * @param {Number} difficulty - Game difficulty level (1-5)
+	 * @param {Number} level - Game level
 	 * @returns {void}
 	 */
-	initialize(difficulty) {
+	initialize(difficulty, level) {
 		this.difficulty = difficulty || 1;
+		this.level = level || 1;
 		this.score = 0;
 		this.currentCascadeData = null;
 		
@@ -49,6 +53,14 @@ class ScoreManagerClass {
 		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
 		
 		this.isInitialized = true;
+		
+		// Emit initial score update with best score
+		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level) || 0;
+		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { 
+			score: 0,
+			bestScore: bestScore,
+			points: 0
+		});
 	}
 	
 	/**
@@ -87,9 +99,13 @@ class ScoreManagerClass {
 		
 		this.score += points;
 		
+		// Get best score for current level/difficulty
+		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level) || 0;
+		
 		// Emit score update event
 		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { 
 			score: this.score,
+			bestScore: bestScore,
 			points: points,
 			cascadeCount: data.cascadeCount
 		});
@@ -158,6 +174,7 @@ class ScoreManagerClass {
 		this.currentCascadeData = null;
 		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { 
 			score: 0,
+			bestScore: 0,
 			points: 0
 		});
 	}

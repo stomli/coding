@@ -26,6 +26,7 @@ import AnimationManager from './AnimationManager.js';
 import ParticleSystem from './ParticleSystem.js';
 import AudioManager from './AudioManager.js';
 import StatisticsTracker from './StatisticsTracker.js';
+import PlayerManager from './PlayerManager.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -363,6 +364,9 @@ class GameEngineClass {
 		this.level = level || 1;
 		this.difficulty = difficulty || 1;
 		
+		// Record game start in player stats
+		PlayerManager.updateStats({ gameStarted: true });
+		
 		// Initialize LevelManager
 		LevelManager.setLevel(this.level);
 		LevelManager.startTimer();
@@ -380,7 +384,7 @@ class GameEngineClass {
 		PieceFactory.reset();
 		
 		// Initialize ScoreManager
-		ScoreManager.initialize(this.difficulty);
+		ScoreManager.initialize(this.difficulty, this.level);
 		
 		// Set drop speed based on difficulty
 		this.dropInterval = Math.max(200, 1000 - (difficulty * 150));
@@ -1154,9 +1158,10 @@ class GameEngineClass {
 			// Get current stats
 			const currentScore = ScoreManager.getScore();
 			
-			// Hardcoded best stats for now (TODO: implement persistence)
-			const bestScore = 0;
-			const longestTime = 0.0;
+			// Get best stats from player profile for this difficulty+level
+			const levelBestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level);
+			const overallBestScore = PlayerManager.getHighScore(); // Best score across ALL levels
+			const longestTime = PlayerManager.getLongestTime();
 			
 			// Update stat displays
 			const thisScoreEl = document.getElementById('completeThisScore');
@@ -1166,23 +1171,34 @@ class GameEngineClass {
 			const highScoreMsg = document.getElementById('levelCompleteHighScoreMessage');
 			
 			if (thisScoreEl) thisScoreEl.textContent = currentScore.toLocaleString();
-			if (bestScoreEl) bestScoreEl.textContent = bestScore.toLocaleString();
+			if (bestScoreEl) bestScoreEl.textContent = levelBestScore > 0 ? levelBestScore.toLocaleString() : '-';
 			if (timeSurvivedEl) timeSurvivedEl.textContent = timeSurvived.toFixed(1) + 's';
 			if (longestTimeEl) longestTimeEl.textContent = longestTime.toFixed(1) + 's';
 			
-			// Show high score message if new best
+			// Update player stats with difficulty and level
+			PlayerManager.updateStats({
+				score: currentScore,
+				time: timeSurvived,
+				difficulty: this.difficulty,
+				gameStarted: false,
+				levelCompleted: reason === 'timeout' ? this.level : undefined
+			});
+			
+			// Show high score message if new best for this level
 			if (highScoreMsg) {
-				if (currentScore > bestScore) {
-					highScoreMsg.classList.remove('hidden');
+				if (levelBestScore === 0 || currentScore > levelBestScore) {
+					highScoreMsg.textContent = '🎉 New Level Best Score!';
+					highScoreMsg.style.display = 'block';
+				} else if (currentScore > overallBestScore) {
+					highScoreMsg.textContent = '🎉 New Personal Best!';
+					highScoreMsg.style.display = 'block';
 				} else {
-					highScoreMsg.classList.add('hidden');
-				}
+				highScoreMsg.style.display = 'none';
 			}
-			
-			// Render match statistics to the overlay
-			StatisticsTracker.renderToElement('levelCompleteStatsBoard');
-			
-			// Show/hide next level button
+		}
+		
+		// Render match statistics to the overlay
+		StatisticsTracker.renderToElement('levelCompleteStatsBoard');			// Show/hide next level button
 			const nextLevelBtn = document.getElementById('nextLevelButton');
 			if (nextLevelBtn) {
 				// Only show next level button if completed successfully (timeout) and not last level
