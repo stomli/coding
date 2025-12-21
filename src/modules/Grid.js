@@ -8,6 +8,14 @@
  * Exports: Grid class
  */
 
+/**
+ * ============================================================================
+ * Grid.js - Orb•Fall: ChromaCrush
+ * ============================================================================
+ * Copyright (c) 2025 G. Scott Tomlin. All Rights Reserved.
+ * ============================================================================
+ */
+
 import Ball from './Ball.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { isInBounds } from '../utils/Helpers.js';

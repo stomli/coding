@@ -1,11 +1,14 @@
 /**
- * GameEngine.js
+ * ============================================================================
+ * GameEngine.js - Orb•Fall: ChromaCrush
+ * ============================================================================
+ * Copyright (c) 2025 G. Scott Tomlin. All Rights Reserved.
  * 
- * Description: Core game loop and state management (Phase 1: initialization only)
+ * Core game loop and state management
  * 
  * Dependencies: All modules
- * 
  * Exports: GameEngine class
+ * ============================================================================
  */
 
 import Grid from './Grid.js';
