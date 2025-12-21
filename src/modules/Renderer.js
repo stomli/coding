@@ -159,7 +159,7 @@ class Renderer {
 			this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; // 30% opacity white outline
 			this.ctx.lineWidth = 2; // 2-pixel outline
 			this.ctx.beginPath();
-			this.ctx.arc(centerX, centerY, radius * 0.9, 0, Math.PI * 2); // 0 to 2π = full circle, 90% of normal size
+			this.ctx.arc(centerX, centerY, ballRadius * 0.9, 0, Math.PI * 2); // 0 to 2π = full circle, 90% of normal size
 			this.ctx.stroke();
 			this.ctx.restore();
 		});
@@ -276,7 +276,8 @@ class Renderer {
 		const isExploding = ballType === CONSTANTS.BALL_TYPES.EXPLODING;
 		const isPainterH = ballType === CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL;
 		const isPainterV = ballType === CONSTANTS.BALL_TYPES.PAINTER_VERTICAL;
-		const isPainterD = ballType === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
+		const isPainterDNE = ballType === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE;
+		const isPainterDNW = ballType === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW;
 		const isBlocking = ballType === CONSTANTS.BALL_TYPES.BLOCKING;
 		
 		ctx.strokeStyle = '#FFFFFF'; // White indicators for visibility on all ball colors
@@ -300,11 +301,18 @@ class Renderer {
 			ctx.lineTo(x, y + radius * 0.6); // 60% of radius down
 			ctx.stroke();
 		}
-		else if (isPainterD) {
-			// Diagonal line
+		else if (isPainterDNE) {
+			// NE-SW diagonal line (↗↙)
 			ctx.beginPath();
-			ctx.moveTo(x - radius * 0.5, y - radius * 0.5);
-			ctx.lineTo(x + radius * 0.5, y + radius * 0.5);
+			ctx.moveTo(x + radius * 0.5, y - radius * 0.5); // Top-right
+			ctx.lineTo(x - radius * 0.5, y + radius * 0.5); // Bottom-left
+			ctx.stroke();
+		}
+		else if (isPainterDNW) {
+			// NW-SE diagonal line (↖↘)
+			ctx.beginPath();
+			ctx.moveTo(x - radius * 0.5, y - radius * 0.5); // Top-left
+			ctx.lineTo(x + radius * 0.5, y + radius * 0.5); // Bottom-right
 			ctx.stroke();
 		}
 		else if (isBlocking) {

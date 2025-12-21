@@ -114,7 +114,8 @@ class PieceFactoryClass {
 			{ type: CONSTANTS.BALL_TYPES.EXPLODING, config: 'exploding' },
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, config: 'painterHorizontal' },
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, config: 'painterVertical' },
-			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, config: 'painterDiagonal' }
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, config: 'painterDiagonal' },
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW, config: 'painterDiagonal' }
 		];
 		
 		// Shuffle to randomize priority
@@ -318,7 +319,9 @@ class PieceFactoryClass {
 				return ConfigManager.get('colors.special.painterH', '#FF00FF');
 			case CONSTANTS.BALL_TYPES.PAINTER_VERTICAL:
 				return ConfigManager.get('colors.special.painterV', '#00FFFF');
-			case CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL:
+			case CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE:
+				return ConfigManager.get('colors.special.painterD', '#FFFF00');
+			case CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW:
 				return ConfigManager.get('colors.special.painterD', '#FFFF00');
 			default:
 				return availableColors[randomInt(0, availableColors.length - 1)];

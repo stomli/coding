@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Ball Drop Puzzle Game</title>
+	<title>Orb•Fall: ChromaCrush</title>
 	<link rel="stylesheet" href="src/styles/main.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
 		<!-- Menu Screen -->
 		<div id="menuScreen" class="screen">
 			<div class="menu-container">
-				<img src="src/img/Logotrans.png" alt="Ball Drop Puzzle Logo" class="game-logo">
+				<img src="src/img/Logotrans.png" alt="Orb Fall Logo" class="game-logo">
 				
 			<!-- Player Selection -->
 			<div class="player-selection">
@@ -45,10 +45,11 @@
 					</div>
 				</div>
 				
-				<div class="menu-actions">
-					<button id="startButton" class="btn-primary">Start Game</button>
-					<button id="settingsButton" class="btn-secondary">Settings</button>
-				</div>
+			<div class="menu-actions">
+				<button id="startButton" class="btn-primary">Start Game</button>
+				<button id="settingsButton" class="btn-secondary">Settings</button>
+				<a href="guide.html" class="btn-secondary" style="display: inline-block; text-decoration: none; text-align: center;">How to Play</a>
+			</div>
 			</div>
 		</div>
 		
@@ -85,49 +86,56 @@
 			</div>
 	</div>		<!-- Game Board Container -->
 		<div class="game-container">
-			<!-- Ball Types Legend -->
+			<!-- Orb Types Legend -->
 			<div class="ball-legend">
-				<h3>Ball Types</h3>
+				<h3>Orb Types</h3>
 				<div class="legend-item">
 					<div class="legend-ball normal-ball"></div>
 					<div class="legend-text">
 						<strong>Normal</strong>
-						<span>Standard ball</span>
+						<span>Standard orb</span>
 					</div>
 				</div>
 				<div class="legend-item">
-					<div class="legend-ball exploding-ball">✱</div>
+					<div class="legend-ball exploding-ball"></div>
 					<div class="legend-text">
 						<strong>Exploding</strong>
-						<span>Destroys nearby balls</span>
+						<span>Destroys nearby orbs</span>
 					</div>
 				</div>
 				<div class="legend-item">
 					<div class="legend-ball blocking-ball">✕</div>
 					<div class="legend-text">
 						<strong>Blocking</strong>
-						<span>Can't be cleared</span>
+						<span>Cleared only by explosions</span>
 					</div>
 				</div>
 				<div class="legend-item">
-					<div class="legend-ball painter-ball">─</div>
+					<div class="legend-ball painter-h">─</div>
 					<div class="legend-text">
 						<strong>Painter H</strong>
 						<span>Paints row same color</span>
 					</div>
 				</div>
 				<div class="legend-item">
-					<div class="legend-ball painter-ball">│</div>
+					<div class="legend-ball painter-v">│</div>
 					<div class="legend-text">
 						<strong>Painter V</strong>
 						<span>Paints column same color</span>
 					</div>
 				</div>
 				<div class="legend-item">
-					<div class="legend-ball painter-ball">╲</div>
+					<div class="legend-ball painter-dne">╱</div>
 					<div class="legend-text">
-						<strong>Painter D</strong>
-						<span>Paints diagonal same color</span>
+						<strong>Painter NE</strong>
+						<span>Paints NE-SW diagonal</span>
+					</div>
+				</div>
+				<div class="legend-item">
+					<div class="legend-ball painter-dnw">╲</div>
+					<div class="legend-text">
+						<strong>Painter NW</strong>
+						<span>Paints NW-SE diagonal</span>
 					</div>
 				</div>
 				

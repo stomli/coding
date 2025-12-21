@@ -147,7 +147,8 @@ class DebugModeClass {
 				'blocking': CONSTANTS.BALL_TYPES.BLOCKING,
 				'painterH': CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL,
 				'painterV': CONSTANTS.BALL_TYPES.PAINTER_VERTICAL,
-				'painterD': CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL
+				'painterDNE': CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE,
+				'painterDNW': CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW
 			};
 			
 			const ballType = typeMap[type.toLowerCase()];
@@ -368,7 +369,8 @@ class DebugModeClass {
 				[CONSTANTS.BALL_TYPES.BLOCKING]: 'Blocking',
 				[CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL]: 'Painter H',
 				[CONSTANTS.BALL_TYPES.PAINTER_VERTICAL]: 'Painter V',
-				[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL]: 'Painter D'
+				[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE]: 'Painter DNE',
+				[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW]: 'Painter DNW'
 			};
 			info += `Default Type: ${typeNames[this.params.type] || this.params.type}<br>`;
 		}
@@ -546,7 +548,8 @@ class DebugModeClass {
 					{ name: 'Blocking', value: CONSTANTS.BALL_TYPES.BLOCKING, icon: '✕' },
 					{ name: 'Painter H', value: CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, icon: '─' },
 					{ name: 'Painter V', value: CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, icon: '│' },
-					{ name: 'Painter D', value: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, icon: '╲' }
+					{ name: 'Painter DNE', value: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, icon: '╱' },
+					{ name: 'Painter DNW', value: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW, icon: '╲' }
 				];
 				
 				types.forEach(type => {
@@ -711,8 +714,14 @@ class DebugModeClass {
 						ctx.moveTo(x, y - radius * 0.6);
 						ctx.lineTo(x, y + radius * 0.6);
 						ctx.stroke();
-					} else if (config.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL) {
-						// Diagonal line
+					} else if (config.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE) {
+						// NE-SW diagonal line
+						ctx.beginPath();
+						ctx.moveTo(x + radius * 0.5, y - radius * 0.5);
+						ctx.lineTo(x - radius * 0.5, y + radius * 0.5);
+						ctx.stroke();
+					} else if (config.type === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW) {
+						// NW-SE diagonal line
 						ctx.beginPath();
 						ctx.moveTo(x - radius * 0.5, y - radius * 0.5);
 						ctx.lineTo(x + radius * 0.5, y + radius * 0.5);

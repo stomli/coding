@@ -649,14 +649,11 @@ class Grid {
 							}
 						}
 					}
-					else if (painterDirection === 'diagonal') {
-						// Paint diagonal line through this position
-						// Paint both diagonals for simplicity
-						
-						// Down-right diagonal (↘)
+					else if (painterDirection === 'diagonal-ne') {
+						// Paint NE-SW diagonal (↗↙)
 						for (let offset = -Math.max(this.rows, this.cols); offset < Math.max(this.rows, this.cols); offset++) {
 							const r = pos.row + offset;
-							const c = pos.col + offset;
+							const c = pos.col - offset;
 							if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) {
 								const targetBall = this.getBallAt(r, c);
 								if (targetBall && targetBall.getType() !== CONSTANTS.BALL_TYPES.BLOCKING) {
@@ -671,11 +668,12 @@ class Grid {
 								}
 							}
 						}
-						
-						// Down-left diagonal (↙)
+					}
+					else if (painterDirection === 'diagonal-nw') {
+						// Paint NW-SE diagonal (↖↘)
 						for (let offset = -Math.max(this.rows, this.cols); offset < Math.max(this.rows, this.cols); offset++) {
 							const r = pos.row + offset;
-							const c = pos.col - offset;
+							const c = pos.col + offset;
 							if (r >= 0 && r < this.rows && c >= 0 && c < this.cols) {
 								const targetBall = this.getBallAt(r, c);
 								if (targetBall && targetBall.getType() !== CONSTANTS.BALL_TYPES.BLOCKING) {

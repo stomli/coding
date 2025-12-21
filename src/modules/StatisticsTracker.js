@@ -112,7 +112,8 @@ class StatisticsTrackerClass {
 			{ type: CONSTANTS.BALL_TYPES.EXPLODING, name: 'Exploding', symbol: '✱' },
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, name: 'Paint H', symbol: '⬌' },
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, name: 'Paint V', symbol: '⬍' },
-			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, name: 'Paint D', symbol: '⬔' }
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, name: 'Paint DNE', symbol: '╱' },
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW, name: 'Paint DNW', symbol: '╲' }
 		];
 
 		let html = '<table class="stats-table">';
@@ -251,7 +252,8 @@ class StatisticsTrackerClass {
 			{ type: CONSTANTS.BALL_TYPES.EXPLODING, symbol: '✱' },
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, symbol: '⬌' },
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, symbol: '⬍' },
-			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, symbol: '⬔' }
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, symbol: '╱' },
+			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW, symbol: '╲' }
 		];
 		
 		types.forEach(({ type, symbol }) => {

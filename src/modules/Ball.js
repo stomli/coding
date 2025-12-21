@@ -126,14 +126,15 @@ class Ball {
 	
 	/**
 	 * Get the painter direction if this is a painter ball
-	 * @returns {String|null} 'horizontal', 'vertical', 'diagonal', or null if not a painter
+	 * @returns {String|null} 'horizontal', 'vertical', 'diagonal-ne', 'diagonal-nw', or null if not a painter
 	 */
 	getPainterDirection() {
 		// Map type to direction
 		const directionMap = {
 			[CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL]: 'horizontal',
 			[CONSTANTS.BALL_TYPES.PAINTER_VERTICAL]: 'vertical',
-			[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL]: 'diagonal'
+			[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE]: 'diagonal-ne',
+			[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW]: 'diagonal-nw'
 		};
 		
 		const direction = directionMap[this.type];
