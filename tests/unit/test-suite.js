@@ -5,6 +5,7 @@
  */
 
 import { testHelpers } from './test-helpers.js';
+import { testDOMHelpers } from './test-dom-helpers.js';
 import { testEventEmitter } from './test-event-emitter.js';
 import { testBall } from './test-ball.js';
 import { testPiece } from './test-piece.js';
@@ -34,6 +35,7 @@ export async function runAllTests() {
 	
 	const suites = [
 		{ name: 'Helpers', tests: testHelpers() },
+		{ name: 'DOMHelpers', tests: testDOMHelpers() },
 		{ name: 'EventEmitter', tests: testEventEmitter() },
 		{ name: 'Ball', tests: testBall() },
 		{ name: 'Piece', tests: testPiece() },
@@ -63,32 +65,26 @@ export async function runAllTests() {
 	suites.push({ name: testSpecialBalls.name, tests: specialBallsResults });
 	
 	// Run LevelManager tests
-	console.log('\n');
 	const levelManagerResults = runLevelManagerTests();
 	suites.push({ name: 'LevelManager', tests: levelManagerResults });
 	
 	// Run AnimationManager tests
-	console.log('\n');
 	const animationManagerResults = runAnimationManagerTests();
 	suites.push({ name: 'AnimationManager', tests: animationManagerResults });
 	
 	// Run ParticleSystem tests
-	console.log('\n');
 	const particleSystemResults = runParticleSystemTests();
 	suites.push({ name: 'ParticleSystem', tests: particleSystemResults });
 	
 	// Run PlayerManager tests
-	console.log('\n');
 	const playerManagerResults = runPlayerManagerTests();
 	suites.push({ name: 'PlayerManager', tests: playerManagerResults });
 	
 	// Run AudioManager tests
-	console.log('\n');
 	const audioManagerResults = runAudioManagerTests();
 	suites.push({ name: 'AudioManager', tests: audioManagerResults });
 	
 	// Run StatisticsTracker tests
-	console.log('\n');
 	const statisticsTrackerResults = runStatisticsTrackerTests();
 	suites.push({ name: 'StatisticsTracker', tests: statisticsTrackerResults });
 

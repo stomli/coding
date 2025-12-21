@@ -98,6 +98,10 @@
 				
 				// Render test results
 				results.suites.forEach(suite => {
+					// Console log suite start
+					console.log(`\n📦 ${suite.name}`);
+					console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+					
 					const suiteDiv = document.createElement('div');
 					suiteDiv.className = 'test-suite';
 					
@@ -111,6 +115,14 @@
 				testsContainer.className = 'test-cases-container';
 				
 				suite.tests.forEach(test => {
+						// Console log failed tests
+						if (!test.pass) {
+							console.error(`❌ FAILED: ${test.name}`);
+							if (test.error) {
+								console.error(`   Error: ${test.error}`);
+							}
+						}
+						
 						const testDiv = document.createElement('div');
 						testDiv.className = `test-case ${test.pass ? 'pass' : 'fail'}`;
 						

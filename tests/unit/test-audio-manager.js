@@ -5,15 +5,12 @@
 import AudioManager from '../../src/modules/AudioManager.js';
 
 export function runAudioManagerTests() {
-	console.log('=== Running AudioManager Tests ===');
-	
 	const results = [];
 	
 	// Helper function to run a test
 	function test(name, fn) {
 		try {
 			fn();
-			console.log(`✓ ${name}`);
 			results.push({ name, pass: true, error: null });
 		} catch (error) {
 			console.error(`✗ ${name}`);
@@ -183,7 +180,6 @@ export function runAudioManagerTests() {
 	// Summary
 	const passed = results.filter(r => r.pass).length;
 	const failed = results.filter(r => !r.pass).length;
-	console.log(`\nAudioManager Tests: ${passed} passed, ${failed} failed\n`);
 	
 	return results;
 }

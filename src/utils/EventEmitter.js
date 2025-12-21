@@ -41,6 +41,20 @@ class EventEmitterClass {
 	}
 	
 	/**
+	 * Subscribe to an event that fires only once
+	 * @param {String} event - Event name to listen for
+	 * @param {Function} callback - Function to call when event is emitted
+	 * @returns {void}
+	 */
+	once(event, callback) {
+		const onceWrapper = (...args) => {
+			callback(...args);
+			this.off(event, onceWrapper);
+		};
+		this.on(event, onceWrapper);
+	}
+	
+	/**
 	 * Unsubscribe from an event
 	 * @param {String} event - Event name to stop listening for
 	 * @param {Function} callback - Function to remove from listeners
@@ -63,17 +77,17 @@ class EventEmitterClass {
 	/**
 	 * Emit an event to all subscribers
 	 * @param {String} event - Event name to emit
-	 * @param {*} data - Data to pass to event listeners
+	 * @param {...*} args - Arguments to pass to event listeners
 	 * @returns {void}
 	 */
-	emit(event, data) {
+	emit(event, ...args) {
 		const hasEvent = this.listeners.hasOwnProperty(event);
 		
 		// Call all listeners for this event
 		if (hasEvent) {
 			const callbacks = this.listeners[event];
 			callbacks.forEach(callback => {
-				callback(data);
+				callback(...args);
 			});
 		}
 		else {

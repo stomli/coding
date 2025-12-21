@@ -304,4 +304,283 @@ testSuite.tests.push({
 	}
 });
 
+// Test: Cascade data resets between separate cascades
+testSuite.tests.push({
+	name: 'Cascade data - Resets between cascades',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		// First cascade with 2 levels
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 3, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 3, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 2 });
+		
+		// Second cascade should start fresh (no bonus from first)
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 5, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		const finalScore = ScoreManager.getScore();
+		// First cascade: 6 balls + 3 bonus = 9
+		// Second cascade: 5 balls (no bonus) = 5
+		// Total = 14
+		const expectedScore = 14;
+		
+		if (finalScore !== expectedScore) {
+			throw new Error(`Expected score ${expectedScore}, got ${finalScore}`);
+		}
+	}
+});
+
+// Test: getScore returns current score
+testSuite.tests.push({
+	name: 'getScore - Returns current score value',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		if (ScoreManager.getScore() !== 0) {
+			throw new Error('Initial score should be 0');
+		}
+		
+		ScoreManager.addPoints(100);
+		
+		if (ScoreManager.getScore() !== 100) {
+			throw new Error(`Expected score 100, got ${ScoreManager.getScore()}`);
+		}
+	}
+});
+
+// Test: addPoints emits SCORE_UPDATE event
+testSuite.tests.push({
+	name: 'addPoints - Emits SCORE_UPDATE event',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		let eventReceived = false;
+		let receivedScore = null;
+		let receivedPoints = null;
+		
+		const handler = (data) => {
+			eventReceived = true;
+			receivedScore = data.score;
+			receivedPoints = data.points;
+		};
+		
+		EventEmitter.on(CONSTANTS.EVENTS.SCORE_UPDATE, handler);
+		ScoreManager.addPoints(50);
+		EventEmitter.off(CONSTANTS.EVENTS.SCORE_UPDATE, handler);
+		
+		if (!eventReceived) {
+			throw new Error('SCORE_UPDATE event not emitted');
+		}
+		
+		if (receivedScore !== 50 || receivedPoints !== 50) {
+			throw new Error(`Expected score 50 and points 50, got ${receivedScore} and ${receivedPoints}`);
+		}
+	}
+});
+
+// Test: Zero balls cleared doesn't crash
+testSuite.tests.push({
+	name: 'Edge case - Zero balls cleared',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 0, matches: 0 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		if (ScoreManager.getScore() !== 0) {
+			throw new Error(`Expected score 0, got ${ScoreManager.getScore()}`);
+		}
+	}
+});
+
+// Test: Negative points (shouldn't happen but validate)
+testSuite.tests.push({
+	name: 'Edge case - Negative points handled',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		ScoreManager.addPoints(100);
+		ScoreManager.addPoints(-50);
+		
+		if (ScoreManager.getScore() !== 50) {
+			throw new Error(`Expected score 50, got ${ScoreManager.getScore()}`);
+		}
+	}
+});
+
+// Test: Large cascade count
+testSuite.tests.push({
+	name: 'Edge case - Large cascade count (10 levels)',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		// Emit 10 BALLS_CLEARED events
+		for (let i = 0; i < 10; i++) {
+			EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 3, matches: 1 });
+		}
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 10 });
+		
+		const score = ScoreManager.getScore();
+		
+		// Should calculate without errors
+		if (score <= 0) {
+			throw new Error(`Expected positive score for 10-cascade, got ${score}`);
+		}
+	}
+});
+
+// Test: Large number of balls cleared
+testSuite.tests.push({
+	name: 'Edge case - Large ball count (1000 balls)',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 1000, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		if (ScoreManager.getScore() !== 1000) {
+			throw new Error(`Expected score 1000, got ${ScoreManager.getScore()}`);
+		}
+	}
+});
+
+// Test: Multiple initialize calls don't duplicate listeners
+testSuite.tests.push({
+	name: 'initialize - Multiple calls remove old listeners',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		ScoreManager.initialize(1); // Call again
+		ScoreManager.initialize(1); // And again
+		
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 10, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		// Score should only be counted once (10 points)
+		if (ScoreManager.getScore() !== 10) {
+			throw new Error(`Expected score 10 (counted once), got ${ScoreManager.getScore()}`);
+		}
+	}
+});
+
+// Test: Difficulty changes affect scoring
+testSuite.tests.push({
+	name: 'Difficulty change - Affects subsequent scoring',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1); // 1.0x
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 10, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		const scoreAtDiff1 = ScoreManager.getScore();
+		
+		ScoreManager.initialize(3); // 2.0x
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 10, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		const scoreAtDiff3 = ScoreManager.getScore();
+		
+		// At difficulty 3, same ball count should give more points
+		if (scoreAtDiff3 <= scoreAtDiff1) {
+			throw new Error(`Higher difficulty should give higher score: diff1=${scoreAtDiff1}, diff3=${scoreAtDiff3}`);
+		}
+	}
+});
+
+// Test: CASCADE_COMPLETE without BALLS_CLEARED doesn't crash
+testSuite.tests.push({
+	name: 'Edge case - CASCADE_COMPLETE without BALLS_CLEARED',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		// Emit cascade complete without any balls cleared
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		// Should not crash, score stays 0
+		if (ScoreManager.getScore() !== 0) {
+			throw new Error(`Expected score 0, got ${ScoreManager.getScore()}`);
+		}
+	}
+});
+
+// Test: Reset emits SCORE_UPDATE event
+testSuite.tests.push({
+	name: 'reset - Emits SCORE_UPDATE event',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		ScoreManager.addPoints(100);
+		
+		let eventReceived = false;
+		let receivedScore = null;
+		
+		const handler = (data) => {
+			eventReceived = true;
+			receivedScore = data.score;
+		};
+		
+		EventEmitter.on(CONSTANTS.EVENTS.SCORE_UPDATE, handler);
+		ScoreManager.reset();
+		EventEmitter.off(CONSTANTS.EVENTS.SCORE_UPDATE, handler);
+		
+		if (!eventReceived) {
+			throw new Error('SCORE_UPDATE event not emitted on reset');
+		}
+		
+		if (receivedScore !== 0) {
+			throw new Error(`Expected score 0 in event, got ${receivedScore}`);
+		}
+	}
+});
+
+// Test: Score accumulation with different cascade sizes
+testSuite.tests.push({
+	name: 'Mixed cascades - Different sizes accumulate correctly',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		ScoreManager.initialize(1);
+		
+		// Single cascade with 5 balls
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 5, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
+		
+		const scoreAfter1 = ScoreManager.getScore(); // 5
+		
+		// Double cascade with 4 balls total
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 2, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 2, matches: 1 });
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 2 });
+		
+		const scoreAfter2 = ScoreManager.getScore(); // 5 + (4 + 3) = 12
+		
+		if (scoreAfter1 !== 5) {
+			throw new Error(`Expected 5 after first cascade, got ${scoreAfter1}`);
+		}
+		
+		if (scoreAfter2 !== 12) {
+			throw new Error(`Expected 12 total, got ${scoreAfter2}`);
+		}
+	}
+});
+
 export default testSuite;

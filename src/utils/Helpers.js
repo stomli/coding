@@ -53,19 +53,7 @@ function getNestedProperty(obj, path, defaultValue = null) {
  * @returns {Number} Clamped value
  */
 function clamp(value, min, max) {
-	const isLessThanMin = value < min;
-	const isGreaterThanMax = value > max;
-	
-	// Return clamped value
-	if (isLessThanMin) {
-		return min;
-	}
-	else if (isGreaterThanMax) {
-		return max;
-	}
-	else {
-		return value;
-	}
+	return Math.max(min, Math.min(max, value));
 }
 
 /**
@@ -77,16 +65,7 @@ function clamp(value, min, max) {
  * @returns {Boolean} True if in bounds, false otherwise
  */
 function isInBounds(row, col, rows, cols) {
-	const isRowValid = row >= 0 && row < rows;
-	const isColValid = col >= 0 && col < cols;
-	
-	// Both row and column must be valid
-	if (isRowValid && isColValid) {
-		return true;
-	}
-	else {
-		return false;
-	}
+	return row >= 0 && row < rows && col >= 0 && col < cols;
 }
 
 /**
@@ -132,38 +111,24 @@ function shuffleArray(array) {
  * @returns {*} Cloned object
  */
 function deepClone(obj) {
-	const isNull = obj === null;
-	const isObject = typeof obj === 'object';
-	
 	// Return primitives and null directly
-	if (isNull || !isObject) {
+	if (obj === null || typeof obj !== 'object') {
 		return obj;
 	}
-	else {
-		// Clone object or array
-	}
 	
-	const isArray = Array.isArray(obj);
-	
-	// Clone array or object
-	if (isArray) {
+	// Clone array
+	if (Array.isArray(obj)) {
 		return obj.map(item => deepClone(item));
 	}
-	else {
-		const cloned = {};
-		for (const key in obj) {
-			const hasProperty = obj.hasOwnProperty(key);
-			
-			// Copy own properties only
-			if (hasProperty) {
-				cloned[key] = deepClone(obj[key]);
-			}
-			else {
-				// Skip inherited properties
-			}
+	
+	// Clone object (own properties only)
+	const cloned = {};
+	for (const key in obj) {
+		if (obj.hasOwnProperty(key)) {
+			cloned[key] = deepClone(obj[key]);
 		}
-		return cloned;
 	}
+	return cloned;
 }
 
 /**
@@ -181,15 +146,8 @@ function formatNumber(num) {
  * @returns {String} Formatted time string
  */
 function formatTime(seconds) {
-	const isNegative = seconds < 0;
-	
 	// Clamp to zero if negative
-	if (isNegative) {
-		seconds = 0;
-	}
-	else {
-		// Time is positive, continue
-	}
+	seconds = Math.max(0, seconds);
 	
 	const minutes = Math.floor(seconds / 60);
 	const secs = Math.floor(seconds % 60);
@@ -199,11 +157,10 @@ function formatTime(seconds) {
 	if (minutes === 0) {
 		return `${secs}.${tenths}`;
 	}
-	else {
-		// Show M:SS.S format
-		const secsStr = secs.toString().padStart(2, '0');
-		return `${minutes}:${secsStr}.${tenths}`;
-	}
+	
+	// Show M:SS.S format
+	const secsStr = secs.toString().padStart(2, '0');
+	return `${minutes}:${secsStr}.${tenths}`;
 }
 
 /**
@@ -213,17 +170,10 @@ function formatTime(seconds) {
  * @returns {void}
  */
 function iterateShapeCells(shape, callback) {
-	// Iterate through shape matrix
 	for (let row = 0; row < shape.length; row++) {
 		for (let col = 0; col < shape[row].length; col++) {
-			const hasBall = shape[row][col] === 1;
-			
-			// Execute callback for ball cells
-			if (hasBall) {
+			if (shape[row][col] === 1) {
 				callback(row, col);
-			}
-			else {
-				// Empty cell, skip
 			}
 		}
 	}

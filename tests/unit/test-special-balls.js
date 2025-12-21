@@ -444,4 +444,347 @@ testSuite.tests.push({
 	}
 });
 
+// Test: Explosion at grid edge doesn't go out of bounds
+testSuite.tests.push({
+	name: 'processExplosions - Edge explosion stays in bounds',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const grid = new Grid(10, 10);
+		
+		// Place exploding ball at corner (0, 0)
+		const explodingBall = new Ball(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000');
+		grid.setBallAt(0, 0, explodingBall);
+		
+		// Fill grid with normal balls
+		for (let r = 0; r < 10; r++) {
+			for (let c = 0; c < 10; c++) {
+				if (grid.getBallAt(r, c) === null) {
+					grid.setBallAt(r, c, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00'));
+				}
+			}
+		}
+		
+		// Create match
+		const matches = [{
+			positions: [{ row: 0, col: 0 }]
+		}];
+		
+		// Should not throw error even though explosion would go out of bounds
+		let errorThrown = false;
+		try {
+			grid.processExplosions(matches);
+		} catch (e) {
+			errorThrown = true;
+		}
+		
+		if (errorThrown) {
+			throw new Error('Explosion at edge should not throw error');
+		}
+	}
+});
+
+// Test: Painter at grid edge works correctly
+testSuite.tests.push({
+	name: 'processPainters - Edge painter stays in bounds',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const grid = new Grid(10, 10);
+		
+		// Place vertical painter at top edge
+		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, '#FF0000');
+		grid.setBallAt(0, 5, painterBall);
+		
+		// Fill column
+		for (let r = 0; r < 10; r++) {
+			if (grid.getBallAt(r, 5) === null) {
+				grid.setBallAt(r, 5, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00'));
+			}
+		}
+		
+		// Create match
+		const matches = [{
+			positions: [{ row: 0, col: 5 }]
+		}];
+		
+		// Should not throw error
+		let errorThrown = false;
+		try {
+			grid.processPainters(matches);
+		} catch (e) {
+			errorThrown = true;
+		}
+		
+		if (errorThrown) {
+			throw new Error('Painter at edge should not throw error');
+		}
+		
+		// Should paint the column
+		if (grid.getBallAt(9, 5).getColor() !== '#FF0000') {
+			throw new Error('Column should be painted');
+		}
+	}
+});
+
+// Test: Exploding ball in match with other special balls
+testSuite.tests.push({
+	name: 'processExplosions - Works with mixed special balls',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const grid = new Grid(20, 10);
+		
+		// Place exploding ball and painter ball together
+		const explodingBall = new Ball(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000');
+		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#FF0000');
+		grid.setBallAt(10, 5, explodingBall);
+		grid.setBallAt(10, 6, painterBall);
+		
+		// Fill area
+		for (let r = 7; r <= 13; r++) {
+			for (let c = 2; c <= 8; c++) {
+				if (grid.getBallAt(r, c) === null) {
+					grid.setBallAt(r, c, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00'));
+				}
+			}
+		}
+		
+		// Create match
+		const matches = [{
+			positions: [
+				{ row: 10, col: 5 },
+				{ row: 10, col: 6 }
+			]
+		}];
+		
+		// Process explosions
+		const exploded = grid.processExplosions(matches);
+		
+		// Should clear explosion area
+		if (exploded.length === 0) {
+			throw new Error('Should clear explosion area');
+		}
+	}
+});
+
+// Test: Multiple painters in one match
+testSuite.tests.push({
+	name: 'processPainters - Multiple painters process correctly',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const grid = new Grid(20, 10);
+		
+		// Place two horizontal painters
+		const painter1 = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#FF0000');
+		const painter2 = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#FF0000');
+		grid.setBallAt(10, 5, painter1);
+		grid.setBallAt(10, 6, painter2);
+		
+		// Fill row
+		for (let c = 0; c < 10; c++) {
+			if (grid.getBallAt(10, c) === null) {
+				grid.setBallAt(10, c, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00'));
+			}
+		}
+		
+		// Create match
+		const matches = [{
+			positions: [
+				{ row: 10, col: 5 },
+				{ row: 10, col: 6 }
+			]
+		}];
+		
+		// Process painters - should only process first painter found
+		const painted = grid.processPainters(matches);
+		
+		// Should paint the row
+		if (painted.length === 0) {
+			throw new Error('Should paint when painters in match');
+		}
+		
+		// Row should be red
+		if (grid.getBallAt(10, 0).getColor() !== '#FF0000') {
+			throw new Error('Row should be painted red');
+		}
+	}
+});
+
+// Test: Explosion returns correct position data
+testSuite.tests.push({
+	name: 'processExplosions - Returns correct cleared positions',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const grid = new Grid(20, 10);
+		
+		// Place exploding ball
+		const explodingBall = new Ball(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000');
+		grid.setBallAt(10, 5, explodingBall);
+		
+		// Place specific balls around it
+		grid.setBallAt(10, 6, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00'));
+		grid.setBallAt(11, 5, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00'));
+		
+		// Create match
+		const matches = [{
+			positions: [{ row: 10, col: 5 }]
+		}];
+		
+		// Process explosions
+		const exploded = grid.processExplosions(matches);
+		
+		// Should return position objects with row and col
+		if (exploded.length > 0) {
+			const firstPos = exploded[0];
+			if (typeof firstPos.row !== 'number' || typeof firstPos.col !== 'number') {
+				throw new Error('Returned positions should have row and col properties');
+			}
+		}
+		
+		// Should include the exploding ball position
+		const hasCenter = exploded.some(p => p.row === 10 && p.col === 5);
+		if (!hasCenter) {
+			throw new Error('Should include center explosion position');
+		}
+		
+		// Should include adjacent positions
+		const hasRight = exploded.some(p => p.row === 10 && p.col === 6);
+		const hasBelow = exploded.some(p => p.row === 11 && p.col === 5);
+		if (!hasRight || !hasBelow) {
+			throw new Error('Should include adjacent positions in explosion');
+		}
+	}
+});
+
+// Test: Painter returns correct painted data
+testSuite.tests.push({
+	name: 'processPainters - Returns painted position data',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const grid = new Grid(10, 10);
+		
+		// Place horizontal painter
+		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#FF0000');
+		grid.setBallAt(5, 5, painterBall);
+		
+		// Fill row with blue balls
+		for (let c = 0; c < 10; c++) {
+			if (grid.getBallAt(5, c) === null) {
+				grid.setBallAt(5, c, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#0000FF'));
+			}
+		}
+		
+		// Create match
+		const matches = [{
+			positions: [{ row: 5, col: 5 }]
+		}];
+		
+		// Process painters
+		const painted = grid.processPainters(matches);
+		
+		// Should return painted position data
+		if (painted.length > 0) {
+			const firstPaint = painted[0];
+			if (typeof firstPaint.row !== 'number' || 
+			    typeof firstPaint.col !== 'number' ||
+			    typeof firstPaint.oldColor !== 'string' ||
+			    typeof firstPaint.newColor !== 'string') {
+				throw new Error('Painted data should include row, col, oldColor, newColor');
+			}
+		}
+		
+		// Should have oldColor and newColor different
+		const blueChanged = painted.find(p => p.oldColor === '#0000FF');
+		if (blueChanged && blueChanged.newColor !== '#FF0000') {
+			throw new Error('Should change blue to red');
+		}
+	}
+});
+
+// Test: Blocking ball properties
+testSuite.tests.push({
+	name: 'Blocking ball - Has correct properties',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const blockingBall = new Ball(CONSTANTS.BALL_TYPES.BLOCKING, '#888888');
+		
+		if (blockingBall.isMatchable() !== false) {
+			throw new Error('Blocking ball should not be matchable');
+		}
+		
+		if (blockingBall.isSpecial() !== true) {
+			throw new Error('Blocking ball should be special');
+		}
+		
+		if (blockingBall.isExploding() !== false) {
+			throw new Error('Blocking ball should not be exploding');
+		}
+		
+		if (blockingBall.isPainter() !== false) {
+			throw new Error('Blocking ball should not be painter');
+		}
+	}
+});
+
+// Test: Exploding ball properties
+testSuite.tests.push({
+	name: 'Exploding ball - Has correct properties',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const explodingBall = new Ball(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000');
+		
+		if (explodingBall.isMatchable() !== true) {
+			throw new Error('Exploding ball should be matchable');
+		}
+		
+		if (explodingBall.isSpecial() !== true) {
+			throw new Error('Exploding ball should be special');
+		}
+		
+		if (explodingBall.isExploding() !== true) {
+			throw new Error('Exploding ball should be exploding');
+		}
+		
+		if (explodingBall.isPainter() !== false) {
+			throw new Error('Exploding ball should not be painter');
+		}
+	}
+});
+
+// Test: Painter ball properties
+testSuite.tests.push({
+	name: 'Painter ball - Has correct properties',
+	async run() {
+		await ConfigManager.loadConfig();
+		
+		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#00FF00');
+		
+		if (painterBall.isMatchable() !== true) {
+			throw new Error('Painter ball should be matchable');
+		}
+		
+		if (painterBall.isSpecial() !== true) {
+			throw new Error('Painter ball should be special');
+		}
+		
+		if (painterBall.isExploding() !== false) {
+			throw new Error('Painter ball should not be exploding');
+		}
+		
+		if (painterBall.isPainter() !== true) {
+			throw new Error('Painter ball should be painter');
+		}
+		
+		if (painterBall.getPainterDirection() !== 'horizontal') {
+			throw new Error('Horizontal painter should return horizontal direction');
+		}
+	}
+});
+
 export default testSuite;

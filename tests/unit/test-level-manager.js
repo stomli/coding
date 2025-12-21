@@ -6,15 +6,12 @@ import LevelManager from '../../src/modules/LevelManager.js';
 import { ConfigManager } from '../../src/modules/ConfigManager.js';
 
 export function runLevelManagerTests() {
-	console.log('=== Running LevelManager Tests ===');
-	
 	const results = [];
 	
 	// Helper function to run a test
 	function test(name, fn) {
 		try {
 			fn();
-			console.log(`✓ ${name}`);
 			results.push({ name, pass: true, error: null });
 		} catch (error) {
 			console.error(`✗ ${name}`);
@@ -285,10 +282,6 @@ export function runLevelManagerTests() {
 	// Print summary
 	const passed = results.filter(r => r.pass).length;
 	const failed = results.filter(r => !r.pass).length;
-	console.log(`\n=== LevelManager Test Summary ===`);
-	console.log(`Passed: ${passed}`);
-	console.log(`Failed: ${failed}`);
-	console.log(`Total: ${passed + failed}`);
 	
 	return results;
 }

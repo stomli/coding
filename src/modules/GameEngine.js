@@ -114,8 +114,6 @@ class GameEngineClass {
 		this._setupEventListeners();
 		
 		this.isInitialized = true;
-		
-		console.log('GameEngine: Initialized successfully');
 	}
 	
 	/**
@@ -308,14 +306,10 @@ class GameEngineClass {
 	 */
 	_requestNextPiece() {
 		if (DebugMode.isEnabled()) {
-			console.log('🔧 Debug: GameEngine requesting next piece');
 			this.waitingForDebugPiece = true;
 			PieceFactory.generatePiece(this.level, this.difficulty, (piece) => {
-				console.log('🔧 Debug: GameEngine received piece from callback', piece);
-				
 				// If currentPiece is null (waiting for this piece), spawn it now
 				if (!this.currentPiece) {
-					console.log('🔧 Debug: No current piece, spawning selected piece immediately');
 					this.currentPiece = piece;
 					this.waitingForDebugPiece = false;
 					
@@ -334,7 +328,6 @@ class GameEngineClass {
 					// This is the preview piece
 					this.nextPiece = piece;
 					this.waitingForDebugPiece = false;
-					console.log('🔧 Debug: waitingForDebugPiece set to false');
 				}
 			});
 		} else {
@@ -417,8 +410,6 @@ class GameEngineClass {
 		
 		// Start game loop
 		this._gameLoop();
-		
-		console.log('GameEngine: Game started');
 	}
 	
 	/**
@@ -645,7 +636,6 @@ class GameEngineClass {
 		
 		// If currentPiece is null (debug mode waiting), skip positioning until piece is ready
 		if (!this.currentPiece) {
-			console.log('🔧 Debug: No next piece available, waiting for selection');
 			this.isLocking = false;
 			this.lockTimer = 0;
 			return;
@@ -689,12 +679,10 @@ class GameEngineClass {
 	async _handleMatching() {
 		// Prevent concurrent cascade processing
 		if (this.isHandlingMatches) {
-			console.log('🔧 Debug: Already handling matches, skipping duplicate call');
 			return;
 		}
 		
 		this.isHandlingMatches = true;
-		console.log('🔧 Debug: _handleMatching called');
 		
 		// Track scoring events for celebration
 		let totalScoringEvents = 0;
@@ -731,12 +719,10 @@ class GameEngineClass {
 			
 			// DEBUG: Wait for user to advance step
 			if (DebugMode.enabled && DebugMode.stepMode) {
-				console.log(`🔧 Debug: Cascade step ${cascadeCount} - found ${matches.length} match(es)`);
 				await DebugMode.waitForStep();
 			}
 			
 		// Record statistics for matches BEFORE processing (while balls still exist)
-		console.log('GameEngine: Recording stats for', matches.length, 'matches');
 		StatisticsTracker.recordMatches(matches, this.grid);
 		
 		// Process special balls FIRST (priority order)
@@ -1026,8 +1012,6 @@ class GameEngineClass {
 			if (pauseScreen) {
 				pauseScreen.classList.remove('hidden');
 			}
-			
-			console.log('GameEngine: Paused');
 		}
 	}
 	
@@ -1055,8 +1039,6 @@ class GameEngineClass {
 			
 			// Restart game loop
 			this._gameLoop();
-			
-			console.log('GameEngine: Resumed');
 		}
 	}
 	
@@ -1209,8 +1191,6 @@ class GameEngineClass {
 				}
 			}
 		}
-		
-		console.log('GameEngine: Level Complete!', reason);
 	}
 	
 	/**

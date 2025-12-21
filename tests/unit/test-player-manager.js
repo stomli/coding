@@ -5,15 +5,12 @@
 import PlayerManager from '../../src/modules/PlayerManager.js';
 
 export function runPlayerManagerTests() {
-	console.log('=== Running PlayerManager Tests ===');
-	
 	const results = [];
 	
 	// Helper function to run a test
 	function test(name, fn) {
 		try {
 			fn();
-			console.log(`✓ ${name}`);
 			results.push({ name, pass: true, error: null });
 		} catch (error) {
 			console.error(`✗ ${name}`);
@@ -349,7 +346,6 @@ export function runPlayerManagerTests() {
 	// Summary
 	const passed = results.filter(r => r.pass).length;
 	const failed = results.filter(r => !r.pass).length;
-	console.log(`\nPlayerManager Tests: ${passed} passed, ${failed} failed\n`);
 	
 	return results;
 }

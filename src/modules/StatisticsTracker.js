@@ -72,7 +72,6 @@ class StatisticsTrackerClass {
 		}
 		
 		this.stats[ballType][color]++;
-		console.log('StatisticsTracker: Recorded match', { ballType, color, count: this.stats[ballType][color] });
 		this.updateCell(ballType, color);
 	}
 
@@ -82,8 +81,6 @@ class StatisticsTrackerClass {
 	 * @param {Grid} grid - Grid instance to get ball data
 	 */
 	recordMatches(matches, grid) {
-		console.log('StatisticsTracker: recordMatches called with', matches.length, 'match groups');
-		
 		// Each match object has a positions array
 		matches.forEach(match => {
 			// Iterate through each position in the match
@@ -154,8 +151,6 @@ class StatisticsTrackerClass {
 		const cellId = `stat-${ballType}-${color.replace('#', '')}`;
 		const cell = document.getElementById(cellId);
 		
-		console.log('StatisticsTracker: updateCell', { ballType, color, cellId, found: !!cell });
-		
 		if (cell) {
 			const count = this.stats[ballType][color];
 			cell.textContent = count;
@@ -172,8 +167,6 @@ class StatisticsTrackerClass {
 			setTimeout(() => {
 				cell.style.transform = 'scale(1)';
 			}, 200);
-		} else {
-			console.warn('StatisticsTracker: Cell not found', cellId);
 		}
 	}
 

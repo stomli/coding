@@ -134,7 +134,6 @@ class PlayerManagerClass {
 		
 		if (migrated) {
 			this.savePlayers();
-			console.log('Player data migration completed');
 		}
 	}
 
@@ -224,10 +223,8 @@ class PlayerManagerClass {
 			this.currentPlayer = playerName;
 			this.players[playerName].lastPlayed = new Date().toISOString();
 			this.savePlayers();
-			console.log(`PlayerManager: Switched to player ${playerName}`);
 			return true;
 		}
-		console.warn(`PlayerManager: Player ${playerName} not found`);
 		return false;
 	}
 
@@ -239,7 +236,6 @@ class PlayerManagerClass {
 	addPlayer(playerName) {
 		// Validate name
 		if (!playerName || playerName.trim() === '') {
-			console.warn('PlayerManager: Invalid player name');
 			return false;
 		}
 
@@ -247,14 +243,12 @@ class PlayerManagerClass {
 
 		// Check if player already exists
 		if (this.players[playerName]) {
-			console.warn(`PlayerManager: Player ${playerName} already exists`);
 			return false;
 		}
 
 		// Create new player
 		this.players[playerName] = this.createNewPlayerData(playerName);
 		this.savePlayers();
-		console.log(`PlayerManager: Added new player ${playerName}`);
 		return true;
 	}
 
@@ -266,19 +260,16 @@ class PlayerManagerClass {
 	deletePlayer(playerName) {
 		// Can't delete Guest or current player
 		if (playerName === 'Guest') {
-			console.warn('PlayerManager: Cannot delete Guest player');
 			return false;
 		}
 
 		if (playerName === this.currentPlayer) {
-			console.warn('PlayerManager: Cannot delete current player');
 			return false;
 		}
 
 		if (this.players[playerName]) {
 			delete this.players[playerName];
 			this.savePlayers();
-			console.log(`PlayerManager: Deleted player ${playerName}`);
 			return true;
 		}
 
@@ -466,8 +457,6 @@ class PlayerManagerClass {
 		
 		this.players[playerName] = freshData;
 		this.savePlayers();
-		
-		console.log(`PlayerManager: Reset data for player ${playerName}`);
 		return true;
 	}
 }

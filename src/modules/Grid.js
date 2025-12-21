@@ -39,6 +39,64 @@ class Grid {
 	}
 	
 	/**
+	 * Iterate over all cells in the grid
+	 * @param {Function} callback - Function called for each cell: (row, col, ball) => void
+	 * @returns {void}
+	 */
+	forEachCell(callback) {
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				callback(row, col, this.grid[row][col]);
+			}
+		}
+	}
+	
+	/**
+	 * Generator that yields all cells in the grid
+	 * @yields {{row: number, col: number, ball: Ball|null}}
+	 */
+	*iterateCells() {
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				yield { row, col, ball: this.grid[row][col] };
+			}
+		}
+	}
+	
+	/**
+	 * Map over all cells and return a new array
+	 * @param {Function} callback - Function called for each cell: (row, col, ball) => any
+	 * @returns {Array} Array of mapped values
+	 */
+	mapCells(callback) {
+		const results = [];
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				results.push(callback(row, col, this.grid[row][col]));
+			}
+		}
+		return results;
+	}
+	
+	/**
+	 * Filter cells based on a predicate
+	 * @param {Function} predicate - Function that returns true for cells to include
+	 * @returns {Array<{row: number, col: number, ball: Ball|null}>} Filtered cells
+	 */
+	filterCells(predicate) {
+		const results = [];
+		for (let row = 0; row < this.rows; row++) {
+			for (let col = 0; col < this.cols; col++) {
+				const ball = this.grid[row][col];
+				if (predicate(row, col, ball)) {
+					results.push({ row, col, ball });
+				}
+			}
+		}
+		return results;
+	}
+	
+	/**
 	 * Get the highest (lowest row number) row containing a ball
 	 * @returns {Number} Row index of highest ball, or -1 if grid is empty
 	 */
@@ -240,6 +298,55 @@ class Grid {
 	}
 	
 	/**
+	 * Generic match finding helper
+	 * @param {Function} cellIterator - Generator function that yields {row, col}
+	 * @param {string} matchType - Type of match (horizontal/vertical/diagonal)
+	 * @param {string} direction - Direction name
+	 * @returns {Array<Object>} Array of match objects
+	 * @private
+	 */
+	_findMatchesInLine(cellIterator, matchType, direction) {
+		const matches = [];
+		let currentColor = null;
+		let matchPositions = [];
+		
+		for (const pos of cellIterator) {
+			const ball = this.grid[pos.row]?.[pos.col];
+			const ballColor = ball?.isMatchable() ? ball.getColor() : null;
+			
+			if (ballColor && ballColor === currentColor) {
+				matchPositions.push(pos);
+			} else {
+				// Save match if it meets minimum length
+				if (matchPositions.length >= CONSTANTS.MIN_MATCH_LENGTH) {
+					matches.push({
+						type: matchType,
+						color: currentColor,
+						positions: [...matchPositions],
+						direction: direction
+					});
+				}
+				
+				// Start new potential match
+				currentColor = ballColor;
+				matchPositions = ballColor ? [pos] : [];
+			}
+		}
+		
+		// Check final match
+		if (matchPositions.length >= CONSTANTS.MIN_MATCH_LENGTH) {
+			matches.push({
+				type: matchType,
+				color: currentColor,
+				positions: [...matchPositions],
+				direction: direction
+			});
+		}
+		
+		return matches;
+	}
+	
+	/**
 	 * Find horizontal matches
 	 * @returns {Array<Object>} Array of horizontal match objects
 	 * @private
@@ -248,48 +355,17 @@ class Grid {
 		const matches = [];
 		
 		for (let row = 0; row < this.rows; row++) {
-			let currentColor = null;
-			let matchStart = 0;
-			let matchLength = 0;
+			const cellIterator = (function*() {
+				for (let col = 0; col < this.cols; col++) {
+					yield { row, col };
+				}
+			}).call(this);
 			
-			for (let col = 0; col <= this.cols; col++) {
-				const ball = col < this.cols ? this.grid[row][col] : null;
-				const hasBall = ball !== null;
-				const isMatchable = hasBall && ball.isMatchable();
-				const ballColor = isMatchable ? ball.getColor() : null;
-				const colorsMatch = ballColor !== null && ballColor === currentColor;
-				
-				// Continue or end match
-				if (colorsMatch) {
-					matchLength++;
-				}
-				else {
-					// Check if we have a valid match
-					const hasMinLength = matchLength >= CONSTANTS.MIN_MATCH_LENGTH;
-					
-					// Save match if valid
-					if (hasMinLength) {
-						const positions = [];
-						for (let c = matchStart; c < matchStart + matchLength; c++) {
-							positions.push({ row, col: c });
-						}
-						matches.push({
-							type: CONSTANTS.MATCH_DIRECTIONS.HORIZONTAL,
-							color: currentColor,
-							positions: positions,
-							direction: 'horizontal'
-						});
-					}
-					else {
-						// Match too short, discard
-					}
-					
-					// Start new potential match
-					currentColor = ballColor;
-					matchStart = col;
-					matchLength = isMatchable ? 1 : 0;
-				}
-			}
+			matches.push(...this._findMatchesInLine(
+				cellIterator,
+				CONSTANTS.MATCH_DIRECTIONS.HORIZONTAL,
+				'horizontal'
+			));
 		}
 		
 		return matches;
@@ -304,48 +380,17 @@ class Grid {
 		const matches = [];
 		
 		for (let col = 0; col < this.cols; col++) {
-			let currentColor = null;
-			let matchStart = 0;
-			let matchLength = 0;
+			const cellIterator = (function*() {
+				for (let row = 0; row < this.rows; row++) {
+					yield { row, col };
+				}
+			}).call(this);
 			
-			for (let row = 0; row <= this.rows; row++) {
-				const ball = row < this.rows ? this.grid[row][col] : null;
-				const hasBall = ball !== null;
-				const isMatchable = hasBall && ball.isMatchable();
-				const ballColor = isMatchable ? ball.getColor() : null;
-				const colorsMatch = ballColor !== null && ballColor === currentColor;
-				
-				// Continue or end match
-				if (colorsMatch) {
-					matchLength++;
-				}
-				else {
-					// Check if we have a valid match
-					const hasMinLength = matchLength >= CONSTANTS.MIN_MATCH_LENGTH;
-					
-					// Save match if valid
-					if (hasMinLength) {
-						const positions = [];
-						for (let r = matchStart; r < matchStart + matchLength; r++) {
-							positions.push({ row: r, col });
-						}
-						matches.push({
-							type: CONSTANTS.MATCH_DIRECTIONS.VERTICAL,
-							color: currentColor,
-							positions: positions,
-							direction: 'vertical'
-						});
-					}
-					else {
-						// Match too short, discard
-					}
-					
-					// Start new potential match
-					currentColor = ballColor;
-					matchStart = row;
-					matchLength = isMatchable ? 1 : 0;
-				}
-			}
+			matches.push(...this._findMatchesInLine(
+				cellIterator,
+				CONSTANTS.MATCH_DIRECTIONS.VERTICAL,
+				'vertical'
+			));
 		}
 		
 		return matches;
@@ -362,132 +407,42 @@ class Grid {
 		// Down-right diagonals (↘)
 		for (let startRow = 0; startRow < this.rows; startRow++) {
 			for (let startCol = 0; startCol < this.cols; startCol++) {
-				let currentColor = null;
-				let matchStart = { row: startRow, col: startCol };
-				let matchLength = 0;
-				
-				let row = startRow;
-				let col = startCol;
-				
-				while (row < this.rows && col < this.cols) {
-					const ball = this.grid[row][col];
-					const hasBall = ball !== null;
-					const isMatchable = hasBall && ball.isMatchable();
-					const ballColor = isMatchable ? ball.getColor() : null;
-					const colorsMatch = ballColor !== null && ballColor === currentColor;
-					
-					if (colorsMatch) {
-						matchLength++;
-					} else {
-						// Check if we have a valid match
-						if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
-							const positions = [];
-							for (let i = 0; i < matchLength; i++) {
-								positions.push({ 
-									row: matchStart.row + i, 
-									col: matchStart.col + i 
-								});
-							}
-							matches.push({
-								type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
-								color: currentColor,
-								positions: positions,
-								direction: 'diagonal'
-							});
-						}
-						
-						// Start new potential match
-						currentColor = ballColor;
-						matchStart = { row, col };
-						matchLength = isMatchable ? 1 : 0;
+				const cellIterator = (function*() {
+					let row = startRow;
+					let col = startCol;
+					while (row < this.rows && col < this.cols) {
+						yield { row, col };
+						row++;
+						col++;
 					}
-					
-					row++;
-					col++;
-				}
+				}).call(this);
 				
-				// Check final match
-				if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
-					const positions = [];
-					for (let i = 0; i < matchLength; i++) {
-						positions.push({ 
-							row: matchStart.row + i, 
-							col: matchStart.col + i 
-						});
-					}
-					matches.push({
-						type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
-						color: currentColor,
-						positions: positions,
-						direction: 'diagonal'
-					});
-				}
+				matches.push(...this._findMatchesInLine(
+					cellIterator,
+					CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
+					'diagonal'
+				));
 			}
 		}
 		
 		// Down-left diagonals (↙)
 		for (let startRow = 0; startRow < this.rows; startRow++) {
 			for (let startCol = this.cols - 1; startCol >= 0; startCol--) {
-				let currentColor = null;
-				let matchStart = { row: startRow, col: startCol };
-				let matchLength = 0;
-				
-				let row = startRow;
-				let col = startCol;
-				
-				while (row < this.rows && col >= 0) {
-					const ball = this.grid[row][col];
-					const hasBall = ball !== null;
-					const isMatchable = hasBall && ball.isMatchable();
-					const ballColor = isMatchable ? ball.getColor() : null;
-					const colorsMatch = ballColor !== null && ballColor === currentColor;
-					
-					if (colorsMatch) {
-						matchLength++;
-					} else {
-						// Check if we have a valid match
-						if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
-							const positions = [];
-							for (let i = 0; i < matchLength; i++) {
-								positions.push({ 
-									row: matchStart.row + i, 
-									col: matchStart.col - i 
-								});
-							}
-							matches.push({
-								type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
-								color: currentColor,
-								positions: positions,
-								direction: 'diagonal'
-							});
-						}
-						
-						// Start new potential match
-						currentColor = ballColor;
-						matchStart = { row, col };
-						matchLength = isMatchable ? 1 : 0;
+				const cellIterator = (function*() {
+					let row = startRow;
+					let col = startCol;
+					while (row < this.rows && col >= 0) {
+						yield { row, col };
+						row++;
+						col--;
 					}
-					
-					row++;
-					col--;
-				}
+				}).call(this);
 				
-				// Check final match
-				if (matchLength >= CONSTANTS.MIN_MATCH_LENGTH) {
-					const positions = [];
-					for (let i = 0; i < matchLength; i++) {
-						positions.push({ 
-							row: matchStart.row + i, 
-							col: matchStart.col - i 
-						});
-					}
-					matches.push({
-						type: CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
-						color: currentColor,
-						positions: positions,
-						direction: 'diagonal'
-					});
-				}
+				matches.push(...this._findMatchesInLine(
+					cellIterator,
+					CONSTANTS.MATCH_DIRECTIONS.DIAGONAL,
+					'diagonal'
+				));
 			}
 		}
 		

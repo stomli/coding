@@ -15,15 +15,12 @@ export function runParticleSystemTests() {
 		tests: []
 	};
 
-	console.log('Running ParticleSystem Tests...');
-
 	// Helper function to run a test
 	function test(name, fn) {
 		try {
 			fn();
 			results.passed++;
 			results.tests.push({ name, pass: true, error: null });
-			console.log(`✓ ${name}`);
 		} catch (error) {
 			results.failed++;
 			results.tests.push({ name, pass: false, error: error.message });
@@ -343,6 +340,5 @@ export function runParticleSystemTests() {
 		assert(p.alpha === 1, 'Initial alpha should be 1');
 	});
 
-	console.log(`\nParticleSystem Tests: ${results.passed} passed, ${results.failed} failed`);
 	return results.tests;
 }

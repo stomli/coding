@@ -15,15 +15,12 @@ export function runAnimationManagerTests() {
 		tests: []
 	};
 
-	console.log('Running AnimationManager Tests...');
-
 	// Helper function to run a test
 	function test(name, fn) {
 		try {
 			fn();
 			results.passed++;
 			results.tests.push({ name, pass: true, error: null });
-			console.log(`✓ ${name}`);
 		} catch (error) {
 			results.failed++;
 			results.tests.push({ name, pass: false, error: error.message });
@@ -286,6 +283,5 @@ export function runAnimationManagerTests() {
 		assert(anim.type === 'pieceDrop', 'Animation type should be pieceDrop');
 	});
 
-	console.log(`\nAnimationManager Tests: ${results.passed} passed, ${results.failed} failed`);
 	return results.tests;
 }
