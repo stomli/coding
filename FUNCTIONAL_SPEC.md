@@ -19,16 +19,26 @@ A Tetris-inspired puzzle game where colored ball pieces fall from the top and st
 
 ### 2.2 Visual Layout
 ```
-┌─────────────────────────────────┐
-│  Score | Level | Difficulty     │ ← Status Bar
-├─────────────────────────────────┤
-│                                 │
-│     [15 columns × 25 rows]      │ ← Game Board
-│         Game Grid               │
-│                                 │
-├─────────────────────────────────┤
-│    Next Piece Preview           │ ← Preview Panel
-└─────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│  Difficulty: 3  Level: 12        ⏱ 8.3s        Score: 1,234  │ ← HUD Bar
+│                                                   Best: 5,678  │
+├─────────────┬─────────────────────────────────┬───────────────┤
+│             │                                 │               │
+│  Orb Types  │    [Game Board 15×25]          │  Next Piece   │
+│  Legend     │                                 │   Preview     │
+│             │                                 │               │
+│  • Normal   │                                 │  [4×4 grid]   │
+│  ⭐ Explode │                                 │               │
+│  ✕ Block    │                                 │               │
+│  ─ Paint H  │                                 │  Upcoming:    │
+│  │ Paint V  │                                 │  [4×4 grid]   │
+│  ╱ Paint NE │                                 │               │
+│  ╲ Paint NW │                                 │               │
+│             │                                 │               │
+│  Colors:    │                                 │               │
+│  🔴🔵🟢🟡   │                                 │               │
+│             │                                 │               │
+└─────────────┴─────────────────────────────────┴───────────────┘
 ```
 
 ---
@@ -73,16 +83,18 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 - **Visual Feedback:** Gold floating text shows count of balls destroyed
 
 #### 3.3.2 Painting Balls (Implemented)
-- **Types:** 3 variants
+- **Types:** 4 variants
   - Horizontal Painter (↔)
   - Vertical Painter (↕)
-  - Diagonal Painter (⤢)
+  - Diagonal NE Painter (↗↙) - Paints NE-SW diagonal
+  - Diagonal NW Painter (↖↘) - Paints NW-SE diagonal
 - **Spawn Rate:** 5% per ball in piece (configurable, independent from exploding)
 - **Behavior:** When 3+ match in their designated direction, entire line changes to the painting ball's color
 - **Line Definition:**
   - Horizontal: Entire row
   - Vertical: Entire column
-  - Diagonal: Entire diagonal line through the match
+  - Diagonal NE: Entire NE-SW diagonal line through the match (↗↙)
+  - Diagonal NW: Entire NW-SE diagonal line through the match (↖↘)
 - **Match Re-Finding:** After painting, grid immediately re-checks for new matches
   - Newly painted balls can create immediate matches
   - Triggers additional cascades if matches found
@@ -258,36 +270,120 @@ As level numbers increase (within same difficulty):
 
 ### 7.1 Main Game Screen
 ```
+┌───────────────────────────────────────────────────────────────────────┐
+│  Difficulty: 3    Level: 12      ⏱ TIME: 8.3s      Score: 1,234      │
+│                                                       Best: 45,678     │
+├────────────────┬──────────────────────────────────┬────────────────────┤
+│                │                                  │                    │
+│  ORB TYPES     │                                  │   NEXT PIECE       │
+│                │                                  │                    │
+│  🔴 Normal     │                                  │   ┌─┬─┬─┬─┐       │
+│    Standard    │      [15 cols × 25 rows]         │   │🔴│🔴│  │  │       │
+│                │                                  │   ├─┼─┼─┼─┤       │
+│  ⭐ Exploding  │       GAME BOARD                 │   │🔴│🔴│  │  │       │
+│    Destroys    │                                  │   ├─┼─┼─┼─┤       │
+│    nearby      │                                  │   │  │  │  │  │       │
+│                │                                  │   ├─┼─┼─┼─┤       │
+│  ✕ Blocking    │                                  │   │  │  │  │  │       │
+│    Cleared by  │                                  │   └─┴─┴─┴─┘       │
+│    explosions  │                                  │                    │
+│                │                                  │   UPCOMING         │
+│  ─ Painter H   │                                  │                    │
+│    Paints row  │                                  │   ┌─┬─┬─┬─┐       │
+│                │                                  │   │🔵│🔵│🔵│  │       │
+│  │ Painter V   │                                  │   ├─┼─┼─┼─┤       │
+│    Paints col  │                                  │   │  │  │  │  │       │
+│                │                                  │   ├─┼─┼─┼─┤       │
+│  ╱ Painter NE  │                                  │   │  │  │  │  │       │
+│    NE-SW diag  │                                  │   ├─┼─┼─┼─┤       │
+│                │                                  │   │  │  │  │  │       │
+│  ╲ Painter NW  │                                  │   └─┴─┴─┴─┘       │
+│    NW-SE diag  │                                  │                    │
+│                │                                  │                    │
+│  AVAILABLE     │                                  │   [Controls]       │
+│  COLORS        │                                  │                    │
+│  🔴 🔵 🟢 🟡    │                                  │   ← → ↓ SPACE     │
+│                │                                  │   Z X Q R P        │
+│                │                                  │                    │
+└────────────────┴──────────────────────────────────┴────────────────────┘
+```
+
+### 7.2 Menu / Level Selection Screen
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│                  🎮 ORB•FALL: CHROMACRUSH                   │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                          PLAYER                             │
+│                                                             │
+│          [Player Name ▼]  [➕]  [🗑️]                       │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                    SELECT DIFFICULTY                        │
+│                                                             │
+│    [  Easy  ] [ Medium ] [  Hard  ] [ Expert ] [ Master ]  │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                      SELECT LEVEL                           │
+│                                                             │
+│   ┌─┬─┬─┬─┬─┬─┬─┬─┬─┬─┐                                   │
+│   │1│2│3│4│5│6│7│8│9│10│  Row 1                            │
+│   ├─┼─┼─┼─┼─┼─┼─┼─┼─┼─┤                                   │
+│   │11│12│13│14│15│16│17│18│19│20│  Row 2                  │
+│   └─┴─┴─┴─┴─┴─┴─┴─┴─┴─┘                                   │
+│                                                             │
+│   🔒 = Locked    ⭐ = Best Score Displayed                 │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│              [    START GAME    ]                           │
+│              [     SETTINGS     ]                           │
+│              [  HOW TO PLAY  ]                              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7.3 Pause Screen
+```
 ┌─────────────────────────────────────────────┐
-│  DIFFICULTY: 3    LEVEL: 12    TIME: 8.3s  │
-│  LEVEL SCORE: 1,234   TOTAL: 45,678        │
-├─────────────────────────────────────────────┤
 │                                             │
-│          [Game Board 15×25]                 │
+│             ⏸️  PAUSED                       │
+│                                             │
+│         Current Score: 1,234                │
+│         Best Score: 5,678                   │
+│                                             │
+│         Time Elapsed: 45.2s                 │
 │                                             │
 │                                             │
-├─────────────────────────────────────────────┤
-│    NEXT PIECE:   [Preview]                  │
+│         [   ▶️  RESUME   ]                   │
+│         [   🔄 RESTART   ]                   │
+│         [   🏠 MENU      ]                   │
+│                                             │
+│                                             │
 └─────────────────────────────────────────────┘
 ```
 
-### 7.2 Menu / Level Selection
-- **Difficulty Selector:** 1-5 buttons
-- **Level Grid:** Shows unlocked levels for selected difficulty
-- **High Scores:** Display best score for each (difficulty, level)
-- **Start Button:** Begin selected level
-
-### 7.3 Pause Screen
-- Overlay on game board
-- Options: Resume, Restart, Return to Menu
-- Displays current scores
-
 ### 7.4 Game Over Screen
-- Show final level score
-- Show total score
-- Show high score for this (difficulty, level)
-- Display "NEW HIGH SCORE!" if achieved
-- Options: Retry, Menu
+```
+┌─────────────────────────────────────────────┐
+│                                             │
+│              GAME OVER                      │
+│                                             │
+│         Final Score:  1,234                 │
+│         Best Score:   5,678                 │
+│                                             │
+│         ⭐ NEW HIGH SCORE! ⭐                │
+│            (if achieved)                    │
+│                                             │
+│         Time: 125.4s                        │
+│         Level Reached: 12                   │
+│                                             │
+│         [   🔄 RETRY     ]                   │
+│         [   🏠 MENU      ]                   │
+│                                             │
+└─────────────────────────────────────────────┘
+```
 
 ---
 
@@ -468,7 +564,7 @@ All game parameters should be configurable via JSON:
 - Project structure with modular architecture
 - ConfigManager with config.json loading (156 configurable parameters)
 - Constants and EventEmitter utilities
-- Ball class with type system (NORMAL, BLOCKING, EXPLODING, HORIZONTAL_PAINTER, VERTICAL_PAINTER, DIAGONAL_PAINTER)
+- Ball class with type system (NORMAL, BLOCKING, EXPLODING, HORIZONTAL_PAINTER, VERTICAL_PAINTER, DIAGONAL_NE_PAINTER, DIAGONAL_NW_PAINTER)
 - Piece class with 8 shapes and rotation
 - Grid class with comprehensive match detection
 - Renderer with Canvas API
@@ -503,7 +599,7 @@ All game parameters should be configurable via JSON:
 
 ✅ **Special Ball Effects (Phase 5)**
 - Exploding balls: 7×7 area clear on match (configurable spawn rate: 5%)
-- Horizontal/Vertical/Diagonal painters: Full line painting (configurable spawn rate: 5%)
+- Horizontal/Vertical/Diagonal NE/Diagonal NW painters: Full line painting (configurable spawn rate: 5%)
 - Blocking balls: Spawn system with difficulty/level scaling, explosion-only removal
 - Painter re-matching: Painted balls immediately re-checked for new matches
 - Explosion scoring: All cleared balls counted and displayed

@@ -126,7 +126,8 @@ As you progress through levels, more colors become available:
 - **Types:** 
   - **Horizontal Painter** (↔): Paints entire row
   - **Vertical Painter** (↕): Paints entire column
-  - **Diagonal Painter** (⤢): Paints entire diagonal
+  - **Diagonal NE Painter** (↗): Paints entire NE-SW diagonal (↗↙)
+  - **Diagonal NW Painter** (↖): Paints entire NW-SE diagonal (↖↘)
 - **Spawn Rate:** 5% chance per ball
 - **Effect:** When 3+ painters match in their direction, the entire line changes to that color
 - **Bonus:** Painted balls immediately re-check for matches, creating instant cascades!

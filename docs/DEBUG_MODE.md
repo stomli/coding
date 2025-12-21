@@ -47,7 +47,8 @@ Available types:
 - `blocking` - Blocking balls (immune to painters)
 - `painterH` - Horizontal painter
 - `painterV` - Vertical painter
-- `painterD` - Diagonal painter
+- `painterDNE` - Diagonal NE painter (↗↙)
+- `painterDNW` - Diagonal NW painter (↖↘)
 
 ## Examples
 

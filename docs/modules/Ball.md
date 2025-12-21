@@ -98,10 +98,15 @@ Standard colored ball that matches by color.
 - When 3+ match vertically, paints entire column to this color
 - Visual: Vertical stripe overlay
 
-### PAINTER_D (Diagonal Painter)
+### PAINTER_DIAGONAL_NE (Diagonal NE Painter)
 - Matches like normal ball
-- When 3+ match diagonally, paints entire diagonal to this color
-- Visual: Diagonal stripe overlay
+- When 3+ match, paints entire NE-SW diagonal (↗↙) to this color
+- Visual: Diagonal stripe overlay (↗)
+
+### PAINTER_DIAGONAL_NW (Diagonal NW Painter)
+- Matches like normal ball
+- When 3+ match, paints entire NW-SE diagonal (↖↘) to this color
+- Visual: Diagonal stripe overlay (↖)
 
 ### BLOCKING
 - Cannot be matched
