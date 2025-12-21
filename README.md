@@ -41,10 +41,11 @@ A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+
 Survive for 15 seconds per level by matching colored balls. Avoid filling any column to the top!
 
 ### Scoring
-- **Base:** 1 point per ball (doubles every 5 balls after first 10)
-- **Full Row:** +50 bonus
-- **Cascades:** +3 for first, doubles each level
-- **Difficulty:** Up to 3× multiplier
+- **Base:** 1 point per ball cleared
+- **Cascades:** Progressive multipliers (Level 1: ×1, Level 2: ×2, Level 3: ×3, etc.)
+  - Example: 2× cascade with 3 balls (L1) + 5 balls (L2) = 3 + 10 = 13 points
+- **Difficulty:** 1.0×, 1.5×, 2.0×, 2.5×, 3.0× multipliers
+- **Visual Feedback:** Color-coded floating text (white: clears, gold: explosions, blue: cascades)
 
 ## 📁 Project Structure
 
@@ -97,12 +98,16 @@ All game parameters are configurable via `config.json`:
 **Supporting Modules:**
 - `Renderer.js` - Canvas rendering
 - `InputHandler.js` - Keyboard controls
-- `ScoreManager.js` - Score calculation
+- `ScoreManager.js` - Score calculation with progressive cascades
 - `LevelManager.js` - Level/difficulty progression
-- `AudioManager.js` - Sound effects (Web Audio API)
-- `StorageManager.js` - LocalStorage persistence
-- `UIManager.js` - UI element updates
-- `ConfigManager.js` - Configuration loading
+- `AudioManager.js` - Web Audio API sound generation
+- `PlayerManager.js` - High scores and player profiles
+- `ConfigManager.js` - Configuration loading (156 parameters)
+- `FloatingText.js` - Color-coded score feedback
+- `AnimationManager.js` - Animation state tracking
+- `ParticleSystem.js` - Visual particle effects
+- `StatisticsTracker.js` - Match/cascade analytics
+- `WeatherBackground.js` - Dynamic background effects
 
 ## 📚 Documentation
 
@@ -113,13 +118,11 @@ Complete documentation available in:
 
 ## 🧪 Testing
 
-```powershell
-# Run unit tests (when implemented)
-npm test
-
-# Run specific test file
-npm test Grid.test.js
-```
+Open `validate.html` in your browser to run the comprehensive test suite:
+- **262+ Unit Tests** across 14 modules
+- Real-time pass/fail reporting
+- Detailed error messages
+- Coverage: Core utilities, game entities, factories, managers, and game systems
 
 ## 🎨 Customization
 
@@ -136,13 +139,18 @@ Edit `config.json` → `scoring` section to adjust point values.
 
 ## 🐛 Known Issues
 
-- None currently (development in progress)
+- None currently - all core features implemented and tested
 
 ## 📝 Version History
 
-- **v1.0** (In Development)
-  - Initial implementation
-  - All core features planned
+- **v1.0** (December 2025)
+  - Complete core gameplay implementation
+  - Progressive cascade scoring system
+  - Special balls: exploding, painting, blocking
+  - 5 difficulty levels with unlimited progression
+  - Web Audio API sound system
+  - LocalStorage persistence
+  - 262+ comprehensive unit tests
 
 ## 🤝 Contributing
 
@@ -163,6 +171,6 @@ For questions or feedback, please open an issue in the repository.
 
 ---
 
-**Status:** 🚧 In Development  
-**Target Release:** TBD  
-**Last Updated:** December 19, 2025
+**Status:** ✅ Complete (Phase 10: Documentation in progress)  
+**Version:** 1.0  
+**Last Updated:** December 21, 2025

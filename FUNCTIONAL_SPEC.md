@@ -61,17 +61,18 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 
 ### 3.3 Special Ball Types
 
-#### 3.3.1 Exploding Balls
+#### 3.3.1 Exploding Balls (Implemented)
 - **Appearance:** Distinct visual marker (e.g., star/burst pattern)
 - **Spawn Rate:** 5% per ball in piece (configurable)
-- **Behavior:** When 3+ match, clears a 7×7 area
+- **Behavior:** When 3+ match, clears a 7×7 area centered on match
 - **Explosion Pattern:**
-  - Horizontal match: 7×7 grid-aligned square
-  - Vertical match: 7×7 grid-aligned square
-  - Diagonal match: 7×7 square rotated 45° along match axis
-- **Clears:** All ball types except blocking balls outside explosion radius
+  - All matches: 7×7 grid-aligned square centered on the matched exploding balls
+  - Multiple exploding balls: Separate 7×7 explosions per position
+- **Clears:** All ball types including blocking balls within the 7×7 radius
+- **Scoring:** All exploded balls counted and tracked via `BALLS_CLEARED` event
+- **Visual Feedback:** Gold floating text shows count of balls destroyed
 
-#### 3.3.2 Painting Balls
+#### 3.3.2 Painting Balls (Implemented)
 - **Types:** 3 variants
   - Horizontal Painter (↔)
   - Vertical Painter (↕)
@@ -82,18 +83,22 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
   - Horizontal: Entire row
   - Vertical: Entire column
   - Diagonal: Entire diagonal line through the match
+- **Match Re-Finding:** After painting, grid immediately re-checks for new matches
+  - Newly painted balls can create immediate matches
+  - Triggers additional cascades if matches found
 
-#### 3.3.3 Blocking Balls
-- **Appearance:** Distinct visual (e.g., gray/black with X or lock icon)
+#### 3.3.3 Blocking Balls (Implemented)
+- **Appearance:** Distinct visual (gray/black with X pattern)
 - **Spawn Method:** Drop individually from center-top of board (column 7-8)
-- **Player Control:** None - they fall automatically
+- **Player Control:** None - they fall automatically at piece drop speed
 - **Spawn Rate:** 
-  - Base: 0.5% chance per piece dropped
+  - Base: 0.5% chance per piece dropped (configurable)
   - Increases with difficulty and level progression
   - Not before piece 50 on difficulty 1
-  - Earlier on higher difficulties
-- **Removal:** Only by reaching bottom of stack or being caught in explosion radius
-- **Cannot:** Be matched, painted, or rotated by player
+  - Earlier on higher difficulties (configurable thresholds)
+- **Removal:** Only by being caught in explosion radius (7×7 area)
+- **Cannot:** Be matched, painted, or affected by normal clears
+- **Behavior:** Falls like normal ball, stacks at bottom, persists until exploded
 
 ---
 
@@ -163,20 +168,34 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 
 ### 5.1 Base Scoring (Implemented)
 - **Base Points:** 1 point per ball cleared (configurable)
-- **Cascade Bonus Formula:**
-  - Single cascade (no chain): Base points only
-  - 2nd cascade in chain: +3 points (configurable)
-  - 3rd cascade in chain: +6 points (previous bonus × 2)
-  - 4th+ cascade: Bonus continues doubling
-  - Formula: `3 × 2^(cascadeLevel - 2)` for cascade level ≥ 2
+- **Cascade Bonus Formula (Progressive Multipliers):**
+  - Single cascade (no chain): Base points only (balls × 1)
+  - 2nd cascade in chain: Progressive scoring begins
+    - Level 1 balls: `count × basePoints × 1`
+    - Level 2 balls: `count × basePoints × 2`
+  - 3rd cascade in chain:
+    - Level 1 balls: `count × basePoints × 1`
+    - Level 2 balls: `count × basePoints × 2`
+    - Level 3 balls: `count × basePoints × 3`
+  - Formula: Each cascade level N gets balls cleared × basePoints × N
+  - Example: 2x cascade with 3 balls (L1) + 5 balls (L2) = (3×1) + (5×2) = 13 points
+  - Example: 3x cascade with 3 balls (L1) + 5 balls (L2) + 6 balls (L3) = (3×1) + (5×2) + (6×3) = 31 points
 
 ### 5.2 Visual Score Feedback (Implemented)
-- **Floating Point Text:** Shows points earned for each match
-  - Appears at center of matched balls
-  - Floats upward 50 pixels over 1.5 seconds
-  - Fades out linearly during animation
-  - White text with black outline for visibility
-  - Separate popup for each match group in multi-match clears
+- **Floating Text System:** Color-coded feedback for different clear types
+  - **Match Clears (White #FFFFFF):** Shows ball count (not points)
+    - Appears at center of matched balls
+    - Text: Number of balls cleared (e.g., "5")
+    - Used for normal color matches
+  - **Explosion Clears (Gold #FFD700):** Shows exploded ball count
+    - Appears at center of all explosion positions
+    - Text: Number of balls destroyed (e.g., "12")
+    - Triggered when exploding balls detonate
+  - **Cascade Bonuses (Blue #4080FF):** Shows cascade multiplier
+    - Appears at center of game grid
+    - Text: Cascade level (e.g., "2x CASCADE!", "3x CASCADE!")
+    - Only shown for 2+ cascades
+  - **Animation:** All text floats upward 50 pixels over 1 second, fading linearly with rgba opacity
 
 ### 5.3 Difficulty Multiplier (Implemented)
 - **Difficulty 1:** 1.0x points
@@ -189,13 +208,14 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 
 ### 5.4 Score Display (Implemented)
 - **Score Manager:** Singleton module tracking score via event system
-  - Listens for `BALLS_CLEARED` events to accumulate ball counts per cascade
-  - Listens for `CASCADE_COMPLETE` events to calculate and apply final score
+  - Listens for `BALLS_CLEARED` events to accumulate ball counts per cascade level
+  - Tracks `ballsPerLevel` array to support progressive cascade scoring
+  - Listens for `CASCADE_COMPLETE` events (from GameEngine) to calculate and apply final score
   - Emits `SCORE_UPDATE` events for UI synchronization
-- **Real-time UI Update:** Score display updates immediately after each cascade
-- **Current Level Score:** Displayed in HUD (resets per level - not yet implemented)
-- **Total Score:** Cumulative tracking (multi-level system not yet implemented)
-- **High Score:** localStorage persistence (not yet implemented)
+  - Detailed console logging for debugging: `🎯 SCORE CALC: 8 balls, 2x cascade, L1(3×1=3) + L2(5×2=10), TOTAL=13`
+- **Real-time UI Update:** Score display updates immediately after each cascade completes
+- **Current Level Score:** Displayed in HUD
+- **High Score:** localStorage persistence via PlayerManager
 
 ---
 
@@ -273,15 +293,29 @@ As level numbers increase (within same difficulty):
 
 ## 8. Audio & Visual Effects
 
-### 8.1 Sound Effects (Programmatic)
-- Piece rotation
-- Piece movement (optional, subtle)
-- Piece lock/land
-- Match clear (different pitch per cascade level)
-- Explosion
-- Painting activation
-- Level complete
-- Game over
+### 8.1 Sound Effects (Implemented - Programmatic Web Audio API)
+- **AudioManager:** Singleton managing all game audio with Web Audio API
+  - **Sound Effects:**
+    - Piece rotation (subtle beep)
+    - Piece movement left/right (click)
+    - Piece hard drop (thud)
+    - Piece lock/land (clunk)
+    - Match clear (escalating pitch per cascade level)
+    - Explosion (bass boom)
+    - Painting activation (whoosh)
+    - Level complete (victory chime)
+    - Game over (descending tone)
+  - **Background Music:**
+    - Procedurally generated ambient music loop
+    - Tempo increases with difficulty level
+  - **Volume Controls:**
+    - Independent SFX and music volume sliders (0-100%)
+    - Master mute toggle
+    - Optimization: Skips audio processing entirely when volume is 0
+  - **Audio Categories:**
+    - SFX (one-shot sounds)
+    - Music (looping background)
+    - Both controlled independently
 
 ### 8.2 Visual Effects
 - **Match Animation:** Balls flash/pulse before clearing
@@ -429,87 +463,115 @@ All game parameters should be configurable via JSON:
 
 ## 14. Implementation Status
 
-### 14.1 Completed Features (Phase 1-3)
-✅ **Core Foundation**
+### 14.1 Completed Features (Phases 1-9)
+✅ **Core Foundation (Phase 1-2)**
 - Project structure with modular architecture
-- ConfigManager with config.json loading
+- ConfigManager with config.json loading (156 configurable parameters)
 - Constants and EventEmitter utilities
-- Ball class with type system
+- Ball class with type system (NORMAL, BLOCKING, EXPLODING, HORIZONTAL_PAINTER, VERTICAL_PAINTER, DIAGONAL_PAINTER)
 - Piece class with 8 shapes and rotation
-- Grid class with match detection
+- Grid class with comprehensive match detection
 - Renderer with Canvas API
 - InputHandler with keyboard controls
 - GameEngine with game loop
 
-✅ **Core Gameplay**
+✅ **Core Gameplay (Phase 2-3)**
 - Piece dropping with gravity
 - Collision detection
 - Piece rotation (clockwise 90°)
 - Horizontal movement (left/right)
 - Hard drop (instant fall)
-- Piece locking with 500ms delay
-- PieceFactory with level-based color unlocking (3→8 colors)
+- Piece locking with configurable delay (default 500ms)
+- PieceFactory with level-based color unlocking (3→8 colors at levels 1, 3, 7, 11, 15, 19)
 - Next piece preview
 - Ghost piece (drop location preview)
 - Pause functionality
 
-✅ **Matching System**
+✅ **Matching & Scoring System (Phase 3-4)**
 - Match detection (horizontal, vertical, diagonal in all 4 directions)
-- Clear animation (3-flash white effect)
+- Clear animation (3-flash white effect with configurable timing)
 - Gravity/cascade system (automatic multi-cascade loops)
-- Cascade counting
+- Cascade counting tracked by GameEngine
 - ScoreManager with event-driven architecture
-- Cascade bonus scoring (3 × 2^n formula)
-- Difficulty multipliers (1.0x - 3.0x)
-- Floating point text animations
+- Progressive cascade scoring (Level 1: ×1, Level 2: ×2, Level 3: ×3, etc.)
+- Difficulty multipliers (1.0x, 1.5x, 2.0x, 2.5x, 3.0x)
+- Color-coded floating text system:
+  - White: Normal match ball counts
+  - Gold: Explosion ball counts
+  - Blue: Cascade multipliers (2x, 3x, etc.)
 - Real-time score display updates
 
-✅ **Quality Assurance**
-- 136 unit tests across 11 test modules
+✅ **Special Ball Effects (Phase 5)**
+- Exploding balls: 7×7 area clear on match (configurable spawn rate: 5%)
+- Horizontal/Vertical/Diagonal painters: Full line painting (configurable spawn rate: 5%)
+- Blocking balls: Spawn system with difficulty/level scaling, explosion-only removal
+- Painter re-matching: Painted balls immediately re-checked for new matches
+- Explosion scoring: All cleared balls counted and displayed
+
+✅ **Level & Difficulty System (Phase 6)**
+- LevelManager module with 5 difficulty levels
+- Level timer (configurable, default 15 seconds)
+- Difficulty selection (1-5) with independent progression
+- Level progression and unlocking system
+- Drop speed scaling (configurable per difficulty)
+- Blocking ball frequency scaling (configurable thresholds)
+- Color unlocking at levels 1, 3, 7, 11, 15, 19
+- Level survival condition (timer reaches 0 without game over)
+
+✅ **Audio System (Phase 7)**
+- AudioManager singleton with Web Audio API
+- Programmatic sound effects:
+  - Piece rotation, movement, drop, lock
+  - Match clear (escalating pitch per cascade)
+  - Explosion, painting activation
+  - Level complete, game over
+- Procedurally generated background music
+- Independent SFX and music volume controls (0-100%)
+- Master mute toggle
+- Volume=0 optimization (skips audio processing entirely)
+
+✅ **UI Screens & Menus (Phase 8)**
+- Main menu with difficulty/level selection
+- HUD with score, level, difficulty, timer display
+- Pause overlay (Resume/Restart/Menu options)
+- Game over screen with score display
+- Level complete screen with progression
+- Settings panel (audio controls, visual options)
+- High score tracking and display per difficulty/level
+
+✅ **Data Persistence (Phase 9)**
+- PlayerManager with localStorage integration
+- High score tracking per (difficulty, level) combination
+- Level unlock persistence
+- Player profile system with guest/named players
+- Settings persistence (audio volumes, visual preferences)
+- StatisticsTracker for match/clear/cascade analytics
+
+✅ **Quality Assurance (Continuous)**
+- 262+ unit tests across 14 test modules
 - Comprehensive test coverage:
-  - **Core Utilities:** Helpers (6 tests), EventEmitter (8 tests)
-  - **Game Entities:** Ball (12 tests), Piece (13 tests), Grid (23 tests)
-  - **Factories & Managers:** PieceFactory (13 tests), ScoreManager (13 tests), ConfigManager (12 tests), FloatingText (11 tests)
-  - **Game Systems:** InputHandler (10 tests), GameEngine (12 tests), Renderer (3 tests)
+  - **Core Utilities:** Helpers (15 tests), EventEmitter (18 tests)
+  - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (78 tests)
+  - **Factories & Managers:** PieceFactory (17 tests), ScoreManager (25 tests), ConfigManager (12 tests), FloatingText (11 tests)
+  - **Special Mechanics:** SpecialBalls (23 tests), StatisticsTracker (31 tests)
+  - **Game Systems:** InputHandler (10 tests), GameEngine (12 tests), PlayerManager (12 tests), Renderer (3 tests)
 - Test runner with async support and detailed reporting
 - All tests passing with singleton pattern support
 
-### 14.2 Pending Features (Phase 4+)
-⏳ **Special Ball Effects**
-- Exploding ball 7×7 clear behavior (type exists, effect not implemented)
-- Painter ball line painting (type exists, effect not implemented)
-- Blocking ball spawn and immunity (type exists, behavior not implemented)
+### 14.2 Pending Features (Phase 10 - Documentation & Deployment)
+⏳ **Documentation**
+- Module documentation (inline JSDoc comments)
+- User guide / gameplay instructions
+- Deployment guide
 
-⏳ **Level & Difficulty System**
-- LevelManager module
-- Level timer (15 second countdown)
-- Difficulty selection (1-5)
-- Level progression and unlocking
-- Drop speed scaling
-- Blocking ball frequency scaling
-
-⏳ **UI Screens**
-- Main menu
-- Level selection screen
-- Pause overlay
-- Game over screen
-- Level complete screen
-- High score display
-
-⏳ **Audio System**
-- AudioManager module
-- Web Audio API sound generation
-- All sound effects (rotation, movement, lock, match, explosion, paint, etc.)
-- Volume control and mute
-
-⏳ **Data Persistence**
-- StorageManager module
-- LocalStorage high score tracking
-- Level unlock persistence
-- Settings persistence
+⏳ **Deployment Optimization**
+- Asset optimization
+- Code minification/bundling (if needed)
+- Hosting setup
+- Final QA pass
 
 ---
 
-**Document Version:** 1.1  
-**Last Updated:** December 19, 2025  
-**Status:** Living Document - Updated with Phase 1-3 Implementation
+**Document Version:** 2.0  
+**Last Updated:** January 2025  
+**Status:** Living Document - Updated through Phase 9 Implementation

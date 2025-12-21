@@ -121,10 +121,10 @@ class AudioManagerClass {
 		oscillator.connect(gainNode);
 		gainNode.connect(this.audioContext.destination);
 		
-		// Descending swoop from high to low
-		oscillator.frequency.setValueAtTime(600, now);
-		oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.2);
-		oscillator.type = 'triangle';
+		// Descending swoop: 600Hz (D5) down to 150Hz (D3) over 200ms
+		oscillator.frequency.setValueAtTime(600, now); // Starting pitch: D5
+		oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.2); // Ending pitch: D3, 0.2s = 200ms duration
+		oscillator.type = 'triangle'; // Triangle wave for smooth, mellow tone
 		
 		gainNode.gain.setValueAtTime(0.12 * this.getEffectiveVolume(), now);
 		gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
@@ -141,31 +141,31 @@ class AudioManagerClass {
 		
 		const now = this.audioContext.currentTime;
 		
-		// Layer 1: Deep bass thud
+		// Layer 1: Deep bass thud (80Hz = E2 down to 40Hz = E1)
 		const bass = this.audioContext.createOscillator();
 		const bassGain = this.audioContext.createGain();
 		bass.connect(bassGain);
 		bassGain.connect(this.audioContext.destination);
-		bass.frequency.setValueAtTime(80, now);
-		bass.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-		bass.type = 'sine';
-		bassGain.gain.setValueAtTime(0.3 * this.getEffectiveVolume(), now);
-		bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+		bass.frequency.setValueAtTime(80, now); // 80Hz = E2 note
+		bass.frequency.exponentialRampToValueAtTime(40, now + 0.1); // Drop to 40Hz = E1, 0.1s = 100ms
+		bass.type = 'sine'; // Pure sine wave for deep bass
+		bassGain.gain.setValueAtTime(0.3 * this.getEffectiveVolume(), now); // 30% volume
+		bassGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); // Fade out over 150ms
 		
-		// Layer 2: Mid-range click
+		// Layer 2: Mid-range click (200Hz = G3) for satisfying "thunk" sound
 		const click = this.audioContext.createOscillator();
 		const clickGain = this.audioContext.createGain();
 		click.connect(clickGain);
 		clickGain.connect(this.audioContext.destination);
-		click.frequency.setValueAtTime(200, now);
-		click.type = 'square';
-		clickGain.gain.setValueAtTime(0.15 * this.getEffectiveVolume(), now);
-		clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+		click.frequency.setValueAtTime(200, now); // 200Hz = G3 note
+		click.type = 'square'; // Square wave for sharp, percussive attack
+		clickGain.gain.setValueAtTime(0.15 * this.getEffectiveVolume(), now); // 15% volume
+		clickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.05); // Quick 50ms fade
 		
 		bass.start(now);
-		bass.stop(now + 0.15);
+		bass.stop(now + 0.15); // 150ms bass duration
 		click.start(now);
-		click.stop(now + 0.05);
+		click.stop(now + 0.05); // 50ms click duration (quick attack)
 	}
 
 	/**
@@ -607,7 +607,7 @@ class AudioManagerClass {
 			contextState: this.audioContext?.state,
 			musicPlaying: this.musicPlaying,
 			musicVolume: this.musicVolume,
-			canPlaySound: this.canPlaySound()
+			canPlayMusic: this.canPlayMusic()
 		});
 		
 		// Try to resume context if suspended
@@ -619,11 +619,12 @@ class AudioManagerClass {
 			}
 		}
 		
-		if (!this.canPlaySound()) {
+		if (!this.canPlayMusic()) {
 			console.log('AudioManager: Cannot play music - reasons:', {
 				isInitialized: this.isInitialized,
 				isMuted: this.isMuted,
-				hasAudioContext: !!this.audioContext
+				hasAudioContext: !!this.audioContext,
+				musicVolume: this.musicVolume
 			});
 			return;
 		}
@@ -669,7 +670,7 @@ class AudioManagerClass {
 	 */
 	_playMusicLoop() {
 		
-		if (!this.musicPlaying || !this.canPlaySound()) return;
+		if (!this.musicPlaying || !this.canPlayMusic()) return;
 		
 		const now = this.audioContext.currentTime;
 		const tempo = 150; // BPM - even faster for rock energy
@@ -1076,11 +1077,19 @@ class AudioManagerClass {
 	}
 
 	/**
-	 * Check if sound can be played
+	 * Check if sound effects can be played
 	 * @returns {Boolean}
 	 */
 	canPlaySound() {
-		return this.isInitialized && !this.isMuted && this.audioContext;
+		return this.isInitialized && !this.isMuted && this.audioContext && this.sfxVolume > 0;
+	}
+	
+	/**
+	 * Check if music can be played
+	 * @returns {Boolean}
+	 */
+	canPlayMusic() {
+		return this.isInitialized && !this.isMuted && this.audioContext && this.musicVolume > 0;
 	}
 
 	/**

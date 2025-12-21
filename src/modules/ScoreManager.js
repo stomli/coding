@@ -134,29 +134,32 @@ class ScoreManagerClass {
 	}
 	
 	/**
-	 * Calculate score for a cascade sequence
-	 * @param {Array<Number>} ballsPerLevel - Balls cleared at each cascade level
-	 * @param {Number} cascadeCount - Number of cascades
-	 * @returns {Number} Points earned
+	 * Calculate score for a cascade sequence using progressive multipliers
+	 * Formula: Each cascade level N: balls × basePoints × N
+	 * Example: 2x cascade with L1(3 balls) + L2(5 balls) = (3×1) + (5×2) = 3 + 10 = 13 points
+	 * @param {Array<Number>} ballsPerLevel - Number of balls cleared at each cascade level [L1, L2, L3, ...]
+	 * @param {Number} cascadeCount - Total number of cascade levels in sequence
+	 * @returns {Number} Points earned after applying difficulty multiplier
 	 * @private
 	 */
 	_calculateCascadeScore(ballsPerLevel, cascadeCount) {
-		const basePoints = ConfigManager.get('scoring.basePointsPerBall', 1);
-		const difficultyMultiplier = ConfigManager.get(`scoring.difficultyMultipliers.difficulty${this.difficulty}`, 1.0);
+		const basePoints = ConfigManager.get('scoring.basePointsPerBall', 1); // Default: 1 point per ball
+		const difficultyMultiplier = ConfigManager.get(`scoring.difficultyMultipliers.difficulty${this.difficulty}`, 1.0); // 1.0x - 3.0x
 		
 		let score = 0;
-		let breakdown = [];
+		let breakdown = []; // For debug logging: ["L1(3×1=3)", "L2(5×2=10)"]
 		
-		// Each cascade level gets progressively higher multiplier
+		// Progressive cascade scoring: each level gets increasing multiplier
+		// Level 1: ×1, Level 2: ×2, Level 3: ×3, etc.
 		for (let level = 0; level < ballsPerLevel.length; level++) {
 			const balls = ballsPerLevel[level] || 0;
-			const multiplier = (level + 1); // 1x, 2x, 3x, 4x, etc.
+			const multiplier = (level + 1); // Cascade level number: 1x, 2x, 3x, 4x, etc.
 			const levelScore = balls * basePoints * multiplier;
 			score += levelScore;
 			breakdown.push(`L${level + 1}(${balls}×${multiplier}=${levelScore})`);
 		}
 		
-		// Apply difficulty multiplier
+		// Apply difficulty multiplier to final total
 		score = Math.floor(score * difficultyMultiplier);
 		
 		const totalBalls = ballsPerLevel.reduce((sum, b) => sum + b, 0);

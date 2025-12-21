@@ -142,24 +142,25 @@ function formatNumber(num) {
 
 /**
  * Format time in seconds to M:SS.S or S.S format
- * @param {Number} seconds - Time in seconds
+ * Examples: 8.3 → "8.3", 65.7 → "1:05.7", 125.2 → "2:05.2"
+ * @param {Number} seconds - Time in seconds (can include decimal)
  * @returns {String} Formatted time string
  */
 function formatTime(seconds) {
-	// Clamp to zero if negative
+	// Clamp to zero if negative (prevents "−0.1" type displays)
 	seconds = Math.max(0, seconds);
 	
-	const minutes = Math.floor(seconds / 60);
-	const secs = Math.floor(seconds % 60);
-	const tenths = Math.floor((seconds % 1) * 10);
+	const minutes = Math.floor(seconds / 60); // 60 seconds per minute
+	const secs = Math.floor(seconds % 60); // Remaining seconds after minutes
+	const tenths = Math.floor((seconds % 1) * 10); // Extract tenth of a second
 	
-	// If less than 60 seconds, show S.S format
+	// If less than 60 seconds, show S.S format (e.g., "8.3")
 	if (minutes === 0) {
 		return `${secs}.${tenths}`;
 	}
 	
-	// Show M:SS.S format
-	const secsStr = secs.toString().padStart(2, '0');
+	// Show M:SS.S format (e.g., "1:05.7")
+	const secsStr = secs.toString().padStart(2, '0'); // Pad to 2 digits (e.g., "05")
 	return `${minutes}:${secsStr}.${tenths}`;
 }
 

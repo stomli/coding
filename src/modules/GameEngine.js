@@ -51,8 +51,8 @@ class GameEngineClass {
 		// Game loop state
 		this.lastUpdateTime = 0;
 		this.dropTimer = 0;
-		this.dropInterval = 1000; // ms between automatic drops
-		this.lockDelay = 500; // ms before piece locks
+		this.dropInterval = 1000; // Milliseconds between automatic piece drops (1 second default)
+		this.lockDelay = 500; // Milliseconds before piece locks after touching ground (0.5 second window for adjustments)
 		this.lockTimer = 0;
 		this.isLocking = false;
 		this.animationFrameId = null;

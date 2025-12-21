@@ -12,6 +12,14 @@
  * Represents a single floating text element
  */
 class FloatingText {
+	/**
+	 * Create a floating text instance
+	 * @param {String} text - Text to display
+	 * @param {Number} x - X position in pixels
+	 * @param {Number} y - Y position in pixels
+	 * @param {Number} duration - Animation duration in ms (default: 1000 = 1 second)
+	 * @param {String} color - Text color in hex (default: '#FFFFFF' = white)
+	 */
 	constructor(text, x, y, duration = 1000, color = '#FFFFFF') {
 		this.text = text;
 		this.startX = x;
@@ -36,8 +44,8 @@ class FloatingText {
 			return false; // Expired
 		}
 		
-		// Float upward (move up 50 pixels over duration)
-		this.y = this.startY - (progress * 50);
+		// Float upward: move 50 pixels upward over animation duration
+		this.y = this.startY - (progress * 50); // 50 pixels = distance traveled upward
 		
 		// Fade out (linear)
 		this.opacity = 1.0 - progress;
@@ -87,7 +95,7 @@ class FloatingTextManager {
 			const rgb = this._hexToRgb(text.color);
 			ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${text.opacity})`;
 			ctx.strokeStyle = `rgba(0, 0, 0, ${text.opacity})`;
-			ctx.lineWidth = 3;
+			ctx.lineWidth = 3; // 3-pixel black outline for readability
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			
@@ -107,18 +115,19 @@ class FloatingTextManager {
 	}
 	
 	/**
-	 * Convert hex color to RGB
-	 * @param {String} hex - Hex color code
-	 * @returns {Object} RGB values
+	 * Convert hex color code to RGB components
+	 * @param {String} hex - Hex color string (e.g., "#FF0000" or "FF0000")
+	 * @returns {{r: number, g: number, b: number}} RGB color components (0-255)
 	 * @private
 	 */
 	_hexToRgb(hex) {
+		// Regex matches 6-character hex codes with optional # prefix
 		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 		return result ? {
-			r: parseInt(result[1], 16),
-			g: parseInt(result[2], 16),
-			b: parseInt(result[3], 16)
-		} : { r: 255, g: 255, b: 255 };
+			r: parseInt(result[1], 16), // Red component (0-255)
+			g: parseInt(result[2], 16), // Green component (0-255)
+			b: parseInt(result[3], 16)  // Blue component (0-255)
+		} : { r: 255, g: 255, b: 255 }; // Default to white if parse fails
 	}
 }
 

@@ -141,23 +141,34 @@ basePoints = ballsCleared × 1 point
 ```
 Configurable via `config.json` (`scoring.basePoints`)
 
-### Cascade Bonus
-Cascade bonuses grow exponentially:
+### Cascade Bonus (Progressive Multipliers)
+Cascade bonuses use progressive multipliers for each level:
 ```javascript
-Single cascade (level 1): 0 bonus
-2nd cascade: +3 points
-3rd cascade: +6 points (3 × 2)
-4th cascade: +12 points (6 × 2)
-nth cascade: bonus = 3 × 2^(cascadeLevel - 2)
+Single cascade (level 1): Balls × 1 (base only)
+2nd cascade (2 levels):
+  - Level 1 balls: count × 1
+  - Level 2 balls: count × 2
+3rd cascade (3 levels):
+  - Level 1 balls: count × 1
+  - Level 2 balls: count × 2
+  - Level 3 balls: count × 3
+Nth cascade: Level N balls × N
 ```
 
-Formula:
+**Formula:**
 ```javascript
-if (cascadeLevel === 1) {
-  cascadeBonus = 0;
-} else {
-  cascadeBonus = 3 × 2^(cascadeLevel - 2);
-}
+totalPoints = Σ(ballsAtLevel[i] × basePoints × (i + 1))
+```
+
+**Example Calculations:**
+```
+2x Cascade: 3 balls (L1) + 5 balls (L2)
+= (3 × 1) + (5 × 2)
+= 3 + 10 = 13 points
+
+3x Cascade: 3 balls (L1) + 5 balls (L2) + 6 balls (L3)
+= (3 × 1) + (5 × 2) + (6 × 3)
+= 3 + 10 + 18 = 31 points
 ```
 
 ### Difficulty Multiplier
@@ -175,9 +186,23 @@ Configurable via `config.json` (`scoring.difficultyMultipliers`)
 
 ### Final Calculation
 ```javascript
-rawPoints = (ballsCleared × basePoints) + cascadeBonus
+rawPoints = Σ(ballsAtLevel[i] × basePoints × (i + 1))
 finalPoints = rawPoints × difficultyMultiplier
 score += finalPoints
+```
+
+**Complete Example:**
+```
+Difficulty 3 (2.0x multiplier)
+3x Cascade: L1(3 balls), L2(5 balls), L3(6 balls)
+
+Raw points:
+  L1: 3 × 1 = 3
+  L2: 5 × 2 = 10
+  L3: 6 × 3 = 18
+  Total: 31 points
+
+With difficulty: 31 × 2.0 = 62 points added to score
 ```
 
 ## Internal Implementation
@@ -188,7 +213,13 @@ score += finalPoints
 ```javascript
 _onBallsCleared(data) → void
 ```
-Event handler for BALLS_CLEARED. Accumulates ball count and increments cascade level.
+Event handler for BALLS_CLEARED. Accumulates ball count per cascade level using ballsPerLevel array.
+
+**Behavior:**
+- Initializes currentCascadeData if first clear in sequence
+- Tracks balls separately for each cascade level
+- Supports multiple BALLS_CLEARED events per cascade iteration
+- Console logging: `⚽ BALLS_CLEARED: ${count} balls, level ${level} now has ${total} balls`
 
 #### _onCascadeComplete(data)
 ```javascript
@@ -196,11 +227,30 @@ _onCascadeComplete(data) → void
 ```
 Event handler for CASCADE_COMPLETE. Calculates and applies final score, emits SCORE_UPDATE.
 
-#### _calculateCascadeScore(totalBalls, cascadeCount)
+**Behavior:**
+- Uses GameEngine's cascadeCount for accurate level tracking
+- Calls _calculateCascadeScore with ballsPerLevel array
+- Applies difficulty multiplier
+- Emits SCORE_UPDATE event
+- Resets cascade tracking data
+
+#### _calculateCascadeScore(ballsPerLevel, cascadeCount, difficultyMultiplier)
 ```javascript
-_calculateCascadeScore(totalBalls, cascadeCount) → Number
+_calculateCascadeScore(ballsPerLevel, cascadeCount, difficultyMultiplier) → Number
 ```
-Calculates total points for a cascade sequence with bonuses and multipliers.
+Calculates total points for a cascade sequence with progressive multipliers.
+
+**Parameters:**
+- `ballsPerLevel` (Array): Ball counts per cascade level
+- `cascadeCount` (Number): Total cascade levels
+- `difficultyMultiplier` (Number): Difficulty multiplier (1.0-3.0)
+
+**Returns:** Final score after all calculations
+
+**Console Output:**
+```
+🎯 SCORE CALC: 14 balls, 3x cascade, L1(3×1=3) + L2(5×2=10) + L3(6×3=18), difficulty=2x, TOTAL=62
+```
 ## Usage Example
 
 ```javascript

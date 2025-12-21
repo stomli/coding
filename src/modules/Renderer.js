@@ -154,12 +154,12 @@ class Renderer {
 			const centerX = gridCol * this.cellSize + this.offsetX;
 			const centerY = gridRow * this.cellSize + this.offsetY;
 			
-			// Draw semi-transparent outline
+			// Draw semi-transparent outline for ghost piece visibility
 			this.ctx.save();
-			this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-			this.ctx.lineWidth = 2;
+			this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; // 30% opacity white outline
+			this.ctx.lineWidth = 2; // 2-pixel outline
 			this.ctx.beginPath();
-			this.ctx.arc(centerX, centerY, ballRadius * 0.9, 0, Math.PI * 2);
+			this.ctx.arc(centerX, centerY, radius * 0.9, 0, Math.PI * 2); // 0 to 2π = full circle, 90% of normal size
 			this.ctx.stroke();
 			this.ctx.restore();
 		});
@@ -200,7 +200,7 @@ class Renderer {
 			const x = offsetX + col * previewCellSize + previewCellSize / 2;
 			const y = offsetY + row * previewCellSize + previewCellSize / 2;
 			const ball = balls[ballIndex];
-			const radius = previewCellSize / 2 * 0.8;
+			const radius = previewCellSize / 2 * 0.8; // 80% of cell size for preview display
 			
 			this._drawBallAt(ball, x, y, radius, previewCtx);
 			ballIndex++;
@@ -218,7 +218,7 @@ class Renderer {
 	_drawBall(ball, col, row) {
 		const x = col * this.cellSize + this.offsetX;
 		const y = row * this.cellSize + this.offsetY;
-		const radius = this.cellSize / 2 * 0.85;
+		const radius = this.cellSize / 2 * 0.85; // 85% of cell size to leave small gap between balls
 		
 		this._drawBallAt(ball, x, y, radius, this.ctx);
 	}
@@ -279,25 +279,25 @@ class Renderer {
 		const isPainterD = ballType === CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL;
 		const isBlocking = ballType === CONSTANTS.BALL_TYPES.BLOCKING;
 		
-		ctx.strokeStyle = '#FFFFFF';
-		ctx.lineWidth = 2;
+		ctx.strokeStyle = '#FFFFFF'; // White indicators for visibility on all ball colors
+		ctx.lineWidth = 2; // 2-pixel lines for clear visibility
 		
 		// Draw exploding indicator (star burst)
 		if (isExploding) {
-			this._drawStar(x, y, radius * 0.6, ctx);
+			this._drawStar(x, y, radius * 0.6, ctx); // Star at 60% of ball radius
 		}
 		else if (isPainterH) {
-			// Horizontal line
+			// Horizontal line indicator (←→)
 			ctx.beginPath();
-			ctx.moveTo(x - radius * 0.6, y);
-			ctx.lineTo(x + radius * 0.6, y);
+			ctx.moveTo(x - radius * 0.6, y); // 60% of radius left
+			ctx.lineTo(x + radius * 0.6, y); // 60% of radius right
 			ctx.stroke();
 		}
 		else if (isPainterV) {
-			// Vertical line
+			// Vertical line indicator (↑↓)
 			ctx.beginPath();
-			ctx.moveTo(x, y - radius * 0.6);
-			ctx.lineTo(x, y + radius * 0.6);
+			ctx.moveTo(x, y - radius * 0.6); // 60% of radius up
+			ctx.lineTo(x, y + radius * 0.6); // 60% of radius down
 			ctx.stroke();
 		}
 		else if (isPainterD) {
