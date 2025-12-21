@@ -191,10 +191,10 @@ export function runStatisticsTrackerTests() {
 	test('Stats track diagonal painter balls', () => {
 		StatisticsTracker.reset(1);
 		
-		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, 'green');
-		const count = StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, 'green');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, 'green');
+		const count = StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, 'green');
 		
-		assertEquals(count, 1, 'Diagonal painter green should be 1');
+		assertEquals(count, 1, 'Diagonal painter NE green should be 1');
 	});
 	
 	// Test: Available colors updates with level
@@ -374,7 +374,7 @@ export function runStatisticsTrackerTests() {
 		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.EXPLODING, 'red');
 		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, 'green');
 		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, 'blue');
-		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, 'red');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, 'red');
 		
 		const total = StatisticsTracker.getTotalCount();
 		assertEquals(total, 6, 'Total should sum all types and colors');

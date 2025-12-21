@@ -756,16 +756,27 @@ export function testGrid() {
 			error: 'Column not fully painted'
 		});
 
-		// Test processPainters - diagonal
+		// Test processPainters paints diagonal lines
 		const painterGrid3 = new Grid(10, 10);
-		painterGrid3.setBallAt(5, 5, new Ball(BALL_TYPES.PAINTER_DIAGONAL, '#0000FF'));
+		painterGrid3.setBallAt(5, 5, new Ball(BALL_TYPES.PAINTER_DIAGONAL_NE, '#0000FF'));
 		painterGrid3.setBallAt(5, 6, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
 		painterGrid3.setBallAt(5, 7, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
 		
-		// Add balls on diagonals
+		// Add balls on NE-SW diagonal
 		for (let i = 0; i < 10; i++) {
-			if (painterGrid3.getBallAt(i, i) === null) {
-				painterGrid3.setBallAt(i, i, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+			const row = 5 + i;
+			const col = 5 - i;
+			if (row >= 0 && row < 10 && col >= 0 && col < 10) {
+				if (painterGrid3.getBallAt(row, col) === null) {
+					painterGrid3.setBallAt(row, col, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+				}
+			}
+			const row2 = 5 - i;
+			const col2 = 5 + i;
+			if (row2 >= 0 && row2 < 10 && col2 >= 0 && col2 < 10) {
+				if (painterGrid3.getBallAt(row2, col2) === null) {
+					painterGrid3.setBallAt(row2, col2, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+				}
 			}
 		}
 		
@@ -783,8 +794,8 @@ export function testGrid() {
 		
 		tests.push({
 			name: 'Grid - processPainters paints diagonal lines',
-			pass: painterGrid3.getBallAt(0, 0).getColor() === '#0000FF' &&
-			      painterGrid3.getBallAt(9, 9).getColor() === '#0000FF',
+			pass: painterGrid3.getBallAt(4, 6) && painterGrid3.getBallAt(4, 6).getColor() === '#0000FF' &&
+			      painterGrid3.getBallAt(6, 4) && painterGrid3.getBallAt(6, 4).getColor() === '#0000FF',
 			error: 'Diagonal not painted'
 		});
 

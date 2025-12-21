@@ -115,11 +115,18 @@ export function testBall() {
 			error: painterVertical.getPainterDirection() !== 'vertical' ? `Expected 'vertical', got '${painterVertical.getPainterDirection()}'` : null
 		});
 
-		const painterDiagonal = new Ball(BALL_TYPES.PAINTER_DIAGONAL, '#00FFFF');
+		const painterDiagonalNE = new Ball(BALL_TYPES.PAINTER_DIAGONAL_NE, '#00FFFF');
 		tests.push({
-			name: 'Ball - diagonal painter has correct direction',
-			pass: painterDiagonal.getPainterDirection() === 'diagonal',
-			error: painterDiagonal.getPainterDirection() !== 'diagonal' ? `Expected 'diagonal', got '${painterDiagonal.getPainterDirection()}'` : null
+			name: 'Ball - diagonal NE painter has correct direction',
+			pass: painterDiagonalNE.getPainterDirection() === 'diagonal-ne',
+			error: painterDiagonalNE.getPainterDirection() !== 'diagonal-ne' ? `Expected 'diagonal-ne', got '${painterDiagonalNE.getPainterDirection()}'` : null
+		});
+
+		const painterDiagonalNW = new Ball(BALL_TYPES.PAINTER_DIAGONAL_NW, '#FF00FF');
+		tests.push({
+			name: 'Ball - diagonal NW painter has correct direction',
+			pass: painterDiagonalNW.getPainterDirection() === 'diagonal-nw',
+			error: painterDiagonalNW.getPainterDirection() !== 'diagonal-nw' ? `Expected 'diagonal-nw', got '${painterDiagonalNW.getPainterDirection()}'` : null
 		});
 
 		// Test non-painter ball returns null for direction
@@ -171,7 +178,8 @@ export function testBall() {
 			BALL_TYPES.EXPLODING,
 			BALL_TYPES.PAINTER_HORIZONTAL,
 			BALL_TYPES.PAINTER_VERTICAL,
-			BALL_TYPES.PAINTER_DIAGONAL,
+			BALL_TYPES.PAINTER_DIAGONAL_NE,
+			BALL_TYPES.PAINTER_DIAGONAL_NW,
 			BALL_TYPES.BLOCKING
 		];
 
@@ -194,7 +202,8 @@ export function testBall() {
 			BALL_TYPES.EXPLODING,
 			BALL_TYPES.PAINTER_HORIZONTAL,
 			BALL_TYPES.PAINTER_VERTICAL,
-			BALL_TYPES.PAINTER_DIAGONAL
+			BALL_TYPES.PAINTER_DIAGONAL_NE,
+			BALL_TYPES.PAINTER_DIAGONAL_NW
 		];
 
 		const matchableTests = matchableTypes.map(type => {
@@ -253,8 +262,14 @@ export function testBall() {
 		});
 
 		tests.push({
-			name: 'Ball - horizontal painter is not diagonal',
-			pass: painterBall.getPainterDirection() !== 'diagonal',
+			name: 'Ball - horizontal painter is not diagonal-ne',
+			pass: painterBall.getPainterDirection() !== 'diagonal-ne',
+			error: null
+		});
+
+		tests.push({
+			name: 'Ball - horizontal painter is not diagonal-nw',
+			pass: painterBall.getPainterDirection() !== 'diagonal-nw',
 			error: null
 		});
 	}

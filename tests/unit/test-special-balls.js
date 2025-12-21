@@ -207,7 +207,7 @@ testSuite.tests.push({
 	}
 });
 
-// Test: Diagonal painter paints diagonal lines
+// Test: Diagonal NE painter paints diagonal lines
 testSuite.tests.push({
 	name: 'processPainters - Diagonal painter paints diagonal lines',
 	async run() {
@@ -215,8 +215,8 @@ testSuite.tests.push({
 		
 		const grid = new Grid(20, 10);
 		
-		// Place diagonal painter ball
-		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL, '#FFFF00');
+		// Place diagonal NE painter ball
+		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, '#FFFF00');
 		grid.setBallAt(10, 5, painterBall);
 		
 		// Fill grid with blue balls
@@ -236,21 +236,21 @@ testSuite.tests.push({
 		// Process painters
 		const painted = grid.processPainters(matches);
 		
-		// Should paint diagonal lines (both diagonals through the point)
-		if (painted.length < 10) { // At least some diagonal cells
+		// Should paint NE-SW diagonal line
+		if (painted.length < 5) { // At least some diagonal cells
 			throw new Error(`Should paint diagonal cells, painted ${painted.length}`);
 		}
 		
 		// Check some diagonal cells are painted
-		// Down-right diagonal
-		if (grid.getBallAt(11, 6)) {
-			const ball1 = grid.getBallAt(11, 6);
+		// NE direction (row-1, col+1)
+		if (grid.getBallAt(9, 6)) {
+			const ball1 = grid.getBallAt(9, 6);
 			if (ball1.getColor() !== '#FFFF00') {
-				throw new Error('Diagonal cell (11,6) should be painted yellow');
+				throw new Error('Diagonal cell (9,6) should be painted yellow');
 			}
 		}
 		
-		// Down-left diagonal
+		// SW direction (row+1, col-1)
 		if (grid.getBallAt(11, 4)) {
 			const ball2 = grid.getBallAt(11, 4);
 			if (ball2.getColor() !== '#FFFF00') {

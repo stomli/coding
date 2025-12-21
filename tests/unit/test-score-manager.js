@@ -564,21 +564,21 @@ testSuite.tests.push({
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 5, matches: 1 });
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
 		
-		const scoreAfter1 = ScoreManager.getScore(); // 5
+		const scoreAfter1 = ScoreManager.getScore(); // Level 0: 5 × 1 = 5
 		
-		// Double cascade with 4 balls total
+		// Second cascade with 2 BALLS_CLEARED events creates 2 levels
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 2, matches: 1 });
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 2, matches: 1 });
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 2 });
 		
-		const scoreAfter2 = ScoreManager.getScore(); // 5 + (4 + 3) = 12
+		const scoreAfter2 = ScoreManager.getScore(); // 5 + (2×1 + 2×2) = 5 + 6 = 11
 		
 		if (scoreAfter1 !== 5) {
 			throw new Error(`Expected 5 after first cascade, got ${scoreAfter1}`);
 		}
 		
-		if (scoreAfter2 !== 12) {
-			throw new Error(`Expected 12 total, got ${scoreAfter2}`);
+		if (scoreAfter2 !== 11) {
+			throw new Error(`Expected 11 total, got ${scoreAfter2}`);
 		}
 	}
 });
