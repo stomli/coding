@@ -19,6 +19,9 @@ import testSpecialBalls from './test-special-balls.js';
 import { runLevelManagerTests } from './test-level-manager.js';
 import { runAnimationManagerTests } from './test-animation-manager.js';
 import { runParticleSystemTests } from './test-particle-system.js';
+import { runPlayerManagerTests } from './test-player-manager.js';
+import { runAudioManagerTests } from './test-audio-manager.js';
+import { runStatisticsTrackerTests } from './test-statistics-tracker.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -62,38 +65,32 @@ export async function runAllTests() {
 	// Run LevelManager tests
 	console.log('\n');
 	const levelManagerResults = runLevelManagerTests();
-	const levelManagerTests = [];
-	for (let i = 0; i < levelManagerResults.passed; i++) {
-		levelManagerTests.push({ name: `Test ${i+1}`, pass: true });
-	}
-	for (let i = 0; i < levelManagerResults.failed; i++) {
-		levelManagerTests.push({ name: `Test ${levelManagerResults.passed + i + 1}`, pass: false });
-	}
-	suites.push({ name: 'LevelManager', tests: levelManagerTests });
+	suites.push({ name: 'LevelManager', tests: levelManagerResults });
 	
 	// Run AnimationManager tests
 	console.log('\n');
 	const animationManagerResults = runAnimationManagerTests();
-	const animationManagerTests = [];
-	for (let i = 0; i < animationManagerResults.passed; i++) {
-		animationManagerTests.push({ name: `Test ${i+1}`, pass: true });
-	}
-	for (let i = 0; i < animationManagerResults.failed; i++) {
-		animationManagerTests.push({ name: `Test ${animationManagerResults.passed + i + 1}`, pass: false });
-	}
-	suites.push({ name: 'AnimationManager', tests: animationManagerTests });
+	suites.push({ name: 'AnimationManager', tests: animationManagerResults });
 	
 	// Run ParticleSystem tests
 	console.log('\n');
 	const particleSystemResults = runParticleSystemTests();
-	const particleSystemTests = [];
-	for (let i = 0; i < particleSystemResults.passed; i++) {
-		particleSystemTests.push({ name: `Test ${i+1}`, pass: true });
-	}
-	for (let i = 0; i < particleSystemResults.failed; i++) {
-		particleSystemTests.push({ name: `Test ${particleSystemResults.passed + i + 1}`, pass: false });
-	}
-	suites.push({ name: 'ParticleSystem', tests: particleSystemTests });
+	suites.push({ name: 'ParticleSystem', tests: particleSystemResults });
+	
+	// Run PlayerManager tests
+	console.log('\n');
+	const playerManagerResults = runPlayerManagerTests();
+	suites.push({ name: 'PlayerManager', tests: playerManagerResults });
+	
+	// Run AudioManager tests
+	console.log('\n');
+	const audioManagerResults = runAudioManagerTests();
+	suites.push({ name: 'AudioManager', tests: audioManagerResults });
+	
+	// Run StatisticsTracker tests
+	console.log('\n');
+	const statisticsTrackerResults = runStatisticsTrackerTests();
+	suites.push({ name: 'StatisticsTracker', tests: statisticsTrackerResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

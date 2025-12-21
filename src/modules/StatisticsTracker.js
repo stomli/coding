@@ -44,24 +44,11 @@ class StatisticsTrackerClass {
 	reset(level = 1) {
 		this.currentLevel = level;
 		
-		const types = [
-			CONSTANTS.BALL_TYPES.NORMAL,
-			CONSTANTS.BALL_TYPES.EXPLODING,
-			CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL,
-			CONSTANTS.BALL_TYPES.PAINTER_VERTICAL,
-			CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL
-		];
-
 		// Get available colors for this level from PieceFactory
 		this.availableColors = PieceFactory.getAvailableColors(level);
 
+		// Completely clear stats object to remove any dynamically added keys
 		this.stats = {};
-		types.forEach(type => {
-			this.stats[type] = {};
-			this.availableColors.forEach(color => {
-				this.stats[type][color] = 0;
-			});
-		});
 
 		if (this.boardElement) {
 			this.renderBoard();
@@ -71,16 +58,22 @@ class StatisticsTrackerClass {
 	/**
 	 * Record a match for a ball type and color
 	 * @param {Number} ballType - Ball type constant
-	 * @param {String} color - Ball color
+	 * @param {String} color - Ball color (hex code or color name)
 	 */
 	recordMatch(ballType, color) {
-		if (this.stats[ballType] && this.stats[ballType][color] !== undefined) {
-			this.stats[ballType][color]++;
-			console.log('StatisticsTracker: Recorded match', { ballType, color, count: this.stats[ballType][color] });
-			this.updateCell(ballType, color);
-		} else {
-			console.warn('StatisticsTracker: Unknown type/color combination', { ballType, color });
+		// Ensure stats[ballType] exists
+		if (!this.stats[ballType]) {
+			this.stats[ballType] = {};
 		}
+		
+		// Initialize color if it doesn't exist
+		if (this.stats[ballType][color] === undefined) {
+			this.stats[ballType][color] = 0;
+		}
+		
+		this.stats[ballType][color]++;
+		console.log('StatisticsTracker: Recorded match', { ballType, color, count: this.stats[ballType][color] });
+		this.updateCell(ballType, color);
 	}
 
 	/**
@@ -206,6 +199,35 @@ class StatisticsTrackerClass {
 			});
 		});
 		return total;
+	}
+	
+	/**
+	 * Alias for getTotalMatches (for compatibility)
+	 * @returns {Number} Total count
+	 */
+	getTotalCount() {
+		return this.getTotalMatches();
+	}
+	
+	/**
+	 * Get statistics object
+	 * @returns {Object} Statistics object
+	 */
+	getStats() {
+		return this.stats;
+	}
+	
+	/**
+	 * Get count for specific ball type and color
+	 * @param {String} ballType - Ball type constant
+	 * @param {String} color - Ball color
+	 * @returns {Number} Count for this combination
+	 */
+	getCount(ballType, color) {
+		if (this.stats[ballType] && this.stats[ballType][color] !== undefined) {
+			return this.stats[ballType][color];
+		}
+		return 0;
 	}
 
 	/**

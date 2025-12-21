@@ -22,11 +22,11 @@ export function runParticleSystemTests() {
 		try {
 			fn();
 			results.passed++;
-			results.tests.push({ name, passed: true });
+			results.tests.push({ name, pass: true, error: null });
 			console.log(`✓ ${name}`);
 		} catch (error) {
 			results.failed++;
-			results.tests.push({ name, passed: false, error: error.message });
+			results.tests.push({ name, pass: false, error: error.message });
 			console.error(`✗ ${name}: ${error.message}`);
 		}
 	}
@@ -344,5 +344,5 @@ export function runParticleSystemTests() {
 	});
 
 	console.log(`\nParticleSystem Tests: ${results.passed} passed, ${results.failed} failed`);
-	return results;
+	return results.tests;
 }

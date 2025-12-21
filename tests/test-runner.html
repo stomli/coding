@@ -26,8 +26,13 @@
 			font-weight: bold;
 			font-size: 1.1em;
 		}
+		.test-cases-container {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0;
+		}
 		.test-case {
-			padding: 8px 15px;
+			padding: 2px 15px;
 			border-top: 1px solid #333;
 			display: flex;
 			align-items: center;
@@ -96,13 +101,16 @@
 					const suiteDiv = document.createElement('div');
 					suiteDiv.className = 'test-suite';
 					
-					const header = document.createElement('div');
-					header.className = 'test-suite-header';
-					const passCount = suite.tests.filter(t => t.pass).length;
-					header.textContent = `${suite.name} (${passCount}/${suite.tests.length} passed)`;
-					suiteDiv.appendChild(header);
-					
-					suite.tests.forEach(test => {
+				const header = document.createElement('div');
+				header.className = 'test-suite-header';
+				const passCount = suite.tests.filter(t => t.pass).length;
+				header.textContent = `${suite.name} (${passCount}/${suite.tests.length} passed)`;
+				suiteDiv.appendChild(header);
+				
+				const testsContainer = document.createElement('div');
+				testsContainer.className = 'test-cases-container';
+				
+				suite.tests.forEach(test => {
 						const testDiv = document.createElement('div');
 						testDiv.className = `test-case ${test.pass ? 'pass' : 'fail'}`;
 						
@@ -112,21 +120,24 @@
 						testDiv.appendChild(icon);
 						
 						const name = document.createElement('span');
-						name.className = 'test-name';
-						name.textContent = test.name;
-						testDiv.appendChild(name);
-						
-						suiteDiv.appendChild(testDiv);
-						
-						if (!test.pass && test.error) {
-							const error = document.createElement('div');
-							error.className = 'test-error';
-							error.textContent = test.error;
-							suiteDiv.appendChild(error);
-						}
-					});
+					name.className = 'test-name';
+					name.textContent = test.name;
+					testDiv.appendChild(name);
 					
-					output.appendChild(suiteDiv);
+					testsContainer.appendChild(testDiv);
+				});
+				
+				suiteDiv.appendChild(testsContainer);
+				
+				// Add error messages after grid (full width)
+				suite.tests.forEach(test => {
+					if (!test.pass && test.error) {
+						const error = document.createElement('div');
+						error.className = 'test-error';
+						error.textContent = test.error;
+						suiteDiv.appendChild(error);
+					}
+				});					output.appendChild(suiteDiv);
 				});
 				
 				// Render summary

@@ -287,7 +287,7 @@ class PlayerManagerClass {
 
 	/**
 	 * Update player stats
-	 * @param {Object} stats - Stats to update (score, time, difficulty, levelCompleted, gameStarted)
+	 * @param {Object} stats - Stats to update (score, time, difficulty, level, gameCompleted OR levelCompleted, gameStarted)
 	 */
 	updateStats(stats) {
 		const player = this.getCurrentPlayerData();
@@ -310,9 +310,12 @@ class PlayerManagerClass {
 		if (stats.time !== undefined && stats.time > player.stats.longestTime) {
 			player.stats.longestTime = stats.time;
 		}
+		
+		// Handle both levelCompleted and gameCompleted+level formats
+		const levelCompleted = stats.levelCompleted || (stats.gameCompleted && stats.level);
 
-		if (stats.levelCompleted !== undefined && stats.difficulty !== undefined) {
-			const level = stats.levelCompleted;
+		if (levelCompleted && stats.difficulty !== undefined) {
+			const level = levelCompleted;
 			const difficulty = stats.difficulty;
 			const key = `${difficulty}-${level}`; // e.g., "1-5" for Easy Level 5
 			

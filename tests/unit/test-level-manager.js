@@ -8,19 +8,18 @@ import { ConfigManager } from '../../src/modules/ConfigManager.js';
 export function runLevelManagerTests() {
 	console.log('=== Running LevelManager Tests ===');
 	
-	let passed = 0;
-	let failed = 0;
+	const results = [];
 	
 	// Helper function to run a test
 	function test(name, fn) {
 		try {
 			fn();
 			console.log(`✓ ${name}`);
-			passed++;
+			results.push({ name, pass: true, error: null });
 		} catch (error) {
 			console.error(`✗ ${name}`);
 			console.error(`  Error: ${error.message}`);
-			failed++;
+			results.push({ name, pass: false, error: error.message });
 		}
 	}
 	
@@ -71,7 +70,7 @@ export function runLevelManagerTests() {
 		LevelManager.initialize();
 		
 		assertEquals(LevelManager.currentLevel, 1, 'Current level should be 1');
-		assertEquals(LevelManager.maxLevel, 20, 'Max level should be 20');
+		assertEquals(LevelManager.maxLevel, 24, 'Max level should be 24');
 		assertEquals(LevelManager.levelTimer, 0, 'Timer should be 0');
 		assertEquals(LevelManager.timerRunning, false, 'Timer should not be running');
 		assert(LevelManager.unlockedLevels.includes(1), 'Level 1 should be unlocked');
@@ -246,7 +245,7 @@ export function runLevelManagerTests() {
 		LevelManager.initialize();
 		LevelManager.unlockAllLevels();
 		
-		assertEquals(LevelManager.unlockedLevels.length, 20, 'Should have 20 unlocked levels');
+		assertEquals(LevelManager.unlockedLevels.length, 24, 'Should have 24 unlocked levels');
 		assert(LevelManager.isLevelUnlocked(20), 'Level 20 should be unlocked');
 		
 		teardownMockStorage();
@@ -256,7 +255,7 @@ export function runLevelManagerTests() {
 	test('getMaxLevel() returns the maximum level', () => {
 		LevelManager.initialize();
 		
-		assertEquals(LevelManager.getMaxLevel(), 20, 'Max level should be 20');
+		assertEquals(LevelManager.getMaxLevel(), 24, 'Max level should be 24');
 	});
 	
 	// Test: Timer doesn't update when stopped
@@ -284,10 +283,12 @@ export function runLevelManagerTests() {
 	});
 	
 	// Print summary
+	const passed = results.filter(r => r.pass).length;
+	const failed = results.filter(r => !r.pass).length;
 	console.log(`\n=== LevelManager Test Summary ===`);
 	console.log(`Passed: ${passed}`);
 	console.log(`Failed: ${failed}`);
 	console.log(`Total: ${passed + failed}`);
 	
-	return { passed, failed, total: passed + failed };
+	return results;
 }
