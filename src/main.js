@@ -28,12 +28,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 		// Initialize particle overlay canvas
 		ParticleSystem.initializeOverlay();
 		
-		// Initialize AudioManager (must be done after user interaction for browser compatibility)
-		// We'll initialize it on first button click
-		document.body.addEventListener('click', () => {
-			AudioManager.initialize();
-			AudioManager.resume();
-		}, { once: true });
+		// Initialize AudioManager immediately (browser may require user interaction to play)
+		AudioManager.initialize();
+		
+		// Try to resume audio context on first user interaction
+		const resumeAudio = async () => {
+			await AudioManager.resume();
+			document.body.removeEventListener('click', resumeAudio);
+		};
+		document.body.addEventListener('click', resumeAudio, { once: true });
 		
 		// Initialize level manager
 		LevelManager.initialize();
@@ -46,6 +49,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 		
 		// Set up score display listener
 		setupScoreListener();
+		
+		// Set up clock and weather display
+		setupClockAndWeather();
 
 		// Show debug overlay if enabled
 		if (DebugMode.isEnabled()) {
@@ -84,14 +90,19 @@ function setupMenuListeners() {
 	// Start new game
 	if (startBtn) {
 		startBtn.addEventListener('click', async () => {
-			AudioManager.playClick();
-			console.log('Start button clicked, starting music...');
+			console.log('Start button clicked');
 			
-			// Ensure AudioManager is initialized
+			// Ensure AudioManager is initialized and resumed
 			AudioManager.initialize();
 			await AudioManager.resume();
 			
-			await AudioManager.startMusic(); // Start background music
+			// Play click sound after resume
+			AudioManager.playClick();
+			
+			// Start background music
+			console.log('Starting background music...');
+			await AudioManager.startMusic();
+			
 			showScreen('gameScreen');
 			// Start with selected difficulty and level
 			GameEngine.start(selectedDifficulty, selectedLevel);
@@ -339,7 +350,7 @@ function showSettingsOverlay() {
 		const sfxSlider = document.getElementById('sfxVolumeSlider');
 		const musicSlider = document.getElementById('musicVolumeSlider');
 		
-		if (muteToggle) muteToggle.checked = settings.muted;
+		if (muteToggle) muteToggle.checked = settings.isMuted;
 		if (masterSlider) masterSlider.value = settings.masterVolume * 100;
 		if (sfxSlider) sfxSlider.value = settings.sfxVolume * 100;
 		if (musicSlider) musicSlider.value = settings.musicVolume * 100;
@@ -429,4 +440,82 @@ function setupSettingsControls() {
 			updateVolumeDisplay('musicVolumeValue', e.target.value);
 		});
 	}
+}
+
+/**
+ * Set up clock and weather display in HUD
+ */
+function setupClockAndWeather() {
+	const clockDisplay = document.getElementById('clockDisplay');
+	
+	if (!clockDisplay) return;
+	
+	// Update clock every minute (no seconds)
+	function updateClock() {
+		const now = new Date();
+		const hours = now.getHours().toString().padStart(2, '0');
+		const minutes = now.getMinutes().toString().padStart(2, '0');
+		clockDisplay.textContent = `${hours}:${minutes}`;
+	}
+	
+	// Update weather display
+	function updateWeather() {
+		const tempDisplay = document.getElementById('tempDisplay');
+		const weatherDisplay = document.getElementById('weatherDisplay');
+		
+		if (!tempDisplay || !weatherDisplay) return;
+		
+		const weather = WeatherBackground.getCurrentWeather();
+		if (weather) {
+			const tempF = weather.temperatureF;
+			const tempC = weather.temperatureC;
+			const condition = getWeatherConditionText(weather.weatherCode);
+			tempDisplay.textContent = `${tempF}°F / ${tempC}°C`;
+			weatherDisplay.textContent = condition;
+		} else {
+			tempDisplay.textContent = '--°F / --°C';
+			weatherDisplay.textContent = '--';
+		}
+	}
+	
+	// Helper function to get weather condition text
+	function getWeatherConditionText(weatherCode) {
+		// WMO Weather interpretation codes
+		if (weatherCode === 0) return 'Clear';
+		if (weatherCode <= 3) return 'Cloudy';
+		if (weatherCode >= 45 && weatherCode <= 48) return 'Foggy';
+		if (weatherCode >= 51 && weatherCode <= 67) return 'Rainy';
+		if (weatherCode >= 71 && weatherCode <= 77) return 'Snowy';
+		if (weatherCode >= 80 && weatherCode <= 82) return 'Showers';
+		if (weatherCode >= 85 && weatherCode <= 86) return 'Snow Showers';
+		if (weatherCode >= 95) return 'Stormy';
+		return 'Partly Cloudy';
+	}
+	
+	// Helper function to get weather emoji (deprecated but kept for reference)
+	function getWeatherEmoji(weatherCode, isDay) {
+		// WMO Weather interpretation codes
+		if (weatherCode === 0) return isDay ? '☀️' : '🌙'; // Clear
+		if (weatherCode <= 3) return isDay ? '⛅' : '☁️'; // Partly cloudy
+		if (weatherCode >= 45 && weatherCode <= 48) return '🌫️'; // Fog
+		if (weatherCode >= 51 && weatherCode <= 67) return '🌧️'; // Rain
+		if (weatherCode >= 71 && weatherCode <= 77) return '❄️'; // Snow
+		if (weatherCode >= 80 && weatherCode <= 82) return '🌧️'; // Rain showers
+		if (weatherCode >= 85 && weatherCode <= 86) return '🌨️'; // Snow showers
+		if (weatherCode >= 95) return '⛈️'; // Thunderstorm
+		return '🌤️'; // Default
+	}
+	
+	// Set callback for when weather updates
+	WeatherBackground.onWeatherUpdate = updateWeather;
+	
+	// Initial update
+	updateClock();
+	updateWeather();
+	
+	// Update clock every minute
+	setInterval(updateClock, 60000);
+	
+	// Update weather every minute
+	setInterval(updateWeather, 60000);
 }

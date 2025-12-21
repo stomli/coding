@@ -14,6 +14,7 @@ class WeatherBackgroundClass {
 		this.backgroundElement = null;
 		this.lastUpdate = null;
 		this.updateInterval = 30 * 60 * 1000; // Update every 30 minutes
+		this.onWeatherUpdate = null; // Callback for when weather updates
 	}
 
 	/**
@@ -30,6 +31,14 @@ class WeatherBackgroundClass {
 		
 		// Set up periodic updates
 		setInterval(() => this.updateWeather(), this.updateInterval);
+	}
+
+	/**
+	 * Get current weather data
+	 * @returns {Object|null} Current weather data
+	 */
+	getCurrentWeather() {
+		return this.currentWeather;
 	}
 
 	/**
@@ -78,13 +87,18 @@ class WeatherBackgroundClass {
 			console.log(`WeatherBackground: Location detected - ${geoData.city}, ${geoData.region}`);
 
 			// Use Open-Meteo API (free, no API key required)
-			const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${geoData.latitude}&longitude=${geoData.longitude}&current=temperature_2m,weather_code,is_day,cloud_cover&daily=sunrise,sunset&timezone=auto`;
+			// Request both Celsius and Fahrenheit
+			const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${geoData.latitude}&longitude=${geoData.longitude}&current=temperature_2m,weather_code,is_day,cloud_cover&temperature_unit=celsius&daily=sunrise,sunset&timezone=auto`;
 			const weatherResponse = await fetch(weatherUrl);
 			const weatherData = await weatherResponse.json();
 
 			if (weatherData.current) {
+				const tempC = Math.round(weatherData.current.temperature_2m);
+				const tempF = Math.round((tempC * 9/5) + 32);
+				
 				this.currentWeather = {
-					temperature: Math.round(weatherData.current.temperature_2m),
+					temperatureC: tempC,
+					temperatureF: tempF,
 					weatherCode: weatherData.current.weather_code,
 					isDay: weatherData.current.is_day === 1,
 					cloudCover: weatherData.current.cloud_cover || 0,
@@ -95,6 +109,11 @@ class WeatherBackgroundClass {
 				console.log('WeatherBackground: Weather data received', this.currentWeather);
 				this.applyWeatherBackground();
 				this.lastUpdate = Date.now();
+				
+				// Trigger callback if set
+				if (this.onWeatherUpdate) {
+					this.onWeatherUpdate(this.currentWeather);
+				}
 			}
 		} catch (error) {
 			console.error('WeatherBackground: Error fetching weather', error);

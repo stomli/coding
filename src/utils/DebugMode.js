@@ -270,8 +270,8 @@ class DebugModeClass {
 			overlay.id = 'debugOverlay';
 			overlay.style.cssText = `
 				position: fixed;
-				top: 10px;
-				right: 10px;
+				bottom: 10px;
+				left: 10px;
 				background: rgba(0, 0, 0, 0.8);
 				color: #00ff88;
 				padding: 10px;
@@ -280,6 +280,8 @@ class DebugModeClass {
 				font-size: 12px;
 				z-index: 10000;
 				border: 2px solid #00ff88;
+				max-height: 80vh;
+				overflow-y: auto;
 			`;
 			document.body.appendChild(overlay);
 		}

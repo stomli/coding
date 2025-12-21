@@ -62,14 +62,11 @@
 					</div>
 				</div>
 				
-				<div class="hud-center">
-					<div class="hud-item timer">
-						<span class="hud-label">Time:</span>
-						<span id="timerDisplay" class="hud-value">15.0s</span>
-					</div>
+			<div class="hud-center">
+				<div class="hud-item timer">
+					<span id="timerDisplay" class="hud-value timer-value">15.0s</span>
 				</div>
-				
-				<div class="hud-right">
+			</div>				<div class="hud-right">
 					<div class="hud-item">
 						<span class="hud-label">Level Score:</span>
 						<span id="levelScoreDisplay" class="hud-value">0</span>
@@ -140,12 +137,29 @@
 				<div class="preview-panel">
 					<h3>Next Piece</h3>
 					<canvas id="previewCanvas"></canvas>
+					
+					<!-- Statistics Board -->
+					<div class="stats-panel">
+						<h3>Match Statistics</h3>
+						<div id="statsBoard" class="stats-board">
+							<!-- Will be populated by JavaScript -->
+						</div>
+					</div>
 				</div>
 			</div>
 			
 			<!-- Controls Info -->
 			<div class="controls-info">
-				<p><kbd>←</kbd> <kbd>→</kbd> Move | <kbd>↑</kbd> Rotate | <kbd>↓</kbd> Drop | <kbd>P</kbd> Pause | <kbd>R</kbd> Restart</p>
+				<div class="controls-keys">
+					<p><kbd>←</kbd> <kbd>→</kbd> Move | <kbd>↑</kbd> Rotate | <kbd>↓</kbd> Drop | <kbd>P</kbd> Pause | <kbd>R</kbd> Restart</p>
+				</div>
+				<div class="hud-item clock">
+					<span id="weatherDisplay" class="weather-info">--</span>
+					<span class="separator">|</span>
+					<span id="tempDisplay" class="temp-info">--°F / --°C</span>
+					<span class="separator">|</span>
+					<span id="clockDisplay" class="clock-time">--:--</span>
+				</div>
 			</div>
 		</div>
 		
@@ -202,6 +216,12 @@
 						<span id="completeLongestTime" class="stat-value">0.0s</span>
 					</div>
 					<p id="levelCompleteHighScoreMessage" class="new-high-score hidden">🎉 NEW BEST SCORE! 🎉</p>
+				</div>
+				<div class="level-complete-match-stats">
+					<h3>Match Statistics</h3>
+					<div id="levelCompleteStatsBoard" class="stats-board">
+						<!-- Will be populated by JavaScript -->
+					</div>
 				</div>
 				<div class="overlay-actions">
 					<button id="nextLevelButton" class="btn-primary">Next Level</button>

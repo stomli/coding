@@ -25,6 +25,7 @@ import LevelManager from './LevelManager.js';
 import AnimationManager from './AnimationManager.js';
 import ParticleSystem from './ParticleSystem.js';
 import AudioManager from './AudioManager.js';
+import StatisticsTracker from './StatisticsTracker.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -104,6 +105,9 @@ class GameEngineClass {
 		
 		// Initialize input handler
 		InputHandler.initialize();
+		
+		// Initialize statistics tracker
+		StatisticsTracker.initialize();
 		
 		// Set up event listeners (Phase 2+)
 		this._setupEventListeners();
@@ -368,6 +372,9 @@ class GameEngineClass {
 		
 		// Clear grid
 		this.grid.clear();
+		
+		// Reset statistics with current level
+		StatisticsTracker.reset(this.level);
 		
 		// Reset PieceFactory
 		PieceFactory.reset();
@@ -724,6 +731,10 @@ class GameEngineClass {
 				await DebugMode.waitForStep();
 			}
 			
+		// Record statistics for matches BEFORE processing (while balls still exist)
+		console.log('GameEngine: Recording stats for', matches.length, 'matches');
+		StatisticsTracker.recordMatches(matches, this.grid);
+		
 		// Process special balls FIRST (priority order)
 		// 1. Process explosions
 		const explodedPositions = this.grid.processExplosions(matches);
@@ -1167,6 +1178,9 @@ class GameEngineClass {
 					highScoreMsg.classList.add('hidden');
 				}
 			}
+			
+			// Render match statistics to the overlay
+			StatisticsTracker.renderToElement('levelCompleteStatsBoard');
 			
 			// Show/hide next level button
 			const nextLevelBtn = document.getElementById('nextLevelButton');

@@ -495,10 +495,18 @@ body {
 }
 
 .hud-left,
-.hud-center,
 .hud-right {
 	display: flex;
 	gap: 2rem;
+	align-items: flex-end;
+}
+
+.hud-center {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
 }
 
 .hud-item {
@@ -537,8 +545,48 @@ body {
 	box-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
 }
 
-.hud-item.timer .hud-value {
+.hud-item.clock {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.15rem;
+	min-width: 150px;
+}
+
+.clock-time {
+	font-size: 0.9rem;
+	font-weight: bold;
 	color: #00ff88;
+	font-family: 'Courier New', monospace;
+	letter-spacing: 0.1rem;
+}
+
+.temp-info {
+	font-size: 0.7rem;
+	color: #aaaaaa;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.weather-info {
+	font-size: 0.65rem;
+	color: #888888;
+	text-align: center;
+	white-space: nowrap;
+	text-transform: uppercase;
+}
+
+.hud-item.timer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.timer-value {
+	font-size: 2rem;
+	font-weight: bold;
+	color: #00ff88;
+	font-family: 'Courier New', monospace;
 }
 
 /* Game Container */
@@ -681,14 +729,125 @@ body {
 	border-radius: 5px;
 }
 
+/* Statistics Panel */
+.stats-panel {
+	background-color: transparent;
+	padding: 0;
+	border-radius: 0;
+	border: none;
+	margin-top: 1rem;
+}
+
+.stats-panel h3 {
+	margin-bottom: 0.5rem;
+	font-size: 0.9rem;
+	color: #00ff88;
+	text-align: center;
+}
+
+.stats-board {
+	font-size: 10px;
+	overflow-x: auto;
+}
+
+.stats-table {
+	width: 100%;
+	border-collapse: collapse;
+	background-color: #1a1a2e;
+	border-radius: 3px;
+}
+
+.stats-table th,
+.stats-table td {
+	padding: 4px;
+	text-align: center;
+	border: 1px solid #444444;
+}
+
+.stats-table th {
+	background-color: #0f3460;
+	color: #00ff88;
+	font-weight: bold;
+	font-size: 9px;
+}
+
+.stats-table td {
+	color: #ffffff;
+	font-size: 10px;
+	min-width: 30px;
+}
+
+.stats-table td.stat-value {
+	font-weight: bold;
+	transition: all 0.3s ease;
+}
+
+.stats-table td.stat-value.has-matches {
+	background-color: rgba(0, 255, 136, 0.1);
+	color: #00ff88;
+}
+
+.stats-table td.stat-value:hover {
+	background-color: rgba(0, 255, 136, 0.2);
+}
+
+.stats-color-cell {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	margin: 0 auto;
+	border: 2px solid #444444;
+}
+
+.stats-type-cell {
+	font-size: 16px;
+}
+
+/* Controls Info */
 /* Controls Info */
 .controls-info {
 	width: 100%;
-	text-align: center;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 	padding: 1rem;
 	background-color: #2a2a3e;
 	border-radius: 5px;
 	margin-top: 1rem;
+}
+
+.controls-keys {
+	flex: 1;
+	text-align: center;
+}
+
+.controls-keys p {
+	margin: 0;
+}
+
+.controls-info .hud-item.clock {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0.5rem;
+	white-space: nowrap;
+}
+
+.controls-info .separator {
+	color: #555555;
+	font-size: 0.8rem;
+}
+
+.controls-info .clock-time {
+	font-size: 0.85rem;
+}
+
+.controls-info .temp-info {
+	font-size: 0.7rem;
+}
+
+.controls-info .weather-info {
+	font-size: 0.7rem;
 }
 
 .controls-info kbd {
@@ -750,6 +909,29 @@ body {
 .game-over-stats,
 .level-complete-stats {
 	margin: 1.5rem 0;
+}
+
+.level-complete-match-stats {
+	margin: 1rem 0;
+	padding: 1rem;
+	background-color: rgba(255, 255, 255, 0.05);
+	border-radius: 5px;
+	border: 1px solid #444444;
+}
+
+.level-complete-match-stats h3 {
+	margin: 0 0 0.75rem 0;
+	font-size: 1rem;
+	color: #00ff88;
+	text-align: center;
+}
+
+.level-complete-match-stats .stats-board {
+	font-size: 11px;
+}
+
+.level-complete-match-stats .stats-table {
+	margin: 0 auto;
 }
 
 .level-complete-reason {

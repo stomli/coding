@@ -603,14 +603,32 @@ class AudioManagerClass {
 	 */
 	async startMusic() {
 		console.log('AudioManager: startMusic called', {
-			canPlaySound: this.canPlaySound(),
-			musicPlaying: this.musicPlaying,
 			isInitialized: this.isInitialized,
-			musicVolume: this.musicVolume
+			isMuted: this.isMuted,
+			hasAudioContext: !!this.audioContext,
+			contextState: this.audioContext?.state,
+			musicPlaying: this.musicPlaying,
+			musicVolume: this.musicVolume,
+			canPlaySound: this.canPlaySound()
 		});
 		
+		// Try to resume context if suspended
+		if (this.audioContext && this.audioContext.state === 'suspended') {
+			try {
+				console.log('AudioManager: Resuming suspended audio context...');
+				await this.audioContext.resume();
+				console.log('AudioManager: Audio context resumed, state =', this.audioContext.state);
+			} catch (error) {
+				console.warn('AudioManager: Could not resume audio context', error);
+			}
+		}
+		
 		if (!this.canPlaySound()) {
-			console.warn('AudioManager: Cannot play sound - audio not initialized or muted');
+			console.log('AudioManager: Cannot play music - reasons:', {
+				isInitialized: this.isInitialized,
+				isMuted: this.isMuted,
+				hasAudioContext: !!this.audioContext
+			});
 			return;
 		}
 		
