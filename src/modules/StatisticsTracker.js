@@ -264,18 +264,6 @@ class StatisticsTrackerClass {
 		// Use available colors for current level
 		const colors = this.availableColors;
 
-		// Build table HTML
-		let html = '<table class="stats-table">';
-		
-		// Header row with color swatches
-		html += '<thead><tr><th></th>';
-		colors.forEach(color => {
-			html += `<th><div class="stats-color-cell" style="background-color: ${color};"></div></th>`;
-		});
-		html += '</tr></thead>';
-		
-		// Data rows
-		html += '<tbody>';
 		const types = [
 			{ type: CONSTANTS.BALL_TYPES.NORMAL, symbol: '●' },
 			{ type: CONSTANTS.BALL_TYPES.EXPLODING, symbol: '✱' },
@@ -284,18 +272,59 @@ class StatisticsTrackerClass {
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE, symbol: '╱' },
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW, symbol: '╲' }
 		];
+
+		// Split colors into chunks of 4 to prevent horizontal overflow
+		const colorChunks = [];
+		for (let i = 0; i < colors.length; i += 4) {
+			const chunk = colors.slice(i, i + 4);
+			// Pad chunk to always have 4 columns
+			while (chunk.length < 4) {
+				chunk.push(null);
+			}
+			colorChunks.push(chunk);
+		}
+
+		let html = '';
 		
-		types.forEach(({ type, symbol }) => {
-			html += `<tr><td class="stats-type-cell">${symbol}</td>`;
-			colors.forEach(color => {
-				const count = this.stats[type]?.[color] || 0;
-				const hasMatches = count > 0;
-				html += `<td class="stat-value${hasMatches ? ' has-matches' : ''}">${count}</td>`;
+		// Create a table for each chunk
+		colorChunks.forEach((colorChunk, chunkIndex) => {
+			if (chunkIndex > 0) {
+				html += '<div style="margin-top: 1rem;"></div>';
+			}
+			
+			html += '<table class="stats-table">';
+			
+			// Header row with color swatches
+			html += '<thead><tr><th></th>';
+			colorChunk.forEach(color => {
+				if (color) {
+					html += `<th><div class="stats-color-cell" style="background-color: ${color};"></div></th>`;
+				} else {
+					html += '<th></th>';
+				}
 			});
-			html += '</tr>';
+			html += '</tr></thead>';
+			
+			// Data rows
+			html += '<tbody>';
+			types.forEach(({ type, symbol }) => {
+				html += `<tr><td class="stats-type-cell">${symbol}</td>`;
+				colorChunk.forEach(color => {
+					if (color) {
+						const count = this.stats[type]?.[color] || 0;
+						const hasMatches = count > 0;
+						html += `<td class="stat-value${hasMatches ? ' has-matches' : ''}">${count}</td>`;
+					} else {
+						html += '<td class="stat-value"></td>';
+					}
+				});
+				html += '</tr>';
+			});
+			html += '</tbody>';
+			
+			html += '</table>';
 		});
 		
-		html += '</tbody></table>';
 		element.innerHTML = html;
 	}
 }

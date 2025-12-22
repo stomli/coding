@@ -1382,19 +1382,14 @@ class GameEngineClass {
 			// Get best stats from player profile for this difficulty+level
 			const levelBestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level);
 			const overallBestScore = PlayerManager.getHighScore(); // Best score across ALL levels
-			const longestTime = PlayerManager.getLongestTime();
 			
 			// Update stat displays
 			const thisScoreEl = document.getElementById('completeThisScore');
 			const bestScoreEl = document.getElementById('completeBestScore');
-			const timeSurvivedEl = document.getElementById('completeTimeSurvived');
-			const longestTimeEl = document.getElementById('completeLongestTime');
 			const highScoreMsg = document.getElementById('levelCompleteHighScoreMessage');
 			
 			if (thisScoreEl) thisScoreEl.textContent = currentScore.toLocaleString();
 			if (bestScoreEl) bestScoreEl.textContent = levelBestScore > 0 ? levelBestScore.toLocaleString() : '-';
-			if (timeSurvivedEl) timeSurvivedEl.textContent = timeSurvived.toFixed(1) + 's';
-			if (longestTimeEl) longestTimeEl.textContent = longestTime.toFixed(1) + 's';
 			
 			// Update player stats with difficulty and level
 			PlayerManager.updateStats({
