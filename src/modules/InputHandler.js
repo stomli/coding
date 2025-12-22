@@ -23,6 +23,7 @@ class InputHandlerClass {
 	constructor() {
 		this.isEnabled = false;
 		this.keyDownHandler = null;
+		this.keyUpHandler = null;
 		this.keyRepeatTimers = {};
 	}
 	
@@ -34,6 +35,7 @@ class InputHandlerClass {
 		const moveLeft = ConfigManager.get('controls.moveLeft', 'ArrowLeft');
 		const moveRight = ConfigManager.get('controls.moveRight', 'ArrowRight');
 		const rotate = ConfigManager.get('controls.rotate', 'ArrowUp');
+		const softDrop = ConfigManager.get('controls.softDrop', 'Space');
 		const hardDrop = ConfigManager.get('controls.hardDrop', 'ArrowDown');
 		const pause = ConfigManager.get('controls.pause', 'KeyP');
 		const restart = ConfigManager.get('controls.restart', 'KeyR');
@@ -43,18 +45,28 @@ class InputHandlerClass {
 			[moveLeft]: CONSTANTS.EVENTS.MOVE_LEFT,
 			[moveRight]: CONSTANTS.EVENTS.MOVE_RIGHT,
 			[rotate]: CONSTANTS.EVENTS.ROTATE,
+			[softDrop]: CONSTANTS.EVENTS.SOFT_DROP,
 			[hardDrop]: CONSTANTS.EVENTS.HARD_DROP,
 			[pause]: CONSTANTS.EVENTS.PAUSE,
 			[restart]: CONSTANTS.EVENTS.RESTART
 		};
+		
+		// Store soft drop key for keyup handling
+		this.softDropKey = softDrop;
 		
 		// Create key down handler
 		this.keyDownHandler = (event) => {
 			this._handleKeyDown(event);
 		};
 		
-		// Add event listener
+		// Create key up handler for soft drop
+		this.keyUpHandler = (event) => {
+			this._handleKeyUp(event);
+		};
+		
+		// Add event listeners
 		window.addEventListener('keydown', this.keyDownHandler);
+		window.addEventListener('keyup', this.keyUpHandler);
 		this.isEnabled = true;
 	}
 	
@@ -105,6 +117,26 @@ class InputHandlerClass {
 	}
 	
 	/**
+	 * Handle key up events (for soft drop release)
+	 * @param {KeyboardEvent} event - Keyboard event
+	 * @returns {void}
+	 * @private
+	 */
+	_handleKeyUp(event) {
+		if (!this.isEnabled) {
+			return;
+		}
+		
+		const keyCode = event.code;
+		
+		// Check if soft drop key was released
+		if (keyCode === this.softDropKey) {
+			event.preventDefault();
+			EventEmitter.emit(CONSTANTS.EVENTS.SOFT_DROP_END);
+		}
+	}
+	
+	/**
 	 * Enable input processing
 	 * @returns {void}
 	 */
@@ -122,7 +154,7 @@ class InputHandlerClass {
 	
 	/**
 	 * Trigger a game action programmatically (for touch controls)
-	 * @param {string} action - Action name (moveLeft, moveRight, rotate, drop, pause, restart)
+	 * @param {string} action - Action name (moveLeft, moveRight, rotate, softDrop, drop, pause, restart)
 	 * @returns {void}
 	 */
 	triggerAction(action) {
@@ -134,6 +166,7 @@ class InputHandlerClass {
 			'moveLeft': CONSTANTS.EVENTS.MOVE_LEFT,
 			'moveRight': CONSTANTS.EVENTS.MOVE_RIGHT,
 			'rotate': CONSTANTS.EVENTS.ROTATE,
+			'softDrop': CONSTANTS.EVENTS.SOFT_DROP,
 			'drop': CONSTANTS.EVENTS.HARD_DROP,
 			'pause': CONSTANTS.EVENTS.PAUSE,
 			'restart': CONSTANTS.EVENTS.RESTART
@@ -146,19 +179,36 @@ class InputHandlerClass {
 	}
 	
 	/**
+	 * Trigger action end (for hold actions like soft drop)
+	 * @param {string} action - Action name
+	 * @returns {void}
+	 */
+	triggerActionEnd(action) {
+		if (!this.isEnabled) {
+			return;
+		}
+		
+		if (action === 'softDrop') {
+			EventEmitter.emit(CONSTANTS.EVENTS.SOFT_DROP_END);
+		}
+	}
+	
+	/**
 	 * Clean up event listeners
 	 * @returns {void}
 	 */
 	destroy() {
 		const hasHandler = this.keyDownHandler !== null;
 		
-		// Remove event listener if exists
+		// Remove event listeners if exist
 		if (hasHandler) {
 			window.removeEventListener('keydown', this.keyDownHandler);
 			this.keyDownHandler = null;
 		}
-		else {
-			// No handler to remove
+		
+		if (this.keyUpHandler !== null) {
+			window.removeEventListener('keyup', this.keyUpHandler);
+			this.keyUpHandler = null;
 		}
 		
 		this.isEnabled = false;

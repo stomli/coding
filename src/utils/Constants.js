@@ -104,6 +104,8 @@ const CONSTANTS = {
 		MOVE_LEFT: 'moveLeftEvent',
 		MOVE_RIGHT: 'moveRightEvent',
 		ROTATE: 'rotateEvent',
+		SOFT_DROP: 'softDropEvent',
+		SOFT_DROP_END: 'softDropEndEvent',
 		HARD_DROP: 'hardDropEvent',
 		PAUSE: 'pauseEvent',
 		RESTART: 'restartEvent'

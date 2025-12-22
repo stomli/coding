@@ -55,6 +55,8 @@ class GameEngineClass {
 		this.lastUpdateTime = 0;
 		this.dropTimer = 0;
 		this.dropInterval = 1000; // Milliseconds between automatic piece drops (1 second default)
+		this.basedropInterval = 1000; // Store base drop interval
+		this.isSoftDropping = false; // Track if soft drop is active
 		this.lockDelay = 500; // Milliseconds before piece locks after touching ground (0.5 second window for adjustments)
 		this.lockTimer = 0;
 		this.isLocking = false;
@@ -134,23 +136,57 @@ class GameEngineClass {
 		kbdButtons.forEach(button => {
 			const action = button.getAttribute('data-action');
 			
-			// Add click/touch event listener
-			button.addEventListener('click', (e) => {
-				e.preventDefault();
-				InputHandler.triggerAction(action);
-			});
-			
-			// Add touch feedback
-			button.addEventListener('touchstart', (e) => {
-				e.preventDefault();
-				button.style.opacity = '0.6';
-				InputHandler.triggerAction(action);
-			});
-			
-			button.addEventListener('touchend', (e) => {
-				e.preventDefault();
-				button.style.opacity = '1';
-			});
+			// For soft drop, use mousedown/mouseup for hold behavior
+			if (action === 'softDrop') {
+				// Mouse events
+				button.addEventListener('mousedown', (e) => {
+					e.preventDefault();
+					button.style.opacity = '0.6';
+					InputHandler.triggerAction(action);
+				});
+				
+				button.addEventListener('mouseup', (e) => {
+					e.preventDefault();
+					button.style.opacity = '1';
+					InputHandler.triggerActionEnd(action);
+				});
+				
+				button.addEventListener('mouseleave', (e) => {
+					button.style.opacity = '1';
+					InputHandler.triggerActionEnd(action);
+				});
+				
+				// Touch events
+				button.addEventListener('touchstart', (e) => {
+					e.preventDefault();
+					button.style.opacity = '0.6';
+					InputHandler.triggerAction(action);
+				});
+				
+				button.addEventListener('touchend', (e) => {
+					e.preventDefault();
+					button.style.opacity = '1';
+					InputHandler.triggerActionEnd(action);
+				});
+			} else {
+				// Other buttons use click behavior
+				button.addEventListener('click', (e) => {
+					e.preventDefault();
+					InputHandler.triggerAction(action);
+				});
+				
+				// Add touch feedback
+				button.addEventListener('touchstart', (e) => {
+					e.preventDefault();
+					button.style.opacity = '0.6';
+					InputHandler.triggerAction(action);
+				});
+				
+				button.addEventListener('touchend', (e) => {
+					e.preventDefault();
+					button.style.opacity = '1';
+				});
+			}
 			
 			// Make button look interactive
 			button.style.cursor = 'pointer';
@@ -173,6 +209,7 @@ class GameEngineClass {
 		let touchStartX = 0;
 		let touchStartY = 0;
 		let touchStartTime = 0;
+		let softDropTimer = null;
 		
 		canvas.addEventListener('touchstart', (e) => {
 			if (this.state !== CONSTANTS.GAME_STATES.PLAYING) return;
@@ -182,6 +219,11 @@ class GameEngineClass {
 			touchStartX = touch.clientX;
 			touchStartY = touch.clientY;
 			touchStartTime = Date.now();
+			
+			// Start soft drop after holding for 200ms
+			softDropTimer = setTimeout(() => {
+				this._startSoftDrop();
+			}, 200);
 		});
 		
 		canvas.addEventListener('touchend', (e) => {
@@ -192,6 +234,13 @@ class GameEngineClass {
 			const touchEndX = touch.clientX;
 			const touchEndY = touch.clientY;
 			const touchEndTime = Date.now();
+			
+			// Clear soft drop timer and end soft drop if active
+			if (softDropTimer) {
+				clearTimeout(softDropTimer);
+				softDropTimer = null;
+			}
+			this._endSoftDrop();
 			
 			const deltaX = touchEndX - touchStartX;
 			const deltaY = touchEndY - touchStartY;
@@ -239,6 +288,8 @@ class GameEngineClass {
 		EventEmitter.on(CONSTANTS.EVENTS.MOVE_LEFT, () => this._moveLeft());
 		EventEmitter.on(CONSTANTS.EVENTS.MOVE_RIGHT, () => this._moveRight());
 		EventEmitter.on(CONSTANTS.EVENTS.ROTATE, () => this._rotatePiece());
+		EventEmitter.on(CONSTANTS.EVENTS.SOFT_DROP, () => this._startSoftDrop());
+		EventEmitter.on(CONSTANTS.EVENTS.SOFT_DROP_END, () => this._endSoftDrop());
 		EventEmitter.on(CONSTANTS.EVENTS.HARD_DROP, () => this._hardDrop());
 		
 		// Pause/Resume
@@ -392,6 +443,33 @@ class GameEngineClass {
 	}
 	
 	/**
+	 * Start soft drop (2.5x speed)
+	 * @returns {void}
+	 * @private
+	 */
+	_startSoftDrop() {
+		const isPlaying = this.state === CONSTANTS.GAME_STATES.PLAYING;
+		const hasPiece = this.currentPiece !== null;
+		
+		if (isPlaying && hasPiece && !this.isSoftDropping) {
+			this.isSoftDropping = true;
+			this.dropInterval = this.basedropInterval / 2.5; // 2.5x speed
+		}
+	}
+	
+	/**
+	 * End soft drop (return to normal speed)
+	 * @returns {void}
+	 * @private
+	 */
+	_endSoftDrop() {
+		if (this.isSoftDropping) {
+			this.isSoftDropping = false;
+			this.dropInterval = this.basedropInterval; // Return to normal speed
+		}
+	}
+	
+	/**
 	 * Calculate the Y position where the piece would land
 	 * @returns {Number} Y position of ghost piece
 	 * @private
@@ -504,6 +582,7 @@ class GameEngineClass {
 		
 		// Set drop speed based on difficulty
 		this.dropInterval = Math.max(200, 1000 - (difficulty * 150));
+		this.basedropInterval = this.dropInterval;
 		
 		// Generate pieces (in debug mode, this will be async via callback)
 		if (DebugMode.isEnabled()) {
