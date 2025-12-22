@@ -110,6 +110,9 @@ class GameEngineClass {
 		// Initialize input handler
 		InputHandler.initialize();
 		
+		// Set up touch controls for mobile
+		this._setupTouchControls();
+		
 		// Initialize statistics tracker
 		StatisticsTracker.initialize();
 		
@@ -117,6 +120,113 @@ class GameEngineClass {
 		this._setupEventListeners();
 		
 		this.isInitialized = true;
+	}
+	
+	/**
+	 * Set up touch controls for mobile devices
+	 * @returns {void}
+	 * @private
+	 */
+	_setupTouchControls() {
+		// Set up kbd button controls
+		const kbdButtons = document.querySelectorAll('kbd[data-action]');
+		
+		kbdButtons.forEach(button => {
+			const action = button.getAttribute('data-action');
+			
+			// Add click/touch event listener
+			button.addEventListener('click', (e) => {
+				e.preventDefault();
+				InputHandler.triggerAction(action);
+			});
+			
+			// Add touch feedback
+			button.addEventListener('touchstart', (e) => {
+				e.preventDefault();
+				button.style.opacity = '0.6';
+				InputHandler.triggerAction(action);
+			});
+			
+			button.addEventListener('touchend', (e) => {
+				e.preventDefault();
+				button.style.opacity = '1';
+			});
+			
+			// Make button look interactive
+			button.style.cursor = 'pointer';
+			button.style.userSelect = 'none';
+		});
+		
+		// Set up canvas touch controls
+		this._setupCanvasTouchControls();
+	}
+	
+	/**
+	 * Set up canvas touch controls for tap and swipe gestures
+	 * @returns {void}
+	 * @private
+	 */
+	_setupCanvasTouchControls() {
+		const canvas = this.renderer.canvas;
+		if (!canvas) return;
+		
+		let touchStartX = 0;
+		let touchStartY = 0;
+		let touchStartTime = 0;
+		
+		canvas.addEventListener('touchstart', (e) => {
+			if (this.state !== CONSTANTS.GAME_STATES.PLAYING) return;
+			
+			e.preventDefault();
+			const touch = e.touches[0];
+			touchStartX = touch.clientX;
+			touchStartY = touch.clientY;
+			touchStartTime = Date.now();
+		});
+		
+		canvas.addEventListener('touchend', (e) => {
+			if (this.state !== CONSTANTS.GAME_STATES.PLAYING) return;
+			
+			e.preventDefault();
+			const touch = e.changedTouches[0];
+			const touchEndX = touch.clientX;
+			const touchEndY = touch.clientY;
+			const touchEndTime = Date.now();
+			
+			const deltaX = touchEndX - touchStartX;
+			const deltaY = touchEndY - touchStartY;
+			const deltaTime = touchEndTime - touchStartTime;
+			
+			// Check if it's a swipe (fast movement) vs tap (quick touch)
+			const isSwipeDown = deltaY > 50 && deltaTime < 300;
+			const isSwipeUp = deltaY < -50 && deltaTime < 300;
+			const isTap = Math.abs(deltaX) < 20 && Math.abs(deltaY) < 20 && deltaTime < 300;
+			
+			if (isSwipeDown) {
+				// Swipe down - hard drop
+				InputHandler.triggerAction('drop');
+			} else if (isSwipeUp) {
+				// Swipe up - rotate
+				InputHandler.triggerAction('rotate');
+			} else if (isTap) {
+				// Tap - move left/right based on which side of canvas
+				const rect = canvas.getBoundingClientRect();
+				const canvasX = touchEndX - rect.left;
+				const canvasWidth = rect.width;
+				const centerX = canvasWidth / 2;
+				
+				if (canvasX < centerX) {
+					InputHandler.triggerAction('moveLeft');
+				} else {
+					InputHandler.triggerAction('moveRight');
+				}
+			}
+		});
+		
+		// Prevent default touch behavior on canvas
+		canvas.addEventListener('touchmove', (e) => {
+			e.preventDefault();
+		}, { passive: false });
 	}
 	
 	/**

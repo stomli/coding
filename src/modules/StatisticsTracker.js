@@ -116,30 +116,59 @@ class StatisticsTrackerClass {
 			{ type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW, name: 'Paint DNW', symbol: '╲' }
 		];
 
-		let html = '<table class="stats-table">';
+		// Split colors into chunks of 4
+		const colorChunks = [];
+		for (let i = 0; i < colors.length; i += 4) {
+			const chunk = colors.slice(i, i + 4);
+			// Pad chunk to always have 4 columns
+			while (chunk.length < 4) {
+				chunk.push(null);
+			}
+			colorChunks.push(chunk);
+		}
+
+		let html = '';
 		
-		// Header row with colors
-		html += '<thead><tr><th></th>';
-		colors.forEach(color => {
-			html += `<th><div class="stats-color-cell" style="background: ${color};"></div></th>`;
-		});
-		html += '</tr></thead>';
-
-		// Body rows with types
-		html += '<tbody>';
-		types.forEach(typeData => {
-			html += '<tr>';
-			html += `<td class="stats-type-cell" title="${typeData.name}">${typeData.symbol}</td>`;
-			colors.forEach(color => {
-				const count = this.stats[typeData.type]?.[color] || 0;
-				const cellClass = count > 0 ? 'stat-value has-matches' : 'stat-value';
-				html += `<td class="${cellClass}" id="stat-${typeData.type}-${color.replace('#', '')}">${count}</td>`;
+		// Create a table for each chunk
+		colorChunks.forEach((colorChunk, chunkIndex) => {
+			if (chunkIndex > 0) {
+				html += '<div style="margin-top: 1rem;"></div>';
+			}
+			
+			html += '<table class="stats-table">';
+			
+			// Header row with colors
+			html += '<thead><tr><th></th>';
+			colorChunk.forEach(color => {
+				if (color) {
+					html += `<th><div class="stats-color-cell" style="background: ${color};"></div></th>`;
+				} else {
+					html += '<th></th>';
+				}
 			});
-			html += '</tr>';
-		});
-		html += '</tbody>';
+			html += '</tr></thead>';
 
-		html += '</table>';
+			// Body rows with types
+			html += '<tbody>';
+			types.forEach(typeData => {
+				html += '<tr>';
+				html += `<td class="stats-type-cell" title="${typeData.name}">${typeData.symbol}</td>`;
+				colorChunk.forEach(color => {
+					if (color) {
+						const count = this.stats[typeData.type]?.[color] || 0;
+						const cellClass = count > 0 ? 'stat-value has-matches' : 'stat-value';
+						html += `<td class="${cellClass}" id="stat-${typeData.type}-${color.replace('#', '')}">${count}</td>`;
+					} else {
+						html += '<td class="stat-value"></td>';
+					}
+				});
+				html += '</tr>';
+			});
+			html += '</tbody>';
+
+			html += '</table>';
+		});
+
 		this.boardElement.innerHTML = html;
 	}
 

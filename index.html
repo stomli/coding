@@ -77,9 +77,17 @@
 					</div>
 			</div>
 			
-		<div class="hud-center">
-			<div class="hud-item timer">
-				<span id="timerDisplay" class="hud-value timer-value">15.0s</span>
+	<div class="hud-center">
+		<div class="hud-item colors-compact">
+			<span class="hud-label">Colors:</span>
+			<div id="availableColors" class="available-colors"></div>
+		</div>
+		<div class="hud-item timer">
+			<span id="timerDisplay" class="hud-value timer-value">15.0s</span>
+		</div>
+			<div class="hud-item preview-compact">
+				<span class="hud-label">Next:</span>
+				<canvas id="previewCanvas" width="96" height="72"></canvas>
 			</div>
 		</div>				<div class="hud-right">
 				<div class="hud-item">
@@ -145,34 +153,28 @@
 						<span>Paints NW-SE diagonal</span>
 					</div>
 				</div>
-				
-				<h3 style="margin-top: 1.5rem;">Available Colors</h3>
-				<div id="availableColors" class="available-colors">
-					<!-- Colors will be populated by JavaScript -->
-				</div>
 			</div>
 			
 			<!-- Main Game Canvas -->
-			<canvas id="gameCanvas"></canvas>				<!-- Next Piece Preview -->
-				<div class="preview-panel">
-					<h3>Next Piece</h3>
-					<canvas id="previewCanvas"></canvas>
-					
-					<!-- Statistics Board -->
-					<div class="stats-panel">
-						<h3>Match Statistics</h3>
-						<div id="statsBoard" class="stats-board">
-							<!-- Will be populated by JavaScript -->
-						</div>
+			<canvas id="gameCanvas"></canvas>
+			
+			<!-- Statistics Panel (desktop only) -->
+			<div class="stats-panel-container">
+				<div class="stats-panel">
+					<h3>Match Statistics</h3>
+					<div id="statsBoard" class="stats-board">
+						<!-- Will be populated by JavaScript -->
 					</div>
 				</div>
 			</div>
+		</div>
 			
 			<!-- Controls Info -->
 			<div class="controls-info">
-				<div class="controls-keys">
-					<p><kbd>←</kbd> <kbd>→</kbd> Move | <kbd>↑</kbd> Rotate | <kbd>↓</kbd> Drop | <kbd>P</kbd> Pause | <kbd>R</kbd> Restart</p>
-				</div>
+			<div class="controls-keys">
+				<p class="controls-text"><kbd data-action="moveLeft">←</kbd> Move <kbd data-action="moveRight">→</kbd> | <kbd data-action="rotate">↑</kbd> Rotate | <kbd data-action="drop">↓</kbd> Drop | <kbd data-action="pause">P</kbd> Pause | <kbd data-action="restart">R</kbd> Restart</p>
+				<p class="controls-icons"><kbd data-action="moveLeft">←</kbd> <kbd data-action="moveRight">→</kbd> | <kbd data-action="rotate">↑</kbd> | <kbd data-action="drop">↓</kbd> | <kbd data-action="pause">P</kbd> | <kbd data-action="restart">R</kbd></p>
+			</div>
 				<div class="hud-item clock">
 					<span id="weatherDisplay" class="weather-info">--</span>
 					<span class="separator">|</span>

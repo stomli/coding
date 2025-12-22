@@ -176,20 +176,17 @@ class Renderer {
 		const shape = piece.getShape();
 		const balls = piece.getBalls();
 		
-		// Calculate preview size
+		// Use fixed cell size of 24px for preview orbs
+		const previewCellSize = 24;
 		const pieceWidth = shape[0].length;
 		const pieceHeight = shape.length;
-		const previewCellSize = Math.min(
-			previewCanvas.width / pieceWidth,
-			previewCanvas.height / pieceHeight
-		);
 		
 		// Clear preview canvas
 		const bgColor = ConfigManager.get('colors.ui.background', '#0f0f1e');
 		previewCtx.fillStyle = bgColor;
 		previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
 		
-		// Center piece in preview
+		// Center piece in preview without scaling
 		const offsetX = (previewCanvas.width - pieceWidth * previewCellSize) / 2;
 		const offsetY = (previewCanvas.height - pieceHeight * previewCellSize) / 2;
 		

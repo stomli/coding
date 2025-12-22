@@ -121,6 +121,31 @@ class InputHandlerClass {
 	}
 	
 	/**
+	 * Trigger a game action programmatically (for touch controls)
+	 * @param {string} action - Action name (moveLeft, moveRight, rotate, drop, pause, restart)
+	 * @returns {void}
+	 */
+	triggerAction(action) {
+		if (!this.isEnabled) {
+			return;
+		}
+		
+		const actionMap = {
+			'moveLeft': CONSTANTS.EVENTS.MOVE_LEFT,
+			'moveRight': CONSTANTS.EVENTS.MOVE_RIGHT,
+			'rotate': CONSTANTS.EVENTS.ROTATE,
+			'drop': CONSTANTS.EVENTS.HARD_DROP,
+			'pause': CONSTANTS.EVENTS.PAUSE,
+			'restart': CONSTANTS.EVENTS.RESTART
+		};
+		
+		const eventName = actionMap[action];
+		if (eventName) {
+			EventEmitter.emit(eventName);
+		}
+	}
+	
+	/**
 	 * Clean up event listeners
 	 * @returns {void}
 	 */
