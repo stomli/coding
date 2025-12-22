@@ -203,8 +203,12 @@ class GameEngineClass {
 	 * @private
 	 */
 	_setupCanvasTouchControls() {
+		if (!this.renderer || !this.renderer.canvas) {
+			// No canvas available (e.g., running in test environment)
+			return;
+		}
+		
 		const canvas = this.renderer.canvas;
-		if (!canvas) return;
 		
 		let touchStartX = 0;
 		let touchStartY = 0;

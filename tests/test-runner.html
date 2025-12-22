@@ -85,6 +85,10 @@
 	<h1>🧪 Ball Drop Puzzle - Unit Tests</h1>
 	<div id="test-output"></div>
 	<div id="summary"></div>
+	
+	<!-- Hidden canvas for tests that need it -->
+	<canvas id="gameCanvas" width="400" height="800" style="display: none;"></canvas>
+	<canvas id="previewCanvas" width="96" height="72" style="display: none;"></canvas>
 
 	<script type="module">
 		import { runAllTests } from './unit/test-suite.js';

@@ -250,6 +250,135 @@ testSuite.tests.push({
 	}
 });
 
+// Test: Soft drop increases drop speed
+testSuite.tests.push({
+	name: '_startSoftDrop - Increases drop speed by 2.5x',
+	async run() {
+		await ConfigManager.loadConfig();
+		GameEngine.initialize();
+		GameEngine.start(1, 1);
+		
+		const baseInterval = GameEngine.dropInterval;
+		const baseDropInterval = GameEngine.basedropInterval;
+		
+		// Start soft drop
+		GameEngine._startSoftDrop();
+		
+		const expectedInterval = baseDropInterval / 2.5;
+		
+		if (!GameEngine.isSoftDropping) {
+			throw new Error('isSoftDropping should be true after starting soft drop');
+		}
+		
+		if (Math.abs(GameEngine.dropInterval - expectedInterval) > 0.1) {
+			throw new Error(`Drop interval should be ${expectedInterval}, got ${GameEngine.dropInterval}`);
+		}
+	}
+});
+
+// Test: End soft drop restores normal speed
+testSuite.tests.push({
+	name: '_endSoftDrop - Restores normal drop speed',
+	async run() {
+		await ConfigManager.loadConfig();
+		GameEngine.initialize();
+		GameEngine.start(1, 1);
+		
+		const baseInterval = GameEngine.basedropInterval;
+		
+		// Start and end soft drop
+		GameEngine._startSoftDrop();
+		GameEngine._endSoftDrop();
+		
+		if (GameEngine.isSoftDropping) {
+			throw new Error('isSoftDropping should be false after ending soft drop');
+		}
+		
+		if (GameEngine.dropInterval !== baseInterval) {
+			throw new Error(`Drop interval should be ${baseInterval}, got ${GameEngine.dropInterval}`);
+		}
+	}
+});
+
+// Test: Soft drop only works when playing
+testSuite.tests.push({
+	name: '_startSoftDrop - Only works in PLAYING state',
+	async run() {
+		await ConfigManager.loadConfig();
+		GameEngine.initialize();
+		
+		// Try to start soft drop when not playing
+		GameEngine.state = CONSTANTS.GAME_STATES.PAUSED;
+		GameEngine._startSoftDrop();
+		
+		if (GameEngine.isSoftDropping) {
+			throw new Error('Soft drop should not activate when not in PLAYING state');
+		}
+	}
+});
+
+// Test: Soft drop requires active piece
+testSuite.tests.push({
+	name: '_startSoftDrop - Requires active piece',
+	async run() {
+		await ConfigManager.loadConfig();
+		GameEngine.initialize();
+		GameEngine.state = CONSTANTS.GAME_STATES.PLAYING;
+		GameEngine.currentPiece = null;
+		
+		// Try to start soft drop without piece
+		GameEngine._startSoftDrop();
+		
+		if (GameEngine.isSoftDropping) {
+			throw new Error('Soft drop should not activate without active piece');
+		}
+	}
+});
+
+// Test: Soft drop prevents double activation
+testSuite.tests.push({
+	name: '_startSoftDrop - Prevents double activation',
+	async run() {
+		await ConfigManager.loadConfig();
+		GameEngine.initialize();
+		GameEngine.start(1, 1);
+		
+		const baseInterval = GameEngine.basedropInterval;
+		
+		// Start soft drop twice
+		GameEngine._startSoftDrop();
+		const firstInterval = GameEngine.dropInterval;
+		GameEngine._startSoftDrop();
+		const secondInterval = GameEngine.dropInterval;
+		
+		if (firstInterval !== secondInterval) {
+			throw new Error('Double soft drop activation should not change drop interval again');
+		}
+		
+		if (Math.abs(secondInterval - (baseInterval / 2.5)) > 0.1) {
+			throw new Error('Drop interval should remain at 2.5x speed');
+		}
+	}
+});
+
+// Test: basedropInterval is set on difficulty change
+testSuite.tests.push({
+	name: 'setDifficulty - Updates basedropInterval',
+	async run() {
+		await ConfigManager.loadConfig();
+		GameEngine.initialize();
+		GameEngine.start(1, 3);
+		
+		if (!GameEngine.basedropInterval) {
+			throw new Error('basedropInterval should be set after starting game');
+		}
+		
+		if (GameEngine.basedropInterval !== GameEngine.dropInterval) {
+			throw new Error('basedropInterval should match dropInterval when not soft dropping');
+		}
+	}
+});
+
 // Test: Restart resets game state
 testSuite.tests.push({
 	name: 'restart - Resets game state',

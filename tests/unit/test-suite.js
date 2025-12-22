@@ -23,6 +23,7 @@ import { runParticleSystemTests } from './test-particle-system.js';
 import { runPlayerManagerTests } from './test-player-manager.js';
 import { runAudioManagerTests } from './test-audio-manager.js';
 import { runStatisticsTrackerTests } from './test-statistics-tracker.js';
+import testMobileInteractions from './test-mobile-interactions.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -87,6 +88,10 @@ export async function runAllTests() {
 	// Run StatisticsTracker tests
 	const statisticsTrackerResults = runStatisticsTrackerTests();
 	suites.push({ name: 'StatisticsTracker', tests: statisticsTrackerResults });
+	
+	// Run Mobile Interactions tests
+	const mobileInteractionsResults = await runAsyncTestSuite(testMobileInteractions);
+	suites.push({ name: testMobileInteractions.name, tests: mobileInteractionsResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

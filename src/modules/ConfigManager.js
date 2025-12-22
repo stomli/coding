@@ -39,17 +39,32 @@ class ConfigManagerClass {
 		}
 		
 		try {
-			const response = await fetch('./config.json');
-			const isSuccess = response.ok;
+			// Try multiple possible paths (for tests and normal operation)
+			const possiblePaths = ['./config.json', '../config.json', '../../config.json'];
+			let response = null;
+			let loadedPath = null;
+			
+			for (const path of possiblePaths) {
+				try {
+					response = await fetch(path);
+					if (response.ok) {
+						loadedPath = path;
+						break;
+					}
+				} catch (e) {
+					// Try next path
+					continue;
+				}
+			}
 			
 			// Parse JSON if successful
-			if (isSuccess) {
+			if (response && response.ok) {
 				this.config = await response.json();
 				this.isLoaded = true;
 				return this.config;
 			}
 			else {
-				throw new Error(`Failed to load config: ${response.status}`);
+				throw new Error(`Failed to load config: Could not find config.json in any expected location`);
 			}
 		}
 		catch (error) {

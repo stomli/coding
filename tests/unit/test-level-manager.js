@@ -67,7 +67,7 @@ export function runLevelManagerTests() {
 		LevelManager.initialize();
 		
 		assertEquals(LevelManager.currentLevel, 1, 'Current level should be 1');
-		assertEquals(LevelManager.maxLevel, 24, 'Max level should be 24');
+		assertEquals(LevelManager.maxLevel, 30, 'Max level should be 30');
 		assertEquals(LevelManager.levelTimer, 0, 'Timer should be 0');
 		assertEquals(LevelManager.timerRunning, false, 'Timer should not be running');
 		assert(LevelManager.unlockedLevels.includes(1), 'Level 1 should be unlocked');
@@ -242,7 +242,7 @@ export function runLevelManagerTests() {
 		LevelManager.initialize();
 		LevelManager.unlockAllLevels();
 		
-		assertEquals(LevelManager.unlockedLevels.length, 24, 'Should have 24 unlocked levels');
+		assertEquals(LevelManager.unlockedLevels.length, 30, 'Should have 30 unlocked levels');
 		assert(LevelManager.isLevelUnlocked(20), 'Level 20 should be unlocked');
 		
 		teardownMockStorage();
@@ -252,7 +252,7 @@ export function runLevelManagerTests() {
 	test('getMaxLevel() returns the maximum level', () => {
 		LevelManager.initialize();
 		
-		assertEquals(LevelManager.getMaxLevel(), 24, 'Max level should be 24');
+		assertEquals(LevelManager.getMaxLevel(), 30, 'Max level should be 30');
 	});
 	
 	// Test: Timer doesn't update when stopped

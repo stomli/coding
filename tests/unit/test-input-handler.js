@@ -261,6 +261,138 @@ testSuite.tests.push({
 	}
 });
 
+// Test: InputHandler emits soft drop event on Space
+testSuite.tests.push({
+	name: 'handleKeyDown - emits soft-drop on Space',
+	async run() {
+		await ConfigManager.loadConfig();
+		InputHandler.initialize();
+		
+		let eventFired = false;
+		const listener = () => { eventFired = true; };
+		
+		EventEmitter.on(CONSTANTS.EVENTS.SOFT_DROP, listener);
+		
+		const event = new KeyboardEvent('keydown', { 
+			code: 'Space',
+			bubbles: true,
+			cancelable: true
+		});
+		
+		InputHandler._handleKeyDown(event);
+		
+		EventEmitter.off(CONSTANTS.EVENTS.SOFT_DROP, listener);
+		
+		if (!eventFired) {
+			throw new Error('soft-drop event should be emitted on Space key');
+		}
+	}
+});
+
+// Test: InputHandler emits soft drop end event on Space release
+testSuite.tests.push({
+	name: 'handleKeyUp - emits soft-drop-end on Space release',
+	async run() {
+		await ConfigManager.loadConfig();
+		InputHandler.initialize();
+		
+		let eventFired = false;
+		const listener = () => { eventFired = true; };
+		
+		EventEmitter.on(CONSTANTS.EVENTS.SOFT_DROP_END, listener);
+		
+		const event = new KeyboardEvent('keyup', { 
+			code: 'Space',
+			bubbles: true,
+			cancelable: true
+		});
+		
+		InputHandler._handleKeyUp(event);
+		
+		EventEmitter.off(CONSTANTS.EVENTS.SOFT_DROP_END, listener);
+		
+		if (!eventFired) {
+			throw new Error('soft-drop-end event should be emitted on Space release');
+		}
+	}
+});
+
+// Test: triggerAction works for softDrop
+testSuite.tests.push({
+	name: 'triggerAction - emits soft-drop for softDrop action',
+	async run() {
+		await ConfigManager.loadConfig();
+		InputHandler.initialize();
+		
+		let eventFired = false;
+		const listener = () => { eventFired = true; };
+		
+		EventEmitter.on(CONSTANTS.EVENTS.SOFT_DROP, listener);
+		
+		InputHandler.triggerAction('softDrop');
+		
+		EventEmitter.off(CONSTANTS.EVENTS.SOFT_DROP, listener);
+		
+		if (!eventFired) {
+			throw new Error('soft-drop event should be emitted via triggerAction');
+		}
+	}
+});
+
+// Test: triggerActionEnd works for softDrop
+testSuite.tests.push({
+	name: 'triggerActionEnd - emits soft-drop-end for softDrop action',
+	async run() {
+		await ConfigManager.loadConfig();
+		InputHandler.initialize();
+		
+		let eventFired = false;
+		const listener = () => { eventFired = true; };
+		
+		EventEmitter.on(CONSTANTS.EVENTS.SOFT_DROP_END, listener);
+		
+		InputHandler.triggerActionEnd('softDrop');
+		
+		EventEmitter.off(CONSTANTS.EVENTS.SOFT_DROP_END, listener);
+		
+		if (!eventFired) {
+			throw new Error('soft-drop-end event should be emitted via triggerActionEnd');
+		}
+	}
+});
+
+// Test: triggerAction works for all mobile actions
+testSuite.tests.push({
+	name: 'triggerAction - supports all mobile gesture actions',
+	async run() {
+		await ConfigManager.loadConfig();
+		InputHandler.initialize();
+		
+		const actions = [
+			{ action: 'moveLeft', event: CONSTANTS.EVENTS.MOVE_LEFT },
+			{ action: 'moveRight', event: CONSTANTS.EVENTS.MOVE_RIGHT },
+			{ action: 'rotate', event: CONSTANTS.EVENTS.ROTATE },
+			{ action: 'softDrop', event: CONSTANTS.EVENTS.SOFT_DROP },
+			{ action: 'drop', event: CONSTANTS.EVENTS.HARD_DROP },
+			{ action: 'pause', event: CONSTANTS.EVENTS.PAUSE },
+			{ action: 'restart', event: CONSTANTS.EVENTS.RESTART }
+		];
+		
+		for (const { action, event } of actions) {
+			let eventFired = false;
+			const listener = () => { eventFired = true; };
+			
+			EventEmitter.on(event, listener);
+			InputHandler.triggerAction(action);
+			EventEmitter.off(event, listener);
+			
+			if (!eventFired) {
+				throw new Error(`${action} should trigger ${event}`);
+			}
+		}
+	}
+});
+
 // Test: InputHandler respects enabled/disabled state
 testSuite.tests.push({
 	name: 'enableInput/disableInput - controls event emission',
