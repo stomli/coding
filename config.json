@@ -1,6 +1,6 @@
 {
 	"game": {
-		"gridRows": 25,
+		"gridRows": 22,
 		"gridCols": 15,
 		"levelDuration": 90,
 		"startingDropSpeed": 1000,
