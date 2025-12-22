@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Browser Pixel Display Test</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 20px;
+			color: white;
+		}
+
+		.container {
+			background: rgba(255, 255, 255, 0.1);
+			backdrop-filter: blur(10px);
+			border-radius: 20px;
+			padding: 30px;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+			max-width: 900px;
+			width: 100%;
+		}
+
+		h1 {
+			text-align: center;
+			margin-bottom: 30px;
+			font-size: 2.5em;
+			text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+		}
+
+		.info-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+			gap: 20px;
+			margin-bottom: 30px;
+		}
+
+		.info-card {
+			background: rgba(255, 255, 255, 0.15);
+			border-radius: 15px;
+			padding: 20px;
+			border: 2px solid rgba(255, 255, 255, 0.2);
+		}
+
+		.info-card h2 {
+			font-size: 1.2em;
+			margin-bottom: 15px;
+			color: #fff;
+			border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+			padding-bottom: 10px;
+		}
+
+		.info-item {
+			display: flex;
+			justify-content: space-between;
+			padding: 8px 0;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+		}
+
+		.info-item:last-child {
+			border-bottom: none;
+		}
+
+		.info-label {
+			font-weight: 600;
+			color: rgba(255, 255, 255, 0.8);
+		}
+
+		.info-value {
+			font-weight: bold;
+			color: #fff;
+			font-family: 'Courier New', monospace;
+		}
+
+		.visual-box {
+			background: rgba(255, 255, 255, 0.15);
+			border-radius: 15px;
+			padding: 20px;
+			margin-top: 20px;
+			border: 2px solid rgba(255, 255, 255, 0.2);
+		}
+
+		.visual-box h2 {
+			margin-bottom: 15px;
+			color: #fff;
+		}
+
+		.dimension-visual {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			gap: 20px;
+			flex-wrap: wrap;
+		}
+
+		.dimension-box {
+			position: relative;
+			background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+			border: 3px solid rgba(255, 255, 255, 0.5);
+			border-radius: 10px;
+			padding: 20px;
+			min-width: 200px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.dimension-label {
+			font-size: 0.9em;
+			color: rgba(255, 255, 255, 0.8);
+			margin-bottom: 5px;
+		}
+
+		.dimension-value {
+			font-size: 2em;
+			font-weight: bold;
+			font-family: 'Courier New', monospace;
+		}
+
+		.update-btn {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			border: none;
+			border-radius: 10px;
+			padding: 15px 30px;
+			font-size: 1.1em;
+			font-weight: bold;
+			cursor: pointer;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+			transition: all 0.3s ease;
+			margin-top: 20px;
+			width: 100%;
+		}
+
+		.update-btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+		}
+
+		.update-btn:active {
+			transform: translateY(0);
+		}
+
+		.ratio-display {
+			text-align: center;
+			font-size: 1.5em;
+			margin-top: 15px;
+			padding: 15px;
+			background: rgba(255, 255, 255, 0.1);
+			border-radius: 10px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>🖥️ Browser Pixel Display</h1>
+		
+		<div class="info-grid">
+			<div class="info-card">
+				<h2>📐 Window Dimensions</h2>
+				<div class="info-item">
+					<span class="info-label">Inner Width:</span>
+					<span class="info-value" id="innerWidth">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Inner Height:</span>
+					<span class="info-value" id="innerHeight">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Outer Width:</span>
+					<span class="info-value" id="outerWidth">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Outer Height:</span>
+					<span class="info-value" id="outerHeight">-</span>
+				</div>
+			</div>
+
+			<div class="info-card">
+				<h2>📱 Screen Dimensions</h2>
+				<div class="info-item">
+					<span class="info-label">Screen Width:</span>
+					<span class="info-value" id="screenWidth">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Screen Height:</span>
+					<span class="info-value" id="screenHeight">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Available Width:</span>
+					<span class="info-value" id="availWidth">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Available Height:</span>
+					<span class="info-value" id="availHeight">-</span>
+				</div>
+			</div>
+
+			<div class="info-card">
+				<h2>📄 Document Dimensions</h2>
+				<div class="info-item">
+					<span class="info-label">Client Width:</span>
+					<span class="info-value" id="clientWidth">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Client Height:</span>
+					<span class="info-value" id="clientHeight">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Scroll Width:</span>
+					<span class="info-value" id="scrollWidth">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Scroll Height:</span>
+					<span class="info-value" id="scrollHeight">-</span>
+				</div>
+			</div>
+
+			<div class="info-card">
+				<h2>🔍 Device Info</h2>
+				<div class="info-item">
+					<span class="info-label">Pixel Ratio:</span>
+					<span class="info-value" id="pixelRatio">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Color Depth:</span>
+					<span class="info-value" id="colorDepth">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Orientation:</span>
+					<span class="info-value" id="orientation">-</span>
+				</div>
+				<div class="info-item">
+					<span class="info-label">Touch Support:</span>
+					<span class="info-value" id="touchSupport">-</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="visual-box">
+			<h2>Visual Representation</h2>
+			<div class="dimension-visual">
+				<div class="dimension-box">
+					<div class="dimension-label">Window Size</div>
+					<div class="dimension-value" id="windowSize">-</div>
+				</div>
+				<div class="dimension-box">
+					<div class="dimension-label">Screen Size</div>
+					<div class="dimension-value" id="screenSize">-</div>
+				</div>
+				<div class="dimension-box">
+					<div class="dimension-label">Document Size</div>
+					<div class="dimension-value" id="documentSize">-</div>
+				</div>
+			</div>
+			<div class="ratio-display">
+				Aspect Ratio: <span id="aspectRatio">-</span>
+			</div>
+		</div>
+
+		<button class="update-btn" onclick="updateDisplay()">🔄 Refresh Values</button>
+	</div>
+
+	<script>
+		function updateDisplay() {
+			// Window dimensions
+			document.getElementById('innerWidth').textContent = window.innerWidth + 'px';
+			document.getElementById('innerHeight').textContent = window.innerHeight + 'px';
+			document.getElementById('outerWidth').textContent = window.outerWidth + 'px';
+			document.getElementById('outerHeight').textContent = window.outerHeight + 'px';
+
+			// Screen dimensions
+			document.getElementById('screenWidth').textContent = screen.width + 'px';
+			document.getElementById('screenHeight').textContent = screen.height + 'px';
+			document.getElementById('availWidth').textContent = screen.availWidth + 'px';
+			document.getElementById('availHeight').textContent = screen.availHeight + 'px';
+
+			// Document dimensions
+			const docElement = document.documentElement;
+			document.getElementById('clientWidth').textContent = docElement.clientWidth + 'px';
+			document.getElementById('clientHeight').textContent = docElement.clientHeight + 'px';
+			document.getElementById('scrollWidth').textContent = docElement.scrollWidth + 'px';
+			document.getElementById('scrollHeight').textContent = docElement.scrollHeight + 'px';
+
+			// Device info
+			document.getElementById('pixelRatio').textContent = window.devicePixelRatio + 'x';
+			document.getElementById('colorDepth').textContent = screen.colorDepth + '-bit';
+			document.getElementById('orientation').textContent = screen.orientation ? screen.orientation.type : 'N/A';
+			document.getElementById('touchSupport').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
+
+			// Visual representations
+			document.getElementById('windowSize').textContent = `${window.innerWidth} × ${window.innerHeight}`;
+			document.getElementById('screenSize').textContent = `${screen.width} × ${screen.height}`;
+			document.getElementById('documentSize').textContent = `${docElement.clientWidth} × ${docElement.clientHeight}`;
+
+			// Aspect ratio
+			const ratio = (window.innerWidth / window.innerHeight).toFixed(2);
+			document.getElementById('aspectRatio').textContent = `${ratio}:1`;
+		}
+
+		// Update on load
+		window.addEventListener('DOMContentLoaded', updateDisplay);
+
+		// Update on resize
+		window.addEventListener('resize', updateDisplay);
+
+		// Update on orientation change
+		window.addEventListener('orientationchange', () => {
+			setTimeout(updateDisplay, 100);
+		});
+	</script>
+</body>
+</html>
