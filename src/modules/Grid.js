@@ -595,7 +595,7 @@ class Grid {
 						
 						// Clear all balls (including blocking balls in explosion radius)
 						if (ball) {
-							explodedPositions.push({ row: r, col: c });
+							explodedPositions.push({ row: r, col: c, ball: ball }); // Include ball object for statistics
 							this.removeBallAt(r, c);
 						}
 					}

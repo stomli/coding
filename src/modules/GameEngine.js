@@ -921,32 +921,54 @@ class GameEngineClass {
 				break; // No more matches
 			}
 			
-			cascadeCount++;
-			
-			// DEBUG: Wait for user to advance step
-			if (DebugMode.enabled && DebugMode.stepMode) {
-				await DebugMode.waitForStep();
+	cascadeCount++;
+	
+	
+	// DEBUG: Wait for user to advance step
+	if (DebugMode.enabled && DebugMode.stepMode) {
+		await DebugMode.waitForStep();
+	}
+	
+	// Build set of positions already in matches to avoid double-counting explosions
+	const matchedPositions = new Set();
+	matches.forEach(match => {
+		match.positions.forEach(pos => {
+			matchedPositions.add(`${pos.row},${pos.col}`);
+		});
+	});	// Process special balls FIRST (priority order)
+	// 1. Process explosions
+	const explodedPositions = this.grid.processExplosions(matches);	
+	// Count exploded balls NOT already in matches
+	let explodedNotInMatches = 0;
+	if (explodedPositions.length > 0) {
+		explodedPositions.forEach(pos => {
+			const posKey = `${pos.row},${pos.col}`;
+			if (pos.ball && !matchedPositions.has(posKey)) {
+				explodedNotInMatches++;
 			}
-			
-		// Record statistics for matches BEFORE processing (while balls still exist)
-		StatisticsTracker.recordMatches(matches, this.grid);
+		});
+	}
+	
+	// Emit BALLS_CLEARED event ONLY for exploded balls not in original matches
+	if (explodedNotInMatches > 0) {
+		// Build ball data array from exploded positions for statistics
+		const ballData = explodedPositions
+			.filter(pos => pos.ball && !matchedPositions.has(`${pos.row},${pos.col}`))
+			.map(pos => ({
+				type: pos.ball.type,
+				color: pos.ball.color
+			}));
 		
-		// Process special balls FIRST (priority order)
-		// 1. Process explosions
-		const explodedPositions = this.grid.processExplosions(matches);
-		
-		// Emit BALLS_CLEARED event for exploded balls
-		if (explodedPositions.length > 0) {
-			EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { 
-				count: explodedPositions.length,
-				matches: 0 // Explosions don't count as matches
-			});
-		}
-		
-		// Count explosions as scoring events
-		if (explodedPositions.length > 0) {
-			totalScoringEvents += explodedPositions.length;
-		}
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { 
+			count: explodedNotInMatches,
+			balls: ballData
+		});
+	}
+	
+	// Count explosions as scoring events (only new ones)
+	if (explodedNotInMatches > 0) {
+		totalScoringEvents += explodedNotInMatches;
+	}
 		
 		// Play explosion sound if any balls exploded
 		if (explodedPositions.length > 0) {
@@ -972,34 +994,63 @@ class GameEngineClass {
 				AnimationManager.animateExplosion(pos.row, pos.col, 3, null);
 			}
 			
-			// Show floating text with count of exploded balls at center
-			const centerRow = totalRow / explodedPositions.length;
-			const centerCol = totalCol / explodedPositions.length;
-			const centerX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
-			const centerY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
-			this.floatingTextManager.add(`${explodedPositions.length}`, centerX, centerY, 1500, '#FFD700');
-		}
-		
-		// 2. Process painters (paint lines before clearing)
-		const paintedPositions = this.grid.processPainters(matches);
-		
-		// 3. Re-find matches after painting to include newly painted lines
-		let matchesToClear = matches;
-		if (paintedPositions.length > 0) {
-			// Find all matches again after painting
-			matchesToClear = this.grid.findMatches();
-			// Record statistics for newly painted matches
-			StatisticsTracker.recordMatches(matchesToClear, this.grid);
-		}
-		
-		// 4. Clear matched balls (original matches + any new matches from painting)
+		// Show floating text with count of exploded balls at center
+		const centerRow = totalRow / explodedPositions.length;
+		const centerCol = totalCol / explodedPositions.length;
+		const centerX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
+		const centerY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
+		this.floatingTextManager.add(`${explodedPositions.length}`, centerX, centerY, 1500, '#FFD700');
+	}
+	
+	// 2. Process painters (paint lines before clearing)
+	const paintedPositions = this.grid.processPainters(matches);
+	
+	// 3. Build set of exploded positions (balls already removed from grid)
+	const explodedPositionSet = new Set();
+	if (explodedPositions.length > 0) {
+		explodedPositions.forEach(pos => {
+			explodedPositionSet.add(`${pos.row},${pos.col}`);
+		});
+	}
+	
+	// 4. Determine which matches to clear
+	let matchesToClear = matches;
+	if (paintedPositions.length > 0) {
+		// Re-find matches after painting to include newly painted lines
+		matchesToClear = this.grid.findMatches();
+	}
+	
+	// 5. Filter out exploded positions from matches (balls already removed)
+	if (explodedPositionSet.size > 0) {
+		matchesToClear = matchesToClear.filter(match => {
+			// Keep match if it has at least one position that wasn't exploded
+			return match.positions.some(pos => {
+				const key = `${pos.row},${pos.col}`;
+				return !explodedPositionSet.has(key);
+			});
+		}).map(match => {
+			// Remove exploded positions from the match
+			return {
+				...match,
+				positions: match.positions.filter(pos => {
+					const key = `${pos.row},${pos.col}`;
+					return !explodedPositionSet.has(key);
+				})
+			};
+		});
+	}
+	
+	// 6. Clear matched balls (only non-exploded ones)
+	if (matchesToClear.length > 0) {
 		await this._clearMatches(matchesToClear, clearDelay);
-			
-			// Count matches as scoring events (use actual cleared matches count)
-			totalScoringEvents += matchesToClear.length;
-			
-			// Apply gravity
+	}
+	
+	// Count matches as scoring events (use actual cleared matches count)
+	totalScoringEvents += matchesToClear.length;			// Apply gravity
 			await this._applyGravity();
+			
+			// Emit CASCADE event to advance to next cascade level for scoring
+			EventEmitter.emit(CONSTANTS.EVENTS.CASCADE, { level: cascadeCount });
 			
 			// Wait before checking for next cascade
 			if (cascadeDelay > 0) {
@@ -1108,47 +1159,48 @@ class GameEngineClass {
 			}
 		}
 		
-		// Show single floating text with total ball count at center of all cleared positions
-		if (positionsToClear.size > 0) {
-			// Calculate center position of all cleared balls
-			let totalRow = 0;
-			let totalCol = 0;
-			for (const posStr of positionsToClear) {
-				const [row, col] = posStr.split(',').map(Number);
-				totalRow += row;
-				totalCol += col;
-			}
-			const centerRow = totalRow / positionsToClear.size;
-			const centerCol = totalCol / positionsToClear.size;
-			
-			// Convert grid position to screen position
-			const screenX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
-			const screenY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
-			
-			// Add floating text showing ball count
-			this.floatingTextManager.add(`${positionsToClear.size}`, screenX, screenY, 1500);
-		}
-		
-		// Animate clearing
-		const positions = Array.from(positionsToClear).map(posStr => {
-			const [row, col] = posStr.split(',').map(Number);
-			return { row, col };
-		});
-		AnimationManager.animateClearBalls(positions, null);
-		
-		// Remove balls from grid
+	// Show single floating text with total ball count at center of all cleared positions
+	if (positionsToClear.size > 0) {
+		let totalRow = 0, totalCol = 0;
 		for (const posStr of positionsToClear) {
 			const [row, col] = posStr.split(',').map(Number);
-			this.grid.removeBallAt(row, col);
+			totalRow += row;
+			totalCol += col;
 		}
+		const centerX = (totalCol / positionsToClear.size) * this.renderer.cellSize + this.renderer.offsetX;
+		const centerY = (totalRow / positionsToClear.size) * this.renderer.cellSize + this.renderer.offsetY;
+		this.floatingTextManager.add(`${positionsToClear.size}`, centerX, centerY, 1500);
+	}
+	
+	// Animate clearing
+	const positions = Array.from(positionsToClear).map(posStr => {
+		const [row, col] = posStr.split(',').map(Number);
+		return { row, col };
+	});
+	AnimationManager.animateClearBalls(positions, null);
+	
+	// Capture ball data BEFORE removing from grid for statistics
+	const ballData = [];
+	for (const posStr of positionsToClear) {
+		const [row, col] = posStr.split(',').map(Number);
+		const ball = this.grid.getBallAt(row, col);
+		if (ball) {
+			ballData.push({ type: ball.type, color: ball.color });
+		}
+	}
+	
+	// Remove balls from grid
+	for (const posStr of positionsToClear) {
+		const [row, col] = posStr.split(',').map(Number);
+		this.grid.removeBallAt(row, col);
+	}
+	
+	this.render();
 		
-		// Render immediately to show cleared balls
-		this.render();
-		
-		// Emit clear event
+		// Emit clear event with ball data for statistics
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { 
 			count: positionsToClear.size,
-			matches: matches.length 
+			balls: ballData // Ball type/color data for statistics
 		});
 	}
 	
