@@ -130,14 +130,46 @@ class PlayerManagerClass {
 					migrated = true;
 				}
 			}
-		});
-		
-		if (migrated) {
-			this.savePlayers();
+			
+			// NEW MIGRATION: Fill in missing completed levels
+			// If a player has completed level 5, they should have checkmarks on 1-4 too
+			if (player.levelProgress.completedLevels) {
+				const completedByDifficulty = {};
+				
+				// Group completed levels by difficulty
+				player.levelProgress.completedLevels.forEach(key => {
+					const [diff, lvl] = key.split('-').map(Number);
+					if (!completedByDifficulty[diff]) {
+						completedByDifficulty[diff] = [];
+					}
+					completedByDifficulty[diff].push(lvl);
+				});
+				
+				console.log('Migration: completedByDifficulty', completedByDifficulty);
+				
+				// For each difficulty, if a higher level is completed, mark all lower levels as completed
+				Object.keys(completedByDifficulty).forEach(diff => {
+					const levels = completedByDifficulty[diff];
+					const maxLevel = Math.max(...levels);
+					
+					console.log(`Migration: Difficulty ${diff}, maxLevel ${maxLevel}, existing levels:`, levels);
+					console.log(`Migration: Current completedLevels:`, player.levelProgress.completedLevels);
+					
+					// Mark all levels from 1 to maxLevel as completed
+					for (let i = 1; i <= maxLevel; i++) {
+					const key = `${diff}-${i}`;
+					if (!player.levelProgress.completedLevels.includes(key)) {
+						player.levelProgress.completedLevels.push(key);
+						migrated = true;
+					}
+				}
+			});
 		}
+	});	
+	if (migrated) {
+		this.savePlayers();
 	}
-
-	/**
+}	/**
 	 * Save players to localStorage
 	 */
 	savePlayers() {
@@ -317,10 +349,14 @@ class PlayerManagerClass {
 				};
 			}
 			
-			// Mark difficulty+level as completed if not already
-			if (!player.levelProgress.completedLevels.includes(key)) {
-				player.levelProgress.completedLevels.push(key);
-				player.stats.levelsCompleted++;
+			// Mark this level and all previous levels as completed
+			// (If you beat level 5, you implicitly beat levels 1-4)
+			for (let i = 1; i <= level; i++) {
+				const completionKey = `${difficulty}-${i}`;
+				if (!player.levelProgress.completedLevels.includes(completionKey)) {
+					player.levelProgress.completedLevels.push(completionKey);
+					player.stats.levelsCompleted++;
+				}
 			}
 			
 			// Update best score for this difficulty+level combination

@@ -93,8 +93,11 @@ function setupMenuListeners() {
 		});
 	});
 	
-	// Select difficulty 1 by default
-	selectDifficulty(1);
+	// Select the highest unlocked difficulty by default
+	const playerData = PlayerManager.getCurrentPlayerData();
+	const unlockedDifficulties = playerData.levelProgress.unlockedDifficulties || [1];
+	const highestDifficulty = Math.max(...unlockedDifficulties);
+	selectDifficulty(highestDifficulty);
 
 	// Start new game
 	if (startBtn) {
@@ -292,8 +295,7 @@ function populateLevelGrid() {
 			btn.disabled = true;
 		} else {
 			// Check if this difficulty+level has been completed
-			const isCompleted = PlayerManager.isLevelCompleted(selectedDifficulty, level);
-			if (isCompleted) {
+			if (PlayerManager.isLevelCompleted(selectedDifficulty, level)) {
 				btn.classList.add('completed');
 			}
 		}
@@ -314,9 +316,10 @@ function populateLevelGrid() {
 		levelGrid.appendChild(btn);
 	}
 	
-	// If no level is selected yet, or selected level is locked, select level 1
+	// If no level is selected yet, or selected level is locked, select the highest unlocked level
 	if (!selectedLevel || !unlockedLevels.includes(selectedLevel)) {
-		selectLevel(1);
+		const highestLevel = Math.max(...unlockedLevels);
+		selectLevel(highestLevel);
 	}
 }
 
@@ -364,6 +367,9 @@ function selectDifficulty(difficulty) {
 			btn.classList.remove('selected');
 		}
 	});
+	
+	// Reset selected level when changing difficulty so populateLevelGrid will select the highest
+	selectedLevel = null;
 	
 	// Refresh level grid to update completion checkmarks for this difficulty
 	populateLevelGrid();
