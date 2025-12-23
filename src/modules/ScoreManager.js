@@ -135,8 +135,8 @@ class ScoreManagerClass {
 	
 	/**
 	 * Calculate score for a cascade sequence using progressive multipliers
-	 * Formula: Each cascade level N: balls × basePoints × N
-	 * Example: 2x cascade with L1(3 balls) + L2(5 balls) = (3×1) + (5×2) = 3 + 10 = 13 points
+	 * Formula: Each cascade level N: balls × basePoints × N, plus cascade bonuses
+	 * Example: 2x cascade with L1(3 balls) + L2(5 balls) = (3×10×1) + (5×10×2) + cascadeBonus = 30 + 100 + 50 = 180 points
 	 * @param {Array<Number>} ballsPerLevel - Number of balls cleared at each cascade level [L1, L2, L3, ...]
 	 * @param {Number} cascadeCount - Total number of cascade levels in sequence
 	 * @returns {Number} Points earned after applying difficulty multiplier
@@ -145,9 +145,10 @@ class ScoreManagerClass {
 	_calculateCascadeScore(ballsPerLevel, cascadeCount) {
 		const basePoints = ConfigManager.get('scoring.basePointsPerBall', 1); // Default: 1 point per ball
 		const difficultyMultiplier = ConfigManager.get(`scoring.difficultyMultipliers.difficulty${this.difficulty}`, 1.0); // 1.0x - 3.0x
+		const cascadeBaseBonus = ConfigManager.get('scoring.cascadeBaseBonus', 3); // Bonus for cascades
 		
 		let score = 0;
-		let breakdown = []; // For debug logging: ["L1(3×1=3)", "L2(5×2=10)"]
+		let breakdown = []; // For debug logging: ["L1(3×10×1=30)", "L2(5×10×2=100)"]
 		
 		// Progressive cascade scoring: each level gets increasing multiplier
 		// Level 1: ×1, Level 2: ×2, Level 3: ×3, etc.
@@ -156,7 +157,14 @@ class ScoreManagerClass {
 			const multiplier = (level + 1); // Cascade level number: 1x, 2x, 3x, 4x, etc.
 			const levelScore = balls * basePoints * multiplier;
 			score += levelScore;
-			breakdown.push(`L${level + 1}(${balls}×${multiplier}=${levelScore})`);
+			breakdown.push(`L${level + 1}(${balls}×${basePoints}×${multiplier}=${levelScore})`);
+		}
+		
+		// Add cascade bonus for 2+ level cascades
+		if (cascadeCount >= 2) {
+			const cascadeBonus = cascadeBaseBonus * (cascadeCount - 1);
+			score += cascadeBonus;
+			breakdown.push(`CascadeBonus(${cascadeBonus})`);
 		}
 		
 		// Apply difficulty multiplier to final total

@@ -110,10 +110,11 @@ testSuite.tests.push({
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 2 });
 		
 		const score = ScoreManager.getScore();
-		// 6 balls × 1 point = 6
-		// Cascade 2 bonus = 3
-		// Total = 9
-		const expectedScore = 9;
+		// L1: 3 balls × 1 point × 1x = 3
+		// L2: 3 balls × 1 point × 2x = 6
+		// Cascade bonus (2-level): 3
+		// Total = 12
+		const expectedScore = 12;
 		
 		if (score !== expectedScore) {
 			throw new Error(`Expected score ${expectedScore}, got ${score}`);
@@ -136,11 +137,12 @@ testSuite.tests.push({
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 3 });
 		
 		const score = ScoreManager.getScore();
-		// 9 balls × 1 point = 9
-		// Cascade 2 bonus = 3
-		// Cascade 3 bonus = 6 (3 × 2)
-		// Total = 18
-		const expectedScore = 18;
+		// L1: 3 balls × 1 point × 1x = 3
+		// L2: 3 balls × 1 point × 2x = 6
+		// L3: 3 balls × 1 point × 3x = 9
+		// Cascade bonus (3-level): 3 × (3-1) = 6
+		// Total = 24
+		const expectedScore = 24;
 		
 		if (score !== expectedScore) {
 			throw new Error(`Expected score ${expectedScore}, got ${score}`);
@@ -293,10 +295,10 @@ testSuite.tests.push({
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
 		
 		const finalScore = ScoreManager.getScore();
-		// First cascade: 6 balls + 3 bonus = 9
-		// Second cascade: 5 balls (no bonus) = 5
-		// Total = 14
-		const expectedScore = 14;
+		// First cascade: L1(3×1) + L2(3×2) + bonus(3) = 12
+		// Second cascade: L1(5×1) no bonus = 5
+		// Total = 17
+		const expectedScore = 17;
 		
 		if (finalScore !== expectedScore) {
 			throw new Error(`Expected score ${expectedScore}, got ${finalScore}`);
@@ -322,10 +324,10 @@ testSuite.tests.push({
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 1 });
 		
 		const finalScore = ScoreManager.getScore();
-		// First cascade: 6 balls + 3 bonus = 9
-		// Second cascade: 5 balls (no bonus) = 5
-		// Total = 14
-		const expectedScore = 14;
+		// First cascade: L1(3×1) + L2(3×2) + bonus(3) = 12
+		// Second cascade: L1(5×1) no bonus = 5
+		// Total = 17
+		const expectedScore = 17;
 		
 		if (finalScore !== expectedScore) {
 			throw new Error(`Expected score ${expectedScore}, got ${finalScore}`);
@@ -571,14 +573,14 @@ testSuite.tests.push({
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 2, matches: 1 });
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 2 });
 		
-		const scoreAfter2 = ScoreManager.getScore(); // 5 + (2×1 + 2×2) = 5 + 6 = 11
+		const scoreAfter2 = ScoreManager.getScore(); // 5 + (L1: 2×1 + L2: 2×2 + bonus: 3) = 5 + 9 = 14
 		
 		if (scoreAfter1 !== 5) {
 			throw new Error(`Expected 5 after first cascade, got ${scoreAfter1}`);
 		}
 		
-		if (scoreAfter2 !== 11) {
-			throw new Error(`Expected 11 total, got ${scoreAfter2}`);
+		if (scoreAfter2 !== 14) {
+			throw new Error(`Expected 14 total, got ${scoreAfter2}`);
 		}
 	}
 });

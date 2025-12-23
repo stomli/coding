@@ -988,13 +988,15 @@ class GameEngineClass {
 		if (paintedPositions.length > 0) {
 			// Find all matches again after painting
 			matchesToClear = this.grid.findMatches();
+			// Record statistics for newly painted matches
+			StatisticsTracker.recordMatches(matchesToClear, this.grid);
 		}
 		
 		// 4. Clear matched balls (original matches + any new matches from painting)
 		await this._clearMatches(matchesToClear, clearDelay);
 			
-			// Count matches as scoring events
-			totalScoringEvents += matches.length;
+			// Count matches as scoring events (use actual cleared matches count)
+			totalScoringEvents += matchesToClear.length;
 			
 			// Apply gravity
 			await this._applyGravity();
