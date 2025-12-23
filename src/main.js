@@ -241,6 +241,9 @@ function setupGameScreenListeners() {
 			const overlay = document.getElementById('levelCompleteOverlay');
 			if (overlay) overlay.classList.add('hidden');
 			
+			// Reset selected level so populateLevelGrid will select the highest unlocked
+			selectedLevel = null;
+			
 			showScreen('menuScreen');
 			populateLevelGrid(); // Refresh to show newly unlocked levels
 		});
