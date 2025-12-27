@@ -30,6 +30,7 @@ import ParticleSystem from './ParticleSystem.js';
 import AudioManager from './AudioManager.js';
 import StatisticsTracker from './StatisticsTracker.js';
 import PlayerManager from './PlayerManager.js';
+import AnalyticsManager from './AnalyticsManager.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -1453,6 +1454,34 @@ class GameEngineClass {
 				gameStarted: false,
 				levelCompleted: reason === 'timeout' ? this.level : undefined
 			});
+			
+			// Track analytics
+			const ballStats = StatisticsTracker.getStatistics();
+			if (reason === 'timeout') {
+				AnalyticsManager.trackLevelComplete(
+					this.difficulty,
+					this.level,
+					currentScore,
+					timeSurvived,
+					{
+						balls_cleared: ballStats.totalBalls,
+						special_balls_used: ballStats.bombBalls + ballStats.painterBalls,
+						is_new_best: levelBestScore === 0 || currentScore > levelBestScore
+					}
+				);
+				AnalyticsManager.updatePlayerProfile(PlayerManager.getCurrentPlayerData().stats);
+			} else {
+				AnalyticsManager.trackLevelFailed(
+					this.difficulty,
+					this.level,
+					currentScore,
+					timeSurvived,
+					reason,
+					{
+						balls_cleared: ballStats.totalBalls
+					}
+				);
+			}
 			
 			// Show high score message if new best for this level
 			if (highScoreMsg) {

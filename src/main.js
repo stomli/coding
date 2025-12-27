@@ -14,12 +14,19 @@ import AudioManager from './modules/AudioManager.js';
 import ParticleSystem from './modules/ParticleSystem.js';
 import WeatherBackground from './modules/WeatherBackground.js';
 import PlayerManager from './modules/PlayerManager.js';
+import AnalyticsManager from './modules/AnalyticsManager.js';
+import { ANALYTICS_CONFIG } from './config/analytics.config.js';
 
 /**
  * Initialize the game when the DOM is ready
  */
 document.addEventListener('DOMContentLoaded', async () => {
 	try {
+		// Initialize analytics
+		if (ANALYTICS_CONFIG.enabled && ANALYTICS_CONFIG.mixpanelToken) {
+			AnalyticsManager.init(ANALYTICS_CONFIG.mixpanelToken);
+		}
+		
 		// Initialize the game engine
 		await GameEngine.initialize();
 		
@@ -116,8 +123,10 @@ function setupMenuListeners() {
 			await AudioManager.startMusic();
 			
 			showScreen('gameScreen');
-			// Start with selected difficulty and level
-			GameEngine.start(selectedDifficulty, selectedLevel);
+		// Start with selected difficulty and level
+		const playerName = PlayerManager.getCurrentPlayerData().name;
+		AnalyticsManager.trackLevelStart(selectedDifficulty, selectedLevel);
+		GameEngine.start(selectedDifficulty, selectedLevel);
 		});
 	}
 
@@ -647,6 +656,14 @@ function setupPlayerManagement() {
 		if (PlayerManager.switchPlayer(playerName)) {
 			console.log(`Switched to player: ${playerName}`);
 			
+			// Identify player for analytics
+			const playerData = PlayerManager.getCurrentPlayerData();
+			AnalyticsManager.identifyPlayer(playerName, {
+				createdAt: playerData.createdAt,
+				gamesPlayed: playerData.stats.gamesPlayed,
+				highScore: playerData.stats.highScore
+			});
+			
 		// Load new player's settings and apply to AudioManager
 		const settings = PlayerManager.getSettings();
 		AudioManager.setMasterVolume(settings.masterVolume);
@@ -682,6 +699,12 @@ function setupPlayerManagement() {
 		}
 		
 		if (PlayerManager.addPlayer(playerName)) {
+			// Track new player creation
+			AnalyticsManager.identifyPlayer(playerName, {
+				createdAt: new Date().toISOString(),
+				gamesPlayed: 0
+			});
+			AnalyticsManager.track('Player Created', { playerName });
 			populatePlayerSelect();
 			// Switch to new player
 			PlayerManager.switchPlayer(playerName);
