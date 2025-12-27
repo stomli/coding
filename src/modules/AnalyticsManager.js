@@ -13,23 +13,28 @@ class AnalyticsManager {
 	 * Initialize Mixpanel with your project token
 	 * Get your token from: https://mixpanel.com/project/YOUR_PROJECT_ID/settings
 	 * @param {String} token - Your Mixpanel project token
+	 * @param {Object} options - Configuration options
 	 */
-	init(token) {
+	init(token, options = {}) {
 		if (!token || typeof mixpanel === 'undefined') {
 			console.warn('AnalyticsManager: Mixpanel not available or no token provided');
 			return;
 		}
 
 		try {
-			mixpanel.init(token, {
-				debug: false, // Set to true during development
+			const config = {
+				debug: options.debug || false,
 				track_pageview: false, // We'll track manually
-				persistence: 'localStorage'
-			});
+				persistence: 'localStorage',
+				autocapture: options.autocapture !== undefined ? options.autocapture : true,
+				record_sessions_percent: options.recordSessionsPercent || 0
+			};
+			
+			mixpanel.init(token, config);
 			
 			this.mixpanel = mixpanel;
 			this.enabled = true;
-			console.log('AnalyticsManager: Initialized');
+			console.log('AnalyticsManager: Initialized', config);
 		} catch (error) {
 			console.error('AnalyticsManager: Failed to initialize', error);
 		}
