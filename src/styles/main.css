@@ -28,6 +28,12 @@ body {
 	padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* Remove decorative hash pattern if present */
+body::before,
+body::after {
+	display: none !important;
+}
+
 #app {
 	width: 100%;
 	max-width: 1200px;
