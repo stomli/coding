@@ -18,7 +18,7 @@ export const ANALYTICS_CONFIG = {
 	
 	// Your Mixpanel project token
 	// Get from: https://mixpanel.com/project/YOUR_PROJECT_ID/settings
-	mixpanelToken: 'YOUR_TOKEN_HERE',
+	mixpanelToken: 'edcdc866ccbef9f9a1cb92383f10ac96',
 	
 	// Enable debug mode to see events in console
 	debug: false
