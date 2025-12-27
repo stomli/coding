@@ -28,5 +28,5 @@ export const ANALYTICS_CONFIG = {
 	
 	// Session Recording: Record user sessions for playback (0-100)
 	// 100 = record all sessions, 0 = record none
-	recordSessionsPercent: 100
+	recordSessionsPercent: 0
 };
