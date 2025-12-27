@@ -21,7 +21,7 @@ export const ANALYTICS_CONFIG = {
 	mixpanelToken: 'edcdc866ccbef9f9a1cb92383f10ac96',
 	
 	// Enable debug mode to see events in console
-	debug: false,
+	debug: true,
 	
 	// Autocapture: Automatically track clicks, page views, and form submissions
 	autocapture: true,

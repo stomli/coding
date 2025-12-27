@@ -29,6 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 				autocapture: ANALYTICS_CONFIG.autocapture,
 				recordSessionsPercent: ANALYTICS_CONFIG.recordSessionsPercent
 			});
+			
+			// Identify current player
+			const currentPlayer = PlayerManager.getCurrentPlayerData();
+			AnalyticsManager.identifyPlayer(currentPlayer.name, {
+				createdAt: currentPlayer.createdAt,
+				gamesPlayed: currentPlayer.stats.gamesPlayed,
+				highScore: currentPlayer.stats.highScore
+			});
+			AnalyticsManager.track('Game Loaded');
 		}
 		
 		// Initialize the game engine

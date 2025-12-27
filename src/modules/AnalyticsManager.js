@@ -34,7 +34,8 @@ class AnalyticsManager {
 			
 			this.mixpanel = mixpanel;
 			this.enabled = true;
-			console.log('AnalyticsManager: Initialized', config);
+			this.debug = config.debug;
+			console.log('AnalyticsManager: Initialized successfully', config);
 		} catch (error) {
 			console.error('AnalyticsManager: Failed to initialize', error);
 		}
@@ -69,6 +70,9 @@ class AnalyticsManager {
 		
 		try {
 			this.mixpanel.track(eventName, properties);
+			if (this.debug) {
+				console.log('AnalyticsManager: Tracked event:', eventName, properties);
+			}
 		} catch (error) {
 			console.error('AnalyticsManager: Failed to track event', error);
 		}
