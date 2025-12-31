@@ -113,13 +113,23 @@ Scans grid for all color matches (3+ in a row).
 
 ---
 
-#### applyGravity()
+#### applyGravity(removedPositions)
 ```javascript
-applyGravity() → Boolean
+applyGravity(removedPositions?) → Boolean
 ```
-Drops all floating balls down to nearest solid surface.
+Drops floating balls down to nearest solid surface.
+
+**Parameters:**
+- `removedPositions` (Array<{row, col}>): Optional array of positions that were removed. If provided, only columns containing these positions will have gravity applied. If omitted, all columns are processed (legacy behavior).
 
 **Returns:** True if any balls moved, false if grid is stable
+
+**Example:**
+```javascript
+// Only apply gravity to columns where balls were removed
+const removed = [{row: 5, col: 3}, {row: 6, col: 3}, {row: 5, col: 7}];
+grid.applyGravity(removed); // Only columns 3 and 7 are processed
+```
 
 ---
 
@@ -166,10 +176,13 @@ Four separate scans:
 Matches of 3+ consecutive same-color balls are returned.
 
 ### Gravity Algorithm
-Iterates from bottom-up, column-by-column:
-- For each empty cell, check if ball exists above
-- Move ball down to fill gap
-- Repeat until no movement occurs
+Optimized to only affect columns with removed balls:
+- Accepts optional `removedPositions` parameter
+- Extracts unique column indices from removed positions
+- For each affected column, iterates from bottom-up:
+  - Compacts all balls down to fill gaps
+  - Clears empty cells at top
+- If no positions provided, processes all columns (legacy behavior)
 
 ### Coordinate System
 - Origin (0,0) is top-left

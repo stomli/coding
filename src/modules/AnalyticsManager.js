@@ -109,12 +109,14 @@ class AnalyticsManager {
 	 * Track level start
 	 * @param {Number} difficulty
 	 * @param {Number} level
+	 * @param {String} mode - Game mode (CLASSIC, ZEN, GAUNTLET, RISING_TIDE)
 	 */
-	trackLevelStart(difficulty, level) {
+	trackLevelStart(difficulty, level, mode = 'CLASSIC') {
 		this.track('Level Started', {
 			difficulty,
 			level,
-			difficulty_level: `${difficulty}-${level}`
+			difficulty_level: `${difficulty}-${level}`,
+			game_mode: mode
 		});
 	}
 
@@ -124,13 +126,15 @@ class AnalyticsManager {
 	 * @param {Number} level
 	 * @param {Number} score
 	 * @param {Number} timeElapsed - Time in seconds
+	 * @param {String} mode - Game mode
 	 * @param {Object} stats - Additional statistics
 	 */
-	trackLevelComplete(difficulty, level, score, timeElapsed, stats = {}) {
+	trackLevelComplete(difficulty, level, score, timeElapsed, mode, stats = {}) {
 		this.track('Level Completed', {
 			difficulty,
 			level,
 			difficulty_level: `${difficulty}-${level}`,
+			game_mode: mode,
 			score,
 			time_seconds: timeElapsed,
 			...stats
@@ -144,13 +148,15 @@ class AnalyticsManager {
 	 * @param {Number} score
 	 * @param {Number} timeElapsed - Time in seconds
 	 * @param {String} reason - Reason for failure (e.g., 'out_of_space', 'no_moves')
+	 * @param {String} mode - Game mode
 	 * @param {Object} stats - Additional statistics
 	 */
-	trackLevelFailed(difficulty, level, score, timeElapsed, reason, stats = {}) {
+	trackLevelFailed(difficulty, level, score, timeElapsed, reason, mode, stats = {}) {
 		this.track('Level Failed', {
 			difficulty,
 			level,
 			difficulty_level: `${difficulty}-${level}`,
+			game_mode: mode,
 			score,
 			time_seconds: timeElapsed,
 			failure_reason: reason,

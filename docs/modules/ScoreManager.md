@@ -141,34 +141,36 @@ basePoints = ballsCleared × 1 point
 ```
 Configurable via `config.json` (`scoring.basePoints`)
 
-### Cascade Bonus (Progressive Multipliers)
-Cascade bonuses use progressive multipliers for each level:
+### Cascade Bonus (Linear Bonus)
+Cascade bonuses use progressive multipliers for each level, plus a linear bonus for multiple cascades:
 ```javascript
-Single cascade (level 1): Balls × 1 (base only)
+Single cascade (level 1): Balls × 1 (base only, no bonus)
 2nd cascade (2 levels):
   - Level 1 balls: count × 1
   - Level 2 balls: count × 2
+  - Cascade bonus: 3 × (2 - 1) = 3 points
 3rd cascade (3 levels):
   - Level 1 balls: count × 1
   - Level 2 balls: count × 2
   - Level 3 balls: count × 3
-Nth cascade: Level N balls × N
+  - Cascade bonus: 3 × (3 - 1) = 6 points
+Nth cascade: Cascade bonus = 3 × (N - 1)
 ```
 
 **Formula:**
 ```javascript
-totalPoints = Σ(ballsAtLevel[i] × basePoints × (i + 1))
+totalPoints = Σ(ballsAtLevel[i] × basePoints × (i + 1)) + (3 × (cascadeCount - 1))
 ```
 
 **Example Calculations:**
 ```
 2x Cascade: 3 balls (L1) + 5 balls (L2)
-= (3 × 1) + (5 × 2)
-= 3 + 10 = 13 points
+= (3 × 1) + (5 × 2) + 3
+= 3 + 10 + 3 = 16 points
 
 3x Cascade: 3 balls (L1) + 5 balls (L2) + 6 balls (L3)
-= (3 × 1) + (5 × 2) + (6 × 3)
-= 3 + 10 + 18 = 31 points
+= (3 × 1) + (5 × 2) + (6 × 3) + 6
+= 3 + 10 + 18 + 6 = 37 points
 ```
 
 ### Difficulty Multiplier
@@ -200,9 +202,10 @@ Raw points:
   L1: 3 × 1 = 3
   L2: 5 × 2 = 10
   L3: 6 × 3 = 18
-  Total: 31 points
+  Cascade bonus: 3 × (3 - 1) = 6
+  Total: 37 points
 
-With difficulty: 31 × 2.0 = 62 points added to score
+With difficulty: 37 × 2.0 = 74 points added to score
 ```
 
 ## Internal Implementation

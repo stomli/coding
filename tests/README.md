@@ -27,6 +27,9 @@ python -m http.server 8000
 - **test-ball.js** - Tests for Ball class (types, colors, special balls)
 - **test-piece.js** - Tests for Piece class (rotation, positioning)
 - **test-grid.js** - Tests for Grid class (collision, matching, gravity)
+- **test-gravity-optimization.js** - Tests for optimized gravity (column-specific processing)
+- **test-special-ball-interactions.js** - Tests for special ball chain reactions
+- **test-game-modes.js** - Tests for game mode mechanics (classic, rising tide, etc.)
 
 ### Debug Tools (`debug.html`)
 Interactive canvas testing:

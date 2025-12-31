@@ -23,6 +23,9 @@ import { runParticleSystemTests } from './test-particle-system.js';
 import { runPlayerManagerTests } from './test-player-manager.js';
 import { runAudioManagerTests } from './test-audio-manager.js';
 import { runStatisticsTrackerTests } from './test-statistics-tracker.js';
+import { runGameModeTests } from './test-game-modes.js';
+import { runSpecialBallInteractionTests } from './test-special-ball-interactions.js';
+import { runGravityOptimizationTests } from './test-gravity-optimization.js';
 import testMobileInteractions from './test-mobile-interactions.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
@@ -88,6 +91,18 @@ export async function runAllTests() {
 	// Run StatisticsTracker tests
 	const statisticsTrackerResults = runStatisticsTrackerTests();
 	suites.push({ name: 'StatisticsTracker', tests: statisticsTrackerResults });
+	
+	// Run GameMode tests
+	const gameModeResults = runGameModeTests();
+	suites.push({ name: 'GameModes', tests: gameModeResults });
+	
+	// Run Special Ball Interaction tests
+	const specialBallInteractionResults = runSpecialBallInteractionTests();
+	suites.push({ name: 'SpecialBallInteractions', tests: specialBallInteractionResults });
+	
+	// Run Gravity Optimization tests
+	const gravityOptimizationResults = runGravityOptimizationTests();
+	suites.push({ name: 'GravityOptimization', tests: gravityOptimizationResults });
 	
 	// Run Mobile Interactions tests
 	const mobileInteractionsResults = await runAsyncTestSuite(testMobileInteractions);

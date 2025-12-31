@@ -454,6 +454,48 @@ body::after {
 	box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
 }
 
+/* Mode Selection */
+.mode-selector {
+	margin-bottom: 2rem;
+}
+
+.mode-buttons {
+	display: flex;
+	gap: 1rem;
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-bottom: 2rem;
+}
+
+.mode-btn {
+	padding: 0.5rem 1rem;
+	font-size: 0.9rem;
+	border: 2px solid #444444;
+	background: linear-gradient(135deg, #2a2a3e, #1f1f32);
+	color: #ffffff;
+	cursor: pointer;
+	border-radius: 5px;
+	transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+	background: linear-gradient(135deg, #3a3a4e, #2f2f42);
+	border-color: #00ff88;
+	box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+	transform: translateY(-2px);
+}
+
+.mode-btn.selected {
+	background: linear-gradient(135deg, #00ff88, #00cc77);
+	color: #1a1a2e;
+	border-color: #00ff88;
+	box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.mode-btn.selected .mode-description {
+	opacity: 0.9;
+}
+
 /* Level Grid */
 .level-grid {
 	display: flex;
@@ -1460,6 +1502,23 @@ body::after {
 	.difficulty-btn {
 		padding: 0.4rem 0.8rem;
 		font-size: 0.85rem;
+	}
+	
+	.mode-buttons {
+		grid-template-columns: 1fr;
+		gap: 0.5rem;
+	}
+	
+	.mode-btn {
+		padding: 0.75rem;
+	}
+	
+	.mode-btn .mode-name {
+		font-size: 1rem;
+	}
+	
+	.mode-btn .mode-description {
+		font-size: 0.7rem;
 	}
 	
 	.level-grid {

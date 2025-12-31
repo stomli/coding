@@ -139,113 +139,125 @@ const player = PlayerManager.createPlayer('Alice');
 
 ---
 
-#### getHighScore(difficulty, level)
+#### getLevelBestScore(difficulty, level, mode)
 ```javascript
-getHighScore(difficulty, level) → Number
+LevelBestScore(difficulty, level, mode = 'CLASSIC') → Number
 ```
-Gets the high score for a specific difficulty/level.
+Gets the best score for a specific difficulty/level/mode combination.
 
 **Parameters:**
 - `difficulty` (Number): Difficulty level (1-5)
 - `level` (Number): Level number (1-∞)
+- `mode` (String): Game mode (default: 'CLASSIC')
 
-**Returns:** High score (0 if no score recorded)
+**Returns:** Best score (0 if no score recorded)
+
+**Legacy Support:** Falls back to old "difficulty_level" format for CLASSIC mode
 
 **Example:**
 ```javascript
-const score = PlayerManager.getHighScore(3, 10); // 1234
+const score = PlayerManager.getLevelBestScore(3, 10, 'ZEN'); // 1234
+const classicScore = PlayerManager.getLevelBestScore(3, 10); // Uses CLASSIC
 ```
 
 ---
 
-#### updateHighScore(difficulty, level, score)
+#### updateStats(statsObject)
 ```javascript
-updateHighScore(difficulty, level, score) → Boolean
+updateStats(statsObject) → void
 ```
-Updates the high score if the new score is higher.
+Updates player statistics and high score after level completion.
 
 **Parameters:**
-- `difficulty` (Number): Difficulty level (1-5)
-- `level` (Number): Level number
-- `score` (Number): New score to compare
-
-**Returns:** true if new high score was set
+- `statsObject` (Object):
+  - `score` (Number): Final score
+  - `time` (Number): Time taken
+  - `difficulty` (Number): Difficulty level (1-5)
+  - `levelCompleted` (Number): Level number
+  - `mode` (String): Game mode
 
 **Side Effects:**
-- Updates player's highScores object if score is higher
+- Updates player's high scores if score is higher (by mode/difficulty/level)
+- Updates statistics (gamesPlayed, totalScore, etc.)
 - Saves to localStorage
 - Updates lastPlayed timestamp
 
 **Example:**
 ```javascript
-const isNewHighScore = PlayerManager.updateHighScore(3, 10, 1500);
-if (isNewHighScore) {
-    // Show "NEW HIGH SCORE!" message
-}
+PlayerManager.updateStats({
+    score: 1500,
+    time: 14250,
+    difficulty: 3,
+    levelCompleted: 10,
+    mode: 'GAUNTLET'
+});
 ```
 
 ---
 
-#### unlockLevel(difficulty, level)
+#### unlockLevel(difficulty, level, mode)
 ```javascript
-unlockLevel(difficulty, level) → void
+unlockLevel(difficulty, level, mode = 'CLASSIC') → void
 ```
-Unlocks a specific level for current player.
+Unlocks a specific level for current player in the specified mode.
 
 **Parameters:**
 - `difficulty` (Number): Difficulty level (1-5)
 - `level` (Number): Level to unlock
+- `mode` (String): Game mode (default: 'CLASSIC')
 
 **Side Effects:**
-- Adds level to unlockedLevels array for difficulty
+- Adds level to unlockedLevelsByMode[mode][difficulty] array
 - Saves to localStorage
 - Prevents duplicates
 
 **Example:**
 ```javascript
-PlayerManager.unlockLevel(3, 11); // Unlock Difficulty 3, Level 11
+PlayerManager.unlockLevel(3, 11, 'ZEN'); // Unlock Difficulty 3, Level 11 in ZEN mode
 ```
 
 ---
 
-#### isLevelUnlocked(difficulty, level)
+#### isLevelCompleted(difficulty, level, mode)
 ```javascript
-isLevelUnlocked(difficulty, level) → Boolean
+isLevelCompleted(difficulty, level, mode = 'CLASSIC') → Boolean
 ```
-Checks if a level is unlocked for current player.
+Checks if a level has been completed for current player in specified mode.
 
 **Parameters:**
 - `difficulty` (Number): Difficulty level (1-5)
 - `level` (Number): Level to check
+- `mode` (String): Game mode (default: 'CLASSIC')
 
-**Returns:** true if level is unlocked
+**Returns:** true if level is completed
 
 **Default Behavior:**
-- Level 1 always unlocked for all difficulties
+- Level 1 always considered incomplete (always playable)
 
 **Example:**
 ```javascript
-if (PlayerManager.isLevelUnlocked(3, 10)) {
-    // Enable "Start" button for this level
+if (PlayerManager.isLevelCompleted(3, 10, 'GAUNTLET')) {
+    // Enable next level button
 }
 ```
 
 ---
 
-#### getUnlockedLevels(difficulty)
+#### getUnlockedLevels(difficulty, mode)
 ```javascript
-getUnlockedLevels(difficulty) → Array<Number>
+getUnlockedLevels(difficulty, mode = 'CLASSIC') → Array<Number>
 ```
-Gets all unlocked levels for a difficulty.
+Gets all unlocked levels for a difficulty and mode.
 
 **Parameters:**
 - `difficulty` (Number): Difficulty level (1-5)
+- `mode` (String): Game mode (default: 'CLASSIC')
 
 **Returns:** Sorted array of unlocked level numbers
 
 **Example:**
 ```javascript
-const levels = PlayerManager.getUnlockedLevels(3); 
+const levels = PlayerManager.getUnlockedLevels(3, 'ZEN'); 
 // [1, 2, 3, 4, 5, 6, 7]
 ```
 
@@ -342,14 +354,29 @@ Gets current player's statistics.
     name: "Alice",
     isGuest: false,
     highScores: {
-        "1_1": 450,   // Difficulty 1, Level 1: 450 points
-        "1_2": 780,
-        "3_5": 1234
+        "CLASSIC-1-1": 450,      // Classic Mode, Difficulty 1, Level 1
+        "CLASSIC-1-2": 780,
+        "ZEN-3-5": 1234,         // Zen Mode, Difficulty 3, Level 5
+        "GAUNTLET-2-3": 567,
+        "1_1": 450               // Legacy format (auto-migrated to CLASSIC)
     },
-    unlockedLevels: {
-        "1": [1, 2, 3, 4, 5],
-        "2": [1, 2],
-        "3": [1, 2, 3, 4, 5, 6]
+    unlockedLevelsByMode: {
+        "CLASSIC": {
+            "1": [1, 2, 3, 4, 5],
+            "2": [1, 2],
+            "3": [1, 2, 3, 4, 5, 6]
+        },
+        "ZEN": {
+            "1": [1, 2, 3],
+            "3": [1, 2, 3, 4, 5]
+        },
+        "GAUNTLET": {
+            "2": [1, 2, 3]
+        },
+        "RISING_TIDE": {}
+    },
+    unlockedLevels: {             // Legacy - migrated to CLASSIC mode
+        "1": [1, 2, 3, 4, 5]
     },
     statistics: {
         gamesPlayed: 42,
@@ -366,7 +393,7 @@ Gets current player's statistics.
 
 ### LocalStorage Schema
 ```javascript
-// Key: 'players'
+// Key: 'ballMatcher_players'
 {
     currentPlayerId: "player_1703123456789",
     players: [
@@ -375,6 +402,15 @@ Gets current player's statistics.
     ]
 }
 ```
+
+### High Score Keys
+Format: `"MODE-difficulty-level"`
+```javascript
+const key = `${mode}-${difficulty}-${level}`; // "ZEN-3-10"
+```
+
+### Legacy Migration
+Old format `"difficulty_level"` is automatically migrated to `"CLASSIC-difficulty-level"` on data load. Both formats are checked when retrieving CLASSIC mode scores for backward compatibility.
 
 ---
 
@@ -393,11 +429,11 @@ Gets current player's statistics.
 
 ## Implementation Notes
 
-### High Score Keys
-Format: `"difficulty_level"`
-```javascript
-const key = `${difficulty}_${level}`; // "3_10"
-```
+### Game Modes System
+- Each mode tracks progression independently
+- High scores stored separately per mode
+- Legacy data automatically migrated to CLASSIC mode
+- Mode-specific unlocked levels in `unlockedLevelsByMode`
 
 ### Guest Player
 - Automatically created if no players exist
@@ -430,5 +466,5 @@ See `tests/unit/test-player-manager.js` (12 tests passing)
 
 ---
 
-**Version:** 1.0  
-**Last Updated:** December 21, 2025
+**Version:** 1.1  
+**Last Updated:** December 30, 2025

@@ -4,6 +4,11 @@ A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+
 
 ## 🎮 Game Features
 
+- **Four Game Modes:**
+  - 🕐 **Classic:** Standard timed gameplay (15 seconds per level)
+  - 🧘 **Zen:** Untimed mode - fill the grid to complete levels
+  - ⚔️ **Gauntlet:** Pre-filled challenge with rising random orbs
+  - 🌊 **Rising Tide:** Rising blocking orbs - clear with explosions
 - **Classic Tetris Mechanics:** 8 piece shapes made of colored balls
 - **Color Matching:** Match 3+ balls horizontally, vertically, or diagonally
 - **Cascade System:** Continuous matching after balls drop
@@ -13,7 +18,7 @@ A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+
   - 🚫 Blocking: Enemy balls that can only be exploded
 - **5 Difficulty Levels:** From Easy to Master
 - **Progressive Levels:** Unlimited levels with increasing challenge
-- **High Score System:** Track best scores per difficulty/level
+- **High Score System:** Track best scores per mode/difficulty/level
 
 ## 🚀 Getting Started
 
@@ -30,20 +35,30 @@ A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+
 
 ## 🎯 How to Play
 
+### Game Modes
+- **Classic:** Survive 15 seconds per level, avoid filling columns
+- **Zen:** No timer - strategically fill the grid to complete levels
+- **Gauntlet:** Start with 5 pre-filled rows, random orbs rise every 5 seconds
+- **Rising Tide:** Blocking orbs rise every 5 seconds, use explosions to clear
+
 ### Controls
-- **← →** Move piece left/right
-- **↑** Rotate piece clockwise
+### Objective
+**Classic/Gauntlet/Rising Tide:** Survive for 15 seconds per level by matching colored balls. Avoid filling any column to the top!
+
+**Zen:** Fill the grid completely to successfully complete the level. Take your time and plan strategically!
 - **↓** Hard drop (instant fall)
 - **P** Pause game
 - **R** Restart level
 
 ### Objective
-Survive for 15 seconds per level by matching colored balls. Avoid filling any column to the top!
-
 ### Scoring
 - **Base:** 1 point per ball cleared
 - **Cascades:** Progressive multipliers (Level 1: ×1, Level 2: ×2, Level 3: ×3, etc.)
-  - Example: 2× cascade with 3 balls (L1) + 5 balls (L2) = 3 + 10 = 13 points
+  - Cascade bonus: 3 × (cascadeCount - 1) for 2+ level cascades
+  - Example: 2× cascade with 3 balls (L1) + 5 balls (L2) + 3 bonus = 3 + 10 + 3 = 16 points
+- **Difficulty:** 1.0×, 1.5×, 2.0×, 2.5×, 3.0× multipliers
+- **Visual Feedback:** Color-coded floating text (white: clears, gold: explosions, blue: cascades)
+- **Mode-Specific:** Each mode tracks scores independently
 - **Difficulty:** 1.0×, 1.5×, 2.0×, 2.5×, 3.0× multipliers
 - **Visual Feedback:** Color-coded floating text (white: clears, gold: explosions, blue: cascades)
 

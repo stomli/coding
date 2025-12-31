@@ -51,7 +51,15 @@
 					</div>
 				</div>
 				
-				<div class="level-selector">
+			<div class="mode-selector">
+				<h2>Select Game Mode</h2>
+				<div class="mode-buttons">
+					<button class="mode-btn selected" data-mode="CLASSIC" title="Clear orbs before time runs out">Classic</button>
+					<button class="mode-btn" data-mode="ZEN" title="Untimed - focus on combos">Zen</button>
+					<button class="mode-btn" data-mode="GAUNTLET" title="Start with pre-filled rows">Gauntlet</button>
+					<button class="mode-btn" data-mode="RISING_TIDE" title="Blocks rise from bottom">Rising Tide</button>
+				</div>
+			</div>				<div class="level-selector">
 					<h2>Select Level</h2>
 					<div id="levelGrid" class="level-grid">
 						<!-- Level buttons dynamically generated -->
@@ -69,21 +77,23 @@
 		<!-- Game Screen -->
 		<div id="gameScreen" class="screen hidden">
 			<!-- HUD -->
-			<div id="hud" class="hud">
-				<div class="hud-left">
-					<div class="hud-item">
-						<span class="hud-label">Difficulty:</span>
-						<span id="difficultyDisplay" class="hud-value">1</span>
-						<input type="number" id="difficultyInput" class="hud-input" min="1" max="5" value="1" style="display: none;">
-					</div>
-					<div class="hud-item">
-						<span class="hud-label">Level:</span>
-						<span id="levelDisplay" class="hud-value">1</span>
-						<input type="number" id="levelInput" class="hud-input" min="1" max="20" value="1" style="display: none;">
-					</div>
-			</div>
-			
-	<div class="hud-center">
+		<div id="hud" class="hud">
+			<div class="hud-left">
+				<div class="hud-item">
+					<span class="hud-label">Mode:</span>
+					<span id="modeDisplay" class="hud-value">Classic</span>
+				</div>
+				<div class="hud-item">
+					<span class="hud-label">Difficulty:</span>
+					<span id="difficultyDisplay" class="hud-value">1</span>
+					<input type="number" id="difficultyInput" class="hud-input" min="1" max="5" value="1" style="display: none;">
+				</div>
+				<div class="hud-item">
+					<span class="hud-label">Level:</span>
+					<span id="levelDisplay" class="hud-value">1</span>
+					<input type="number" id="levelInput" class="hud-input" min="1" max="20" value="1" style="display: none;">
+				</div>
+		</div>	<div class="hud-center">
 		<div class="hud-item colors-compact">
 			<span class="hud-label">Colors:</span>
 			<div id="availableColors" class="available-colors"></div>

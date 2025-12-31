@@ -545,9 +545,10 @@ class GameEngineClass {
 	 * Start a new game
 	 * @param {Number} difficulty - Difficulty level (1-5)
 	 * @param {Number} level - Starting level number
+	 * @param {String} mode - Game mode (CLASSIC, ZEN, GAUNTLET, RISING_TIDE)
 	 * @returns {void}
 	 */
-	start(difficulty, level) {
+	start(difficulty, level, mode = 'CLASSIC') {
 		const isInitialized = this.isInitialized;
 		
 		// Check if initialized
@@ -562,19 +563,37 @@ class GameEngineClass {
 		// Store game state
 		this.level = level || 1;
 		this.difficulty = difficulty || 1;
+		this.gameMode = mode || 'CLASSIC';
+		this.modeConfig = CONSTANTS.GAME_MODE_CONFIG[this.gameMode];
+		
+		// Initialize mode-specific timers
+		if (this.gameMode === 'RISING_TIDE' || this.gameMode === 'GAUNTLET') {
+			this.risingTideTimer = 0;
+			this.risingTideInterval = this.modeConfig.risingInterval;
+		}
 		
 		// Record game start in player stats
 		PlayerManager.updateStats({ gameStarted: true });
 		
-		// Initialize LevelManager
+		// Initialize LevelManager (handle timed vs untimed modes)
 		LevelManager.setLevel(this.level);
-		LevelManager.startTimer();
+		if (this.modeConfig.timed) {
+			LevelManager.startTimer();
+		} else {
+			// For untimed modes, hide or disable timer
+			LevelManager.stopTimer();
+		}
 		
 		// Update available colors display
 		this._updateAvailableColorsDisplay();
 		
 		// Clear grid
 		this.grid.clear();
+		
+		// Pre-fill rows if in GAUNTLET mode
+		if (this.gameMode === 'GAUNTLET') {
+			this._preFillRows(this.modeConfig.preFillRows);
+		}
 		
 		// Reset statistics with current level
 		StatisticsTracker.reset(this.level);
@@ -608,6 +627,39 @@ class GameEngineClass {
 		this.lockTimer = 0;
 		this.isLocking = false;
 		this.lastUpdateTime = performance.now();
+		
+		// Update HUD displays
+		const modeDisplay = document.getElementById('modeDisplay');
+		if (modeDisplay) {
+			// Format mode name nicely
+			const modeNames = {
+				'CLASSIC': 'Classic',
+				'ZEN': 'Zen',
+				'GAUNTLET': 'Gauntlet',
+				'RISING_TIDE': 'Rising Tide'
+			};
+			modeDisplay.textContent = modeNames[this.gameMode] || this.gameMode;
+		}
+		
+		const difficultyDisplay = document.getElementById('difficultyDisplay');
+		if (difficultyDisplay) {
+			difficultyDisplay.textContent = this.difficulty;
+		}
+		
+		const levelDisplay = document.getElementById('levelDisplay');
+		if (levelDisplay) {
+			levelDisplay.textContent = this.level;
+		}
+		
+		// Show/hide timer based on mode
+		const timerElement = document.querySelector('.hud-item.timer');
+		if (timerElement) {
+			if (this.gameMode === 'ZEN') {
+				timerElement.style.display = 'none';
+			} else {
+				timerElement.style.display = '';
+			}
+		}
 		
 		// Update state
 		this.state = CONSTANTS.GAME_STATES.PLAYING;
@@ -735,12 +787,23 @@ class GameEngineClass {
 			// Game is active, update state
 		}
 		
-		// Update level timer
-		const deltaSeconds = deltaTime / 1000;
-		const timeUp = LevelManager.updateTimer(deltaSeconds);
-		if (timeUp) {
-			this._levelComplete();
-			return;
+		// Update level timer (only for timed modes)
+		if (this.modeConfig && this.modeConfig.timed) {
+			const deltaSeconds = deltaTime / 1000;
+			const timeUp = LevelManager.updateTimer(deltaSeconds);
+			if (timeUp) {
+				this._levelComplete();
+				return;
+			}
+		}
+		
+		// Update Rising Tide/Gauntlet timer if enabled for this mode
+		if (this.modeConfig && this.modeConfig.risingBlocks) {
+			this.risingTideTimer += deltaTime;
+			if (this.risingTideTimer >= this.risingTideInterval) {
+				this.risingTideTimer = 0;
+				this._addRisingTideRow();
+			}
 		}
 		
 		const hasPiece = this.currentPiece !== null;
@@ -860,8 +923,10 @@ class GameEngineClass {
 	const isValid = this.grid.isValidPosition(this.currentPiece);
 	
 	if (!isValid) {
-		// Level over - grid breached
-		this._levelComplete('breach');
+		// In ZEN mode, grid breach is success (play until grid fills)
+		// In other modes, it's failure
+		const reason = this.gameMode === 'ZEN' ? 'timeout' : 'breach';
+		this._levelComplete(reason);
 	}
 	else {
 		// Check for dangerous stack height (75% up the board = row 6 or less)
@@ -1041,16 +1106,21 @@ class GameEngineClass {
 		});
 	}
 	
-	// 6. Clear matched balls (only non-exploded ones)
+	// 6. Clear matched balls (only non-exploded ones) and track positions
+	let clearedPositions = [];
 	if (matchesToClear.length > 0) {
-		await this._clearMatches(matchesToClear, clearDelay);
+		clearedPositions = await this._clearMatches(matchesToClear, clearDelay);
 	}
-	
+
+	// Combine exploded and cleared positions for gravity
+	const allRemovedPositions = [
+		...explodedPositions.map(p => ({ row: p.row, col: p.col })),
+		...clearedPositions
+	];
+
 	// Count matches as scoring events (use actual cleared matches count)
-	totalScoringEvents += matchesToClear.length;			// Apply gravity
-			await this._applyGravity();
-			
-			// Emit CASCADE event to advance to next cascade level for scoring
+	totalScoringEvents += matchesToClear.length;			// Apply gravity only to affected columns
+			await this._applyGravity(allRemovedPositions);			// Emit CASCADE event to advance to next cascade level for scoring
 			EventEmitter.emit(CONSTANTS.EVENTS.CASCADE, { level: cascadeCount });
 			
 			// Wait before checking for next cascade
@@ -1084,7 +1154,7 @@ class GameEngineClass {
 	 * Clear matched balls from grid
 	 * @param {Array<Object>} matches - Array of match objects
 	 * @param {Number} duration - Animation duration in ms
-	 * @returns {Promise<void>}
+	 * @returns {Promise<Array<{row: Number, col: Number}>>} Array of cleared positions
 	 * @private
 	 */
 	async _clearMatches(matches, duration) {
@@ -1191,11 +1261,13 @@ class GameEngineClass {
 	}
 	
 	// Remove balls from grid
+	const clearedPositions = [];
 	for (const posStr of positionsToClear) {
 		const [row, col] = posStr.split(',').map(Number);
 		this.grid.removeBallAt(row, col);
+		clearedPositions.push({ row, col });
 	}
-	
+
 	this.render();
 		
 		// Emit clear event with ball data for statistics
@@ -1203,16 +1275,22 @@ class GameEngineClass {
 			count: positionsToClear.size,
 			balls: ballData // Ball type/color data for statistics
 		});
-	}
-	
-	/**
+		
+		return clearedPositions;
+	}	/**
 	 * Apply gravity to make balls fall
+	 * @param {Array<{row: Number, col: Number}>} removedPositions - Positions of removed balls
 	 * @returns {Promise<void>}
 	 * @private
 	 */
-	async _applyGravity() {
+	async _applyGravity(removedPositions = []) {
 		const dropSpeed = ConfigManager.get('animations.dropAnimationSpeed', 50);
 		let ballsMoved = true;
+		
+		// Determine which columns to process
+		const columnsToProcess = removedPositions.length > 0
+			? [...new Set(removedPositions.map(p => p.col))]
+			: Array.from({ length: this.grid.cols }, (_, i) => i);
 		
 		// Keep dropping until no balls can fall
 		while (ballsMoved) {
@@ -1220,7 +1298,7 @@ class GameEngineClass {
 			
 			// Scan from bottom to top
 			for (let row = this.grid.rows - 2; row >= 0; row--) {
-				for (let col = 0; col < this.grid.cols; col++) {
+				for (const col of columnsToProcess) {
 					const ball = this.grid.getBallAt(row, col);
 					
 					if (ball && this.grid.getBallAt(row + 1, col) === null) {
@@ -1347,8 +1425,129 @@ class GameEngineClass {
 			this.animationFrameId = null;
 		}
 		
-		// Restart with same difficulty
-		this.start(1, 1);
+		// Restart with same difficulty, level, and mode
+		this.start(this.difficulty || 1, this.level || 1, this.gameMode || 'CLASSIC');
+	}
+	
+	/**
+	 * Pre-fill rows with random non-matching orbs (GAUNTLET mode)
+	 * @param {Number} numRows - Number of rows to pre-fill from bottom
+	 * @private
+	 */
+	_preFillRows(numRows) {
+		const rows = Math.min(numRows, this.grid.rows);
+		const availableColors = PieceFactory.getAvailableColors(this.level);
+		
+		for (let row = this.grid.rows - 1; row >= this.grid.rows - rows; row--) {
+			for (let col = 0; col < this.grid.cols; col++) {
+				// Generate ball - might be special or normal
+				const specialBall = PieceFactory.generateSpecialBall(this.difficulty);
+				let ball;
+				
+				if (specialBall) {
+					// Use the special ball generated
+					ball = specialBall;
+				} else {
+					// Generate normal ball with random color
+					const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+					ball = new Ball(CONSTANTS.BALL_TYPES.NORMAL, randomColor);
+				}
+				
+				this.grid.setBall(row, col, ball);
+			}
+		}
+		
+		// Ensure no matches were created - if so, randomize those cells again
+		let matches = this.grid.findMatches();
+		while (matches.length > 0) {
+			// Break matches by changing one ball in each match
+			matches.forEach(match => {
+				if (match.positions.length > 0) {
+					const pos = match.positions[0];
+					const newColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+					const ball = new Ball(CONSTANTS.BALL_TYPES.NORMAL, newColor);
+					this.grid.setBall(pos.row, pos.col, ball);
+				}
+			});
+			matches = this.grid.findMatches();
+		}
+	}
+	
+	/**
+	 * Add a row of orbs at the bottom
+	 * Shifts all existing content up by one row
+	 * RISING_TIDE: Adds blocking orbs
+	 * GAUNTLET: Adds random colored orbs (same as pre-fill logic)
+	 * @private
+	 */
+	_addRisingTideRow() {
+		console.log('Rising Tide: Adding row for mode:', this.gameMode);
+		// Shift all balls up by one row
+		for (let row = 0; row < this.grid.rows - 1; row++) {
+			for (let col = 0; col < this.grid.cols; col++) {
+				const ballBelow = this.grid.getBall(row + 1, col);
+				this.grid.setBall(row, col, ballBelow);
+			}
+		}
+		
+		// Add orbs to bottom row
+		const bottomRow = this.grid.rows - 1;
+		
+		if (this.gameMode === 'GAUNTLET') {
+			// GAUNTLET: Add random orbs with types based on level/difficulty
+			const availableColors = PieceFactory.getAvailableColors(this.level);
+			for (let col = 0; col < this.grid.cols; col++) {
+				// Generate ball - might be special or normal
+				const specialBall = PieceFactory.generateSpecialBall(this.difficulty);
+				let ball;
+				
+				if (specialBall) {
+					// Use the special ball generated
+					ball = specialBall;
+				} else {
+					// Generate normal ball with random color
+					const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+					ball = new Ball(CONSTANTS.BALL_TYPES.NORMAL, randomColor);
+				}
+				
+				this.grid.setBall(bottomRow, col, ball);
+			}
+			
+			// Break any matches created in the new bottom row
+			let matches = this.grid.findMatches();
+			while (matches.length > 0) {
+				matches.forEach(match => {
+					// Only fix matches in the bottom row
+					match.positions.forEach(pos => {
+						if (pos.row === bottomRow) {
+							const newColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+							const ball = new Ball(CONSTANTS.BALL_TYPES.NORMAL, newColor);
+							this.grid.setBall(pos.row, pos.col, ball);
+						}
+					});
+				});
+				matches = this.grid.findMatches();
+			}
+		} else {
+			// RISING_TIDE: Add blocking orbs
+			for (let col = 0; col < this.grid.cols; col++) {
+				const blockingBall = new Ball(CONSTANTS.BALL_TYPES.BLOCKING, '#888888');
+				this.grid.setBall(bottomRow, col, blockingBall);
+			}
+		}
+		
+		// Render the updated grid
+		this.render();
+		
+		// Check if top row has any balls - game over if so
+		for (let col = 0; col < this.grid.cols; col++) {
+			if (this.grid.getBall(0, col) !== null) {
+				// In ZEN mode, this is success; in other modes, failure
+				const reason = this.gameMode === 'ZEN' ? 'timeout' : 'breach';
+				this._levelComplete(reason);
+				return;
+			}
+		}
 	}
 	
 	/**
@@ -1425,7 +1624,14 @@ class GameEngineClass {
 			
 			if (reason === 'timeout') {
 				if (title) title.textContent = 'Level Complete!';
-				if (reasonText) reasonText.textContent = '⏱️ Time Survived!';
+				if (reasonText) {
+					// Different message for ZEN mode
+					if (this.gameMode === 'ZEN') {
+						reasonText.textContent = '🧘 Grid Filled - Zen Achieved!';
+					} else {
+						reasonText.textContent = '⏱️ Time Survived!';
+					}
+				}
 			} else {
 				if (title) title.textContent = 'Level Over';
 				if (reasonText) reasonText.textContent = '⚠️ Grid Breached!';
@@ -1434,8 +1640,8 @@ class GameEngineClass {
 			// Get current stats
 			const currentScore = ScoreManager.getScore();
 			
-			// Get best stats from player profile for this difficulty+level
-			const levelBestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level);
+			// Get best stats from player profile for this mode+difficulty+level
+			const levelBestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level, this.gameMode);
 			const overallBestScore = PlayerManager.getHighScore(); // Best score across ALL levels
 			
 			// Update stat displays
@@ -1446,16 +1652,15 @@ class GameEngineClass {
 			if (thisScoreEl) thisScoreEl.textContent = currentScore.toLocaleString();
 			if (bestScoreEl) bestScoreEl.textContent = levelBestScore > 0 ? levelBestScore.toLocaleString() : '-';
 			
-			// Update player stats with difficulty and level
-			PlayerManager.updateStats({
-				score: currentScore,
-				time: timeSurvived,
-				difficulty: this.difficulty,
-				gameStarted: false,
-				levelCompleted: reason === 'timeout' ? this.level : undefined
-			});
-			
-		// Track analytics
+		// Update player stats with difficulty, level, and mode
+		PlayerManager.updateStats({
+			score: currentScore,
+			time: timeSurvived,
+			difficulty: this.difficulty,
+			mode: this.gameMode,
+			gameStarted: false,
+			levelCompleted: reason === 'timeout' ? this.level : undefined
+		});		// Track analytics
 		const ballStats = StatisticsTracker.getStats();
 		const totalBalls = StatisticsTracker.getTotalMatches();
 		if (reason === 'timeout') {
@@ -1464,6 +1669,7 @@ class GameEngineClass {
 				this.level,
 				currentScore,
 				timeSurvived,
+				this.gameMode,
 				{
 					balls_cleared: totalBalls,
 					special_balls_used: (ballStats[CONSTANTS.BALL_TYPES.BOMB]?.total || 0) + (ballStats[CONSTANTS.BALL_TYPES.PAINTER]?.total || 0),
@@ -1478,6 +1684,7 @@ class GameEngineClass {
 				currentScore,
 				timeSurvived,
 				reason,
+				this.gameMode,
 				{
 					balls_cleared: totalBalls
 				}

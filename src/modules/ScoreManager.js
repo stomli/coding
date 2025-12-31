@@ -23,6 +23,7 @@ class ScoreManagerClass {
 		this.score = 0;
 		this.difficulty = 1;
 		this.level = 1;
+		this.mode = 'CLASSIC';
 		this.currentCascadeData = null;
 		this.isInitialized = false;
 		
@@ -36,11 +37,13 @@ class ScoreManagerClass {
 	 * Initialize score manager and set up event listeners
 	 * @param {Number} difficulty - Game difficulty level (1-5)
 	 * @param {Number} level - Game level
+	 * @param {String} mode - Game mode (CLASSIC, ZEN, GAUNTLET, RISING_TIDE)
 	 * @returns {void}
 	 */
-	initialize(difficulty, level) {
+	initialize(difficulty, level, mode = 'CLASSIC') {
 		this.difficulty = difficulty || 1;
 		this.level = level || 1;
+		this.mode = mode || 'CLASSIC';
 		this.score = 0;
 		this.currentCascadeData = null;
 		
@@ -59,7 +62,7 @@ class ScoreManagerClass {
 		this.isInitialized = true;
 		
 		// Emit initial score update with best score
-		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level) || 0;
+		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level, this.mode) || 0;
 		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { 
 			score: 0,
 			bestScore: bestScore,
@@ -90,14 +93,11 @@ class ScoreManagerClass {
 			};
 		}
 		
-		// Add balls to current cascade level (sum all BALLS_CLEARED in same iteration)
-		const level = this.currentCascadeData.currentLevel;
-		if (!this.currentCascadeData.ballsPerLevel[level]) {
-			this.currentCascadeData.ballsPerLevel[level] = 0;
-		}
-		this.currentCascadeData.ballsPerLevel[level] += data.count;
+		// Each BALLS_CLEARED event represents a new cascade level
+		const level = this.currentCascadeData.ballsPerLevel.length;
+		this.currentCascadeData.ballsPerLevel.push(data.count);
 		
-		console.log(`⚽ BALLS_CLEARED: ${data.count} balls, level ${level} now has ${this.currentCascadeData.ballsPerLevel[level]} balls`);
+		console.log(`⚽ BALLS_CLEARED: ${data.count} balls at level ${level + 1}, ballsPerLevel=`, this.currentCascadeData.ballsPerLevel);
 	}
 	
 	/**
@@ -137,8 +137,8 @@ class ScoreManagerClass {
 		
 		this.score += points;
 		
-		// Get best score for current level/difficulty
-		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level) || 0;
+		// Get best score for current mode/difficulty/level
+		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level, this.mode) || 0;
 		
 		// Emit score update event
 		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { 
@@ -155,7 +155,7 @@ class ScoreManagerClass {
 	/**
 	 * Calculate score for a cascade sequence using progressive multipliers
 	 * Formula: Each cascade level N: balls × basePoints × N, PLUS cascade bonus
-	 * Cascade bonus: 3 × 2^(level-1) for each level starting at 2nd cascade
+	 * Cascade bonus: 3 × (cascadeCount - 1) for cascades of 2+ levels
 	 * Example: 2x cascade with L1(3 balls) + L2(5 balls) = (3×1) + (5×2) + cascadeBonus(3) = 3 + 10 + 3 = 16 points
 	 * @param {Array<Number>} ballsPerLevel - Number of balls cleared at each cascade level [L1, L2, L3, ...]
 	 * @param {Number} cascadeCount - Total number of cascade levels in sequence
@@ -180,17 +180,12 @@ class ScoreManagerClass {
 			breakdown.push(`L${level + 1}(${balls}×${multiplier}=${levelScore})`);
 		}
 		
-		// Add cascade bonus for 2+ cascades: 3 × 2^(level-1) per cascade starting at level 2
+		// Add cascade bonus for 2+ cascades: 3 × (cascadeCount - 1)
 		let cascadeBonusTotal = 0;
 		if (cascadeCount >= 2) {
-			let cascadeBonusBreakdown = [];
-			for (let level = 2; level <= cascadeCount; level++) {
-				const levelBonus = cascadeBaseBonus * Math.pow(2, level - 2); // 2nd: 3×2^0=3, 3rd: 3×2^1=6, 4th: 3×2^2=12
-				cascadeBonusTotal += levelBonus;
-				cascadeBonusBreakdown.push(`${level}:(${cascadeBaseBonus}×2^${level-2}=${levelBonus})`);
-			}
+			cascadeBonusTotal = cascadeBaseBonus * (cascadeCount - 1);
 			score += cascadeBonusTotal;
-			breakdown.push(`CascadeBonus[${cascadeBonusBreakdown.join('+')}=${cascadeBonusTotal}]`);
+			breakdown.push(`CascadeBonus(${cascadeBaseBonus}×${cascadeCount - 1}=${cascadeBonusTotal})`);
 		}
 		
 		// Apply difficulty multiplier to final total

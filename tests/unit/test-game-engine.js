@@ -387,19 +387,15 @@ testSuite.tests.push({
 		GameEngine.initialize();
 		GameEngine.start(5, 10);
 		
-		// Modify some state
-		GameEngine.level = 10;
-		GameEngine.difficulty = 15;
-		
-		// Restart
+		// Restart should keep same difficulty and level
 		GameEngine.restart();
 		
-		if (GameEngine.level !== 1) {
-			throw new Error(`Level should reset to 1, got ${GameEngine.level}`);
+		if (GameEngine.level !== 10) {
+			throw new Error(`Level should remain 10, got ${GameEngine.level}`);
 		}
 		
-		if (GameEngine.difficulty !== 1) {
-			throw new Error(`Difficulty should reset to 1, got ${GameEngine.difficulty}`);
+		if (GameEngine.difficulty !== 5) {
+			throw new Error(`Difficulty should remain 5, got ${GameEngine.difficulty}`);
 		}
 		
 		if (GameEngine.state !== CONSTANTS.GAME_STATES.PLAYING) {

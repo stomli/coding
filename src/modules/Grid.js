@@ -458,14 +458,29 @@ class Grid {
 	}
 	
 	/**
-	 * Apply gravity - drop floating balls down
+	 * Apply gravity - drop floating balls down only in columns with removed balls
+	 * @param {Array<{row: Number, col: Number}>} removedPositions - Optional positions that were removed
 	 * @returns {Boolean} True if any balls moved, false if grid is stable
 	 */
-	applyGravity() {
+	applyGravity(removedPositions = null) {
 		let ballsMoved = false;
 		
+		// Determine which columns need gravity applied
+		let columnsToProcess;
+		if (removedPositions && removedPositions.length > 0) {
+			// Only process columns that had balls removed
+			const columnSet = new Set();
+			for (const pos of removedPositions) {
+				columnSet.add(pos.col);
+			}
+			columnsToProcess = Array.from(columnSet);
+		} else {
+			// Process all columns (legacy behavior)
+			columnsToProcess = Array.from({ length: this.cols }, (_, i) => i);
+		}
+		
 		// Process from bottom up, column by column
-		for (let col = 0; col < this.cols; col++) {
+		for (const col of columnsToProcess) {
 			let writeRow = this.rows - 1;
 			
 			// Scan from bottom to top
@@ -594,6 +609,7 @@ class Grid {
 						const ball = this.getBallAt(r, c);
 						
 						// Clear all balls (including blocking balls in explosion radius)
+						// Special balls destroyed by explosions do NOT trigger their effects
 						if (ball) {
 							explodedPositions.push({ row: r, col: c, ball: ball }); // Include ball object for statistics
 							this.removeBallAt(r, c);
@@ -614,9 +630,8 @@ class Grid {
 	processPainters(matches) {
 		const paintedPositions = [];
 		
-		// Find all painter balls in matches
+		// Find all painter balls in matches (painters trigger effects when matched)
 		for (const match of matches) {
-			// Check if any ball in this match is a painter
 			for (const pos of match.positions) {
 				const ball = this.getBallAt(pos.row, pos.col);
 				

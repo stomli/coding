@@ -243,20 +243,60 @@ Each difficulty affects:
 
 ### 6.2 Level Progression
 
-#### 6.2.1 Level Duration
+#### 6.2.1 Game Modes (Implemented)
+Four distinct game modes offer different play styles:
+
+**CLASSIC Mode**
+- Standard timed gameplay (15 seconds per level)
+- No special mechanics
+- Traditional progression system
+- Recommended for new players
+
+**ZEN Mode**
+- No time limit - play at your own pace
+- Grid fill (breach) ends the level successfully instead of game over
+- Timer display hidden from HUD
+- Focus on strategy and perfect clears
+- Ideal for relaxed, thoughtful gameplay
+
+**GAUNTLET Mode**
+- Timed gameplay with pre-filled challenge
+- Bottom 5 rows pre-filled with random orbs (including special balls)
+- Random colored orbs rise from bottom every 5 seconds
+- Rising orbs include special balls (exploding, painting)
+- High difficulty with constant pressure
+- Tests clearing speed and management skills
+
+**RISING_TIDE Mode**
+- Timed gameplay with rising threat
+- Blocking orbs rise from bottom every 5 seconds
+- Blocking orbs can only be removed by explosions
+- Steady accumulation of obstacles
+- Requires strategic use of exploding balls
+- Progressive difficulty as blocking orbs accumulate
+
+**Mode-Specific Progression:**
+- Each mode tracks progression independently
+- Completing Classic-1-5 does NOT unlock Zen-1-6
+- Best scores stored separately per mode
+- Level unlocking managed per mode
+- High scores: `"MODE-difficulty-level"` format (e.g., `"ZEN-2-3"`)
+
+#### 6.2.2 Level Duration
 - **Time Limit:** 15 seconds (configurable)
 - **Completion:** Survive full duration without game over
 
-#### 6.2.2 Level Advancement
-- **Success:** Timer reaches 0, board clears, advance to next level
-- **Failure:** Any column reaches top row = Game Over
+#### 6.2.3 Level Advancement
+- **Success:** Timer reaches 0 (timed modes) or grid filled (ZEN mode), board clears, advance to next level
+- **Failure:** Any column reaches top row = Game Over (except in ZEN mode where it's success)
 - **Infinite Levels:** No final level, continues indefinitely
 
-#### 6.2.3 Level Unlocking
-- Players start at Difficulty 1, Level 1
-- Completing a level unlocks it for replay
-- Can select any unlocked (difficulty, level) combination from menu
+#### 6.2.4 Level Unlocking
+- Players start at each mode's Difficulty 1, Level 1
+- Completing a level unlocks it for replay within that mode
+- Can select any unlocked (mode, difficulty, level) combination from menu
 - Each combination tracks independent high score
+- Mode selector on main screen with hover descriptions
 
 ### 6.3 Progressive Difficulty Within Levels
 As level numbers increase (within same difficulty):
@@ -271,8 +311,8 @@ As level numbers increase (within same difficulty):
 ### 7.1 Main Game Screen
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
-│  Difficulty: 3    Level: 12      ⏱ TIME: 8.3s      Score: 1,234      │
-│                                                       Best: 45,678     │
+│  MODE: Classic    Difficulty: 3    Level: 12      ⏱ TIME: 8.3s       │
+│                                          Score: 1,234   Best: 45,678  │
 ├────────────────┬──────────────────────────────────┬────────────────────┤
 │                │                                  │                    │
 │  ORB TYPES     │                                  │   NEXT PIECE       │
@@ -318,6 +358,11 @@ As level numbers increase (within same difficulty):
 │                          PLAYER                             │
 │                                                             │
 │          [Player Name ▼]  [➕]  [🗑️]                       │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                      SELECT GAME MODE                       │
+│                                                             │
+│    [ Classic ] [  Zen  ] [ Gauntlet ] [ Rising Tide ]      │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
 │                    SELECT DIFFICULTY                        │
@@ -419,30 +464,64 @@ As level numbers increase (within same difficulty):
 - **Painting Animation:** Wave/ripple along painted line
 - **Cascade Feedback:** Visual indicator for combo count
 - **Blocking Ball:** Falling animation with distinct trail
-
----
-
-## 9. Data Persistence
-
 ### 9.1 LocalStorage Schema
 ```json
 {
-  "highScores": {
-    "difficulty_1": {
-      "level_1": 1234,
-      "level_2": 2345,
-      ...
-    },
-    "difficulty_2": {
-      ...
+  "ballMatcher_players": {
+    "Guest": {
+      "name": "Guest",
+      "stats": {
+        "gamesPlayed": 42,
+        "highScore": 5678,
+        "totalScore": 123456,
+        "longestTime": 450,
+        "levelsCompleted": 15
+      },
+      "levelProgress": {
+        "completedLevels": [
+          "CLASSIC-1-1", "CLASSIC-1-2", "CLASSIC-1-3",
+          "ZEN-1-1", "ZEN-2-1",
+          "GAUNTLET-1-1",
+          "RISING_TIDE-1-1"
+        ],
+        "levelScores": {
+          "CLASSIC-1-1": 1234,
+          "CLASSIC-1-2": 2345,
+          "ZEN-1-1": 3456,
+          "GAUNTLET-1-1": 890
+        },
+        "unlockedLevelsByMode": {
+          "CLASSIC": {
+            "1": [1, 2, 3, 4],
+            "2": [1, 2]
+          },
+          "ZEN": {
+            "1": [1, 2],
+            "2": [1]
+          },
+          "GAUNTLET": {
+            "1": [1, 2]
+          },
+          "RISING_TIDE": {
+            "1": [1]
+          }
+        },
+        "highestLevel": 4
+      },
+      "settings": {
+        "soundEnabled": true,
+        "musicVolume": 70,
+        "sfxVolume": 85
+      }
     }
   },
-  "unlockedLevels": {
-    "difficulty_1": [1, 2, 3, 4, 5],
-    "difficulty_2": [1, 2],
-    ...
-  },
-  "settings": {
+  "ballMatcher_currentPlayer": "Guest"
+}
+```
+
+**Key Format:** `"MODE-difficulty-level"` (e.g., `"CLASSIC-1-5"`, `"ZEN-2-3"`)
+
+**Legacy Migration:** Automatically converts old `"difficulty-level"` format to `"CLASSIC-difficulty-level"` on first loadsettings": {
     "soundEnabled": true,
     "volume": 0.7
   }
@@ -460,6 +539,11 @@ All game parameters should be configurable via JSON:
 - Time per level
 - Starting drop speed
 - Drop speed increment per level
+- Game mode configurations:
+  - `timed` (boolean) - Whether mode has time limit
+  - `preFillRows` (number) - Rows to pre-fill at start (GAUNTLET: 5)
+  - `risingBlocks` (boolean) - Whether orbs rise periodically
+  - `risingInterval` (milliseconds) - Time between rising events (default: 5000)
 
 ### 10.2 Colors
 - Ball color palette (hex codes for 8 colors)
@@ -637,22 +721,40 @@ All game parameters should be configurable via JSON:
 
 ✅ **Data Persistence (Phase 9)**
 - PlayerManager with localStorage integration
-- High score tracking per (difficulty, level) combination
-- Level unlock persistence
+- Mode-specific high score tracking: `"MODE-difficulty-level"` format
+- Independent level unlock tracking per mode
 - Player profile system with guest/named players
 - Settings persistence (audio volumes, visual preferences)
 - StatisticsTracker for match/clear/cascade analytics
+- Legacy data migration (auto-converts old format to CLASSIC mode)
+
+✅ **Game Modes System (Phase 9.5)**
+- Four distinct game modes with unique mechanics:
+  - **CLASSIC:** Standard timed gameplay (15s per level)
+  - **ZEN:** Untimed, grid breach = success, strategic play
+  - **GAUNTLET:** 5 pre-filled rows + rising random orbs every 5s
+  - **RISING_TIDE:** Rising blocking orbs every 5s, requires explosions
+- Mode selector UI with hover descriptions
+- Mode-specific progression tracking (independent unlocks/scores)
+- Mode configuration system (timed, preFillRows, risingBlocks, risingInterval)
+- Pre-fill mechanics with special ball generation
+- Rising mechanics (random orbs for GAUNTLET, blocking for RISING_TIDE)
+- HUD displays current game mode
+- Analytics tracking includes game_mode parameter
+- Timer hidden in ZEN mode
+- Grid breach handling per mode (success in ZEN, failure in others)
 
 ✅ **Quality Assurance (Continuous)**
-- 262+ unit tests across 14 test modules
+- 274+ unit tests across 15 test modules
 - Comprehensive test coverage:
   - **Core Utilities:** Helpers (15 tests), EventEmitter (18 tests)
   - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (78 tests)
   - **Factories & Managers:** PieceFactory (17 tests), ScoreManager (25 tests), ConfigManager (12 tests), FloatingText (11 tests)
-  - **Special Mechanics:** SpecialBalls (23 tests), StatisticsTracker (31 tests)
-  - **Game Systems:** InputHandler (10 tests), GameEngine (12 tests), PlayerManager (12 tests), Renderer (3 tests)
-- Test runner with async support and detailed reporting
-- All tests passing with singleton pattern support
+---
+
+**Document Version:** 2.1  
+**Last Updated:** December 2024  
+**Status:** Living Document - Updated through Phase 9.5 Implementation
 
 ### 14.2 Pending Features (Phase 10 - Documentation & Deployment)
 ⏳ **Documentation**

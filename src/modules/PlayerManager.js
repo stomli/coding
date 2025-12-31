@@ -155,8 +155,8 @@ class PlayerManagerClass {
 					console.log(`Migration: Difficulty ${diff}, maxLevel ${maxLevel}, existing levels:`, levels);
 					console.log(`Migration: Current completedLevels:`, player.levelProgress.completedLevels);
 					
-					// Mark all levels from 1 to maxLevel as completed
-					for (let i = 1; i <= maxLevel; i++) {
+				// Mark all levels from 1 to maxLevel as completed
+				for (let i = 1; i <= maxLevel; i++) {
 					const key = `${diff}-${i}`;
 					if (!player.levelProgress.completedLevels.includes(key)) {
 						player.levelProgress.completedLevels.push(key);
@@ -165,7 +165,70 @@ class PlayerManagerClass {
 				}
 			});
 		}
-	});	
+		
+		// NEW: Migrate difficulty-level format to mode-difficulty-level format (CLASSIC mode)
+		// Check if we need to migrate to mode-specific format
+		const needsModeMigration = !player.levelProgress.unlockedLevelsByMode || 
+		                           (player.levelProgress.completedLevels && 
+		                            player.levelProgress.completedLevels.some(key => {
+		                            	const parts = key.split('-');
+		                            	return parts.length === 2; // "difficulty-level" format
+		                            }));
+		
+		if (needsModeMigration) {
+			// Initialize unlockedLevelsByMode if it doesn't exist
+			if (!player.levelProgress.unlockedLevelsByMode) {
+				player.levelProgress.unlockedLevelsByMode = {
+					"CLASSIC": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+					"ZEN": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+					"GAUNTLET": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+					"RISING_TIDE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] }
+				};
+			}
+			
+			// Migrate unlockedLevelsByDifficulty to CLASSIC mode
+			if (player.levelProgress.unlockedLevelsByDifficulty) {
+				Object.keys(player.levelProgress.unlockedLevelsByDifficulty).forEach(diff => {
+					const unlockedLevels = player.levelProgress.unlockedLevelsByDifficulty[diff];
+					player.levelProgress.unlockedLevelsByMode.CLASSIC[diff] = [...unlockedLevels];
+				});
+			}
+			
+			// Migrate completedLevels from "difficulty-level" to "CLASSIC-difficulty-level"
+			if (player.levelProgress.completedLevels) {
+				const migratedCompleted = [];
+				player.levelProgress.completedLevels.forEach(key => {
+					const parts = key.split('-');
+					if (parts.length === 2) {
+						// Old format: "difficulty-level" -> convert to "CLASSIC-difficulty-level"
+						migratedCompleted.push(`CLASSIC-${key}`);
+					} else if (parts.length === 3) {
+						// Already in new format: "mode-difficulty-level"
+						migratedCompleted.push(key);
+					}
+				});
+				player.levelProgress.completedLevels = migratedCompleted;
+			}
+			
+			// Migrate levelScores from "difficulty-level" to "CLASSIC-difficulty-level"
+			if (player.levelProgress.levelScores) {
+				const migratedScores = {};
+				Object.keys(player.levelProgress.levelScores).forEach(key => {
+					const parts = key.split('-');
+					if (parts.length === 2) {
+						// Old format: "difficulty-level" -> convert to "CLASSIC-difficulty-level"
+						migratedScores[`CLASSIC-${key}`] = player.levelProgress.levelScores[key];
+					} else if (parts.length === 3) {
+						// Already in new format: "mode-difficulty-level"
+						migratedScores[key] = player.levelProgress.levelScores[key];
+					}
+				});
+				player.levelProgress.levelScores = migratedScores;
+			}
+			
+			migrated = true;
+		}
+	});
 	if (migrated) {
 		this.savePlayers();
 	}
@@ -200,19 +263,34 @@ class PlayerManagerClass {
 			},
 			levelProgress: {
 				highestLevel: 1,
-				// Track unlocked levels by difficulty
-				// Format: { "1": [1, 2, 3], "2": [1], "3": [1], "4": [1], "5": [1] }
+				// Track unlocked levels by difficulty AND game mode
+				// Format: { "CLASSIC": { "1": [1, 2, 3], "2": [1] }, "ZEN": { "1": [1] } }
 				unlockedLevelsByDifficulty: {
-					"1": [1], // Easy
+					"1": [1], // Easy (legacy - for CLASSIC mode)
 					"2": [1], // Medium
 					"3": [1], // Hard
 					"4": [1], // Expert
 					"5": [1]  // Master
 				},
-				// Track completion and scores by difficulty+level combination
-				// Format: "difficulty-level" (e.g., "1-1", "3-5")
-				completedLevels: [], // Array of "difficulty-level" strings
-				levelScores: {} // Object mapping "difficulty-level" to best score: { "1-1": 1000, "2-5": 1500, etc. }
+				// New: Mode-specific unlocked levels
+				unlockedLevelsByMode: {
+					"CLASSIC": {
+						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
+					},
+					"ZEN": {
+						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
+					},
+					"GAUNTLET": {
+						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
+					},
+					"RISING_TIDE": {
+						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
+					}
+				},
+				// Track completion and scores by mode+difficulty+level combination
+				// Format: "mode-difficulty-level" (e.g., "CLASSIC-1-1", "ZEN-3-5")
+				completedLevels: [], // Array of "mode-difficulty-level" or "difficulty-level" (legacy)
+				levelScores: {} // Object mapping "mode-difficulty-level" to best score
 		},
 		settings: {
 			isMuted: false,
@@ -322,6 +400,14 @@ class PlayerManagerClass {
 		if (!player.levelProgress.levelScores) {
 			player.levelProgress.levelScores = {};
 		}
+		if (!player.levelProgress.unlockedLevelsByMode) {
+			player.levelProgress.unlockedLevelsByMode = {
+				"CLASSIC": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+				"ZEN": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+				"GAUNTLET": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+				"RISING_TIDE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] }
+			};
+		}
 		
 		if (stats.score !== undefined) {
 			player.stats.totalScore += stats.score;
@@ -340,26 +426,27 @@ class PlayerManagerClass {
 		if (levelCompleted && stats.difficulty !== undefined) {
 			const level = levelCompleted;
 			const difficulty = stats.difficulty;
-			const key = `${difficulty}-${level}`; // e.g., "1-5" for Easy Level 5
+			const mode = stats.mode || 'CLASSIC'; // Default to CLASSIC for backward compatibility
+			const key = `${mode}-${difficulty}-${level}`; // e.g., "CLASSIC-1-5"
+			const legacyKey = `${difficulty}-${level}`; // For backward compatibility
 			
-			// Ensure unlockedLevelsByDifficulty exists
+			// Ensure unlockedLevelsByDifficulty exists (legacy)
 			if (!player.levelProgress.unlockedLevelsByDifficulty) {
 				player.levelProgress.unlockedLevelsByDifficulty = {
 					"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
 				};
 			}
 			
-			// Mark this level and all previous levels as completed
-			// (If you beat level 5, you implicitly beat levels 1-4)
+			// Mark this level and all previous levels as completed for this mode
 			for (let i = 1; i <= level; i++) {
-				const completionKey = `${difficulty}-${i}`;
+				const completionKey = `${mode}-${difficulty}-${i}`;
 				if (!player.levelProgress.completedLevels.includes(completionKey)) {
 					player.levelProgress.completedLevels.push(completionKey);
 					player.stats.levelsCompleted++;
 				}
 			}
 			
-			// Update best score for this difficulty+level combination
+			// Update best score for this mode+difficulty+level combination
 			if (stats.score !== undefined) {
 				const currentBest = player.levelProgress.levelScores[key] || 0;
 				if (stats.score > currentBest) {
@@ -372,14 +459,26 @@ class PlayerManagerClass {
 				player.levelProgress.highestLevel = level;
 			}
 			
-			// Unlock next level for this difficulty
+			// Unlock next level for this mode+difficulty
 			const difficultyKey = String(difficulty);
-			if (!player.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) {
+			
+			// Update legacy unlockedLevelsByDifficulty (for CLASSIC mode)
+			if (mode === 'CLASSIC' && !player.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) {
 				player.levelProgress.unlockedLevelsByDifficulty[difficultyKey] = [1];
 			}
 			
+			// Update mode-specific unlocked levels
+			if (!player.levelProgress.unlockedLevelsByMode[mode]) {
+				player.levelProgress.unlockedLevelsByMode[mode] = {
+					"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
+				};
+			}
+			if (!player.levelProgress.unlockedLevelsByMode[mode][difficultyKey]) {
+				player.levelProgress.unlockedLevelsByMode[mode][difficultyKey] = [1];
+			}
+			
 			// Ensure all levels up to and including current level are unlocked
-			const unlockedArray = player.levelProgress.unlockedLevelsByDifficulty[difficultyKey];
+			const unlockedArray = player.levelProgress.unlockedLevelsByMode[mode][difficultyKey];
 			for (let i = 1; i <= level; i++) {
 				if (!unlockedArray.includes(i)) {
 					unlockedArray.push(i);
@@ -389,6 +488,19 @@ class PlayerManagerClass {
 			// Unlock the next level
 			if (!unlockedArray.includes(level + 1)) {
 				unlockedArray.push(level + 1);
+			}
+			
+			// Also update legacy array if CLASSIC mode
+			if (mode === 'CLASSIC') {
+				const legacyArray = player.levelProgress.unlockedLevelsByDifficulty[difficultyKey];
+				for (let i = 1; i <= level; i++) {
+					if (!legacyArray.includes(i)) {
+						legacyArray.push(i);
+					}
+				}
+				if (!legacyArray.includes(level + 1)) {
+					legacyArray.push(level + 1);
+				}
 			}
 		}
 
@@ -417,33 +529,47 @@ class PlayerManagerClass {
 	}
 
 	/**
-	 * Get best score for a specific difficulty+level combination
+	 * Get best score for a specific mode+difficulty+level combination
 	 * @param {Number} difficulty - Difficulty level (1-5)
 	 * @param {Number} level - Level number
-	 * @returns {Number} Best score for this difficulty+level (0 if never completed)
+	 * @param {String} mode - Game mode (CLASSIC, ZEN, GAUNTLET, RISING_TIDE)
+	 * @returns {Number} Best score for this mode+difficulty+level (0 if never completed)
 	 */
-	getLevelBestScore(difficulty, level) {
+	getLevelBestScore(difficulty, level, mode = 'CLASSIC') {
 		const player = this.getCurrentPlayerData();
 		if (!player.levelProgress.levelScores) {
 			player.levelProgress.levelScores = {};
 		}
-		const key = `${difficulty}-${level}`;
-		return player.levelProgress.levelScores[key] || 0;
+		// Try new mode-based key first
+		const modeKey = `${mode}-${difficulty}-${level}`;
+		if (player.levelProgress.levelScores[modeKey] !== undefined) {
+			return player.levelProgress.levelScores[modeKey];
+		}
+		// Fall back to legacy key for backward compatibility
+		const legacyKey = `${difficulty}-${level}`;
+		return player.levelProgress.levelScores[legacyKey] || 0;
 	}
 
 	/**
-	 * Check if a difficulty+level combination has been completed
+	 * Check if a mode+difficulty+level combination has been completed
 	 * @param {Number} difficulty - Difficulty level (1-5)
 	 * @param {Number} level - Level number
-	 * @returns {Boolean} True if this difficulty+level has been completed at least once
+	 * @param {String} mode - Game mode (CLASSIC, ZEN, GAUNTLET, RISING_TIDE)
+	 * @returns {Boolean} True if this mode+difficulty+level has been completed at least once
 	 */
-	isLevelCompleted(difficulty, level) {
+	isLevelCompleted(difficulty, level, mode = 'CLASSIC') {
 		const player = this.getCurrentPlayerData();
 		if (!player.levelProgress.completedLevels) {
 			player.levelProgress.completedLevels = [];
 		}
-		const key = `${difficulty}-${level}`;
-		return player.levelProgress.completedLevels.includes(key);
+		// Check new mode-based key
+		const modeKey = `${mode}-${difficulty}-${level}`;
+		if (player.levelProgress.completedLevels.includes(modeKey)) {
+			return true;
+		}
+		// Fall back to legacy key for backward compatibility
+		const legacyKey = `${difficulty}-${level}`;
+		return player.levelProgress.completedLevels.includes(legacyKey);
 	}
 
 	/**

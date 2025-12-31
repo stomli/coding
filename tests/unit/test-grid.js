@@ -132,6 +132,105 @@ export function testGrid() {
 			pass: grid4.getBallAt(9, 5) !== null,
 			error: null
 		});
+		
+		// Test optimized gravity - only affected columns
+		const gravityGrid = new Grid(10, 10);
+		// Column 3: balls at rows 0, 2, 4
+		gravityGrid.setBallAt(0, 3, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		gravityGrid.setBallAt(2, 3, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+		gravityGrid.setBallAt(4, 3, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
+		// Column 7: balls at rows 1, 3
+		gravityGrid.setBallAt(1, 7, new Ball(BALL_TYPES.NORMAL, '#FFFF00'));
+		gravityGrid.setBallAt(3, 7, new Ball(BALL_TYPES.NORMAL, '#FF00FF'));
+		// Column 5: ball at row 0 (unaffected column)
+		gravityGrid.setBallAt(0, 5, new Ball(BALL_TYPES.NORMAL, '#00FFFF'));
+		
+		// Remove middle ball from column 3 only
+		const removed = [{ row: 2, col: 3 }];
+		gravityGrid.applyGravity(removed);
+		
+		tests.push({
+			name: 'Gravity - only affects specified columns',
+			pass: gravityGrid.getBallAt(9, 3) !== null && // Column 3 compacted
+			      gravityGrid.getBallAt(8, 3) !== null &&
+			      gravityGrid.getBallAt(7, 3) === null &&
+			      gravityGrid.getBallAt(1, 7) !== null && // Column 7 unchanged
+			      gravityGrid.getBallAt(3, 7) !== null &&
+			      gravityGrid.getBallAt(0, 5) !== null, // Column 5 unchanged
+			error: null
+		});
+		
+		// Test gravity with multiple columns
+		const multiColGrid = new Grid(10, 10);
+		multiColGrid.setBallAt(0, 2, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		multiColGrid.setBallAt(2, 2, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+		multiColGrid.setBallAt(0, 5, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
+		multiColGrid.setBallAt(3, 5, new Ball(BALL_TYPES.NORMAL, '#FFFF00'));
+		multiColGrid.setBallAt(0, 8, new Ball(BALL_TYPES.NORMAL, '#FF00FF')); // Unaffected
+		
+		const multiRemoved = [
+			{ row: 1, col: 2 },
+			{ row: 1, col: 5 },
+			{ row: 2, col: 5 }
+		];
+		multiColGrid.applyGravity(multiRemoved);
+		
+		tests.push({
+			name: 'Gravity - handles multiple affected columns',
+			pass: multiColGrid.getBallAt(9, 2) !== null && // Column 2 compacted
+			      multiColGrid.getBallAt(8, 2) !== null &&
+			      multiColGrid.getBallAt(9, 5) !== null && // Column 5 compacted
+			      multiColGrid.getBallAt(8, 5) !== null &&
+			      multiColGrid.getBallAt(0, 8) !== null, // Column 8 unchanged
+			error: null
+		});
+		
+		// Test gravity without positions (legacy - all columns)
+		const legacyGrid = new Grid(10, 10);
+		legacyGrid.setBallAt(0, 3, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		legacyGrid.setBallAt(0, 7, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+		legacyGrid.applyGravity(); // No positions = all columns
+		
+		tests.push({
+			name: 'Gravity - legacy mode processes all columns',
+			pass: legacyGrid.getBallAt(9, 3) !== null &&
+			      legacyGrid.getBallAt(9, 7) !== null,
+			error: null
+		});
+		
+		// Test gravity preserves ball order
+		const orderGrid = new Grid(10, 10);
+		const redBall = new Ball(BALL_TYPES.NORMAL, '#FF0000');
+		const greenBall = new Ball(BALL_TYPES.NORMAL, '#00FF00');
+		const blueBall = new Ball(BALL_TYPES.NORMAL, '#0000FF');
+		orderGrid.setBallAt(1, 4, redBall);
+		orderGrid.setBallAt(3, 4, greenBall);
+		orderGrid.setBallAt(5, 4, blueBall);
+		
+		orderGrid.applyGravity([{ row: 2, col: 4 }]);
+		
+		tests.push({
+			name: 'Gravity - preserves ball order when compacting',
+			pass: orderGrid.getBallAt(9, 4) === redBall &&
+			      orderGrid.getBallAt(8, 4) === greenBall &&
+			      orderGrid.getBallAt(7, 4) === blueBall,
+			error: null
+		});
+		
+		// Test gravity returns correct ballsMoved flag
+		const moveGrid = new Grid(10, 10);
+		moveGrid.setBallAt(0, 3, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		const moved1 = moveGrid.applyGravity([{ row: 5, col: 3 }]);
+		
+		const stableGrid = new Grid(10, 10);
+		stableGrid.setBallAt(9, 3, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		const moved2 = stableGrid.applyGravity([{ row: 8, col: 3 }]);
+		
+		tests.push({
+			name: 'Gravity - returns true when balls moved',
+			pass: moved1 === true && moved2 === false,
+			error: null
+		});
 
 		// Test isColumnFull
 		const grid5 = new Grid(5, 5);

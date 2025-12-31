@@ -72,6 +72,52 @@ const CONSTANTS = {
 	},
 	
 	/**
+	 * Game mode enumeration
+	 */
+	GAME_MODES: {
+		CLASSIC: 'CLASSIC',      // Original timed mode
+		ZEN: 'ZEN',              // Untimed, play until grid fills
+		GAUNTLET: 'GAUNTLET',    // Pre-filled rows at start
+		RISING_TIDE: 'RISING_TIDE' // Blocking rows rise from bottom
+	},
+	
+	/**
+	 * Game mode configurations
+	 */
+	GAME_MODE_CONFIG: {
+		CLASSIC: {
+			name: 'Classic',
+			description: 'Clear orbs before time runs out',
+			timed: true,
+			preFillRows: 0,
+			risingBlocks: false
+		},
+		ZEN: {
+			name: 'Zen',
+			description: 'Untimed play - focus on combos and high scores',
+			timed: false,
+			preFillRows: 0,
+			risingBlocks: false
+		},
+		GAUNTLET: {
+			name: 'Gauntlet',
+			description: 'Start with pre-filled rows for extra challenge',
+			timed: true,
+			preFillRows: 5, // Number of rows to pre-fill (configurable per difficulty)
+			risingBlocks: true,
+			risingInterval: 5000 // milliseconds
+		},
+		RISING_TIDE: {
+			name: 'Rising Tide',
+			description: 'Blocking orbs rise from the bottom every 5 seconds',
+			timed: true,
+			preFillRows: 0,
+			risingBlocks: true,
+			risingInterval: 5000 // milliseconds
+		}
+	},
+	
+	/**
 	 * Piece shape types
 	 */
 	PIECE_TYPES: {

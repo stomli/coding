@@ -99,10 +99,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 /**
  * Set up event listeners for menu buttons
  */
+let selectedMode = 'CLASSIC'; // Default game mode
+
 function setupMenuListeners() {
 	const startBtn = document.getElementById('startButton');
 	const settingsBtn = document.getElementById('settingsButton');
 	const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+	const modeButtons = document.querySelectorAll('.mode-btn');
+
+	// Mode selection
+	modeButtons.forEach(btn => {
+		btn.addEventListener('click', () => {
+			AudioManager.playClick();
+			const mode = btn.dataset.mode;
+			selectMode(mode);
+		});
+	});
 
 	// Difficulty selection
 	difficultyButtons.forEach(btn => {
@@ -136,10 +148,10 @@ function setupMenuListeners() {
 			await AudioManager.startMusic();
 			
 			showScreen('gameScreen');
-		// Start with selected difficulty and level
+		// Start with selected difficulty, level, and mode
 		const playerName = PlayerManager.getCurrentPlayerData().name;
-		AnalyticsManager.trackLevelStart(selectedDifficulty, selectedLevel);
-		GameEngine.start(selectedDifficulty, selectedLevel);
+		AnalyticsManager.trackLevelStart(selectedDifficulty, selectedLevel, selectedMode);
+		GameEngine.start(selectedDifficulty, selectedLevel, selectedMode);
 		});
 	}
 
@@ -238,7 +250,7 @@ function setupGameScreenListeners() {
 			// Advance to next level
 			selectedLevel = Math.min(selectedLevel + 1, LevelManager.getMaxLevel());
 			showScreen('gameScreen');
-			GameEngine.start(selectedDifficulty, selectedLevel);
+			GameEngine.start(selectedDifficulty, selectedLevel, selectedMode);
 		});
 	}
 	
@@ -251,7 +263,7 @@ function setupGameScreenListeners() {
 			
 			// Replay same level
 			showScreen('gameScreen');
-			GameEngine.start(selectedDifficulty, selectedLevel);
+			GameEngine.start(selectedDifficulty, selectedLevel, selectedMode);
 		});
 	}
 	
@@ -297,11 +309,21 @@ function populateLevelGrid() {
 	if (!levelGrid) return;
 	
 	const maxLevel = LevelManager.getMaxLevel();
-	// Get unlocked levels for current difficulty from current player's data
+	// Get unlocked levels for current mode+difficulty from current player's data
 	const playerData = PlayerManager.getCurrentPlayerData();
 	const difficultyKey = String(selectedDifficulty);
-	const unlockedLevels = (playerData.levelProgress.unlockedLevelsByDifficulty && 
-	                        playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) || [1];
+	
+	// Use mode-specific unlocked levels (with fallback to legacy format)
+	let unlockedLevels = [1];
+	if (playerData.levelProgress.unlockedLevelsByMode && 
+	    playerData.levelProgress.unlockedLevelsByMode[selectedMode] &&
+	    playerData.levelProgress.unlockedLevelsByMode[selectedMode][difficultyKey]) {
+		unlockedLevels = playerData.levelProgress.unlockedLevelsByMode[selectedMode][difficultyKey];
+	} else if (playerData.levelProgress.unlockedLevelsByDifficulty && 
+	           playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) {
+		// Fallback to legacy format for backward compatibility
+		unlockedLevels = playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey];
+	}
 	
 	// Clear existing buttons
 	levelGrid.innerHTML = '';
@@ -319,8 +341,8 @@ function populateLevelGrid() {
 			btn.classList.add('locked');
 			btn.disabled = true;
 		} else {
-			// Check if this difficulty+level has been completed
-			if (PlayerManager.isLevelCompleted(selectedDifficulty, level)) {
+			// Check if this mode+difficulty+level has been completed
+			if (PlayerManager.isLevelCompleted(selectedDifficulty, level, selectedMode)) {
 				btn.classList.add('completed');
 			}
 		}
@@ -356,11 +378,21 @@ let selectedLevel = 1;
 let selectedDifficulty = 1;
 
 function selectLevel(level) {
-	// Check if level is unlocked for current player and difficulty
+	// Check if level is unlocked for current player, mode, and difficulty
 	const playerData = PlayerManager.getCurrentPlayerData();
 	const difficultyKey = String(selectedDifficulty);
-	const unlockedLevels = (playerData.levelProgress.unlockedLevelsByDifficulty && 
-	                        playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) || [1];
+	
+	// Use mode-specific unlocked levels (with fallback to legacy format)
+	let unlockedLevels = [1];
+	if (playerData.levelProgress.unlockedLevelsByMode && 
+	    playerData.levelProgress.unlockedLevelsByMode[selectedMode] &&
+	    playerData.levelProgress.unlockedLevelsByMode[selectedMode][difficultyKey]) {
+		unlockedLevels = playerData.levelProgress.unlockedLevelsByMode[selectedMode][difficultyKey];
+	} else if (playerData.levelProgress.unlockedLevelsByDifficulty && 
+	           playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey]) {
+		// Fallback to legacy format for backward compatibility
+		unlockedLevels = playerData.levelProgress.unlockedLevelsByDifficulty[difficultyKey];
+	}
 	if (!unlockedLevels.includes(level)) return;
 	
 	selectedLevel = level;
@@ -374,6 +406,27 @@ function selectLevel(level) {
 			btn.classList.remove('selected');
 		}
 	});
+}
+
+/**
+ * Select a game mode
+ * @param {String} mode - Game mode constant (CLASSIC, ZEN, GAUNTLET, RISING_TIDE)
+ */
+function selectMode(mode) {
+	selectedMode = mode;
+	
+	// Update UI - highlight selected mode
+	const modeButtons = document.querySelectorAll('.mode-btn');
+	modeButtons.forEach(btn => {
+		if (btn.dataset.mode === mode) {
+			btn.classList.add('selected');
+		} else {
+			btn.classList.remove('selected');
+		}
+	});
+	
+	// Refresh level grid to show mode-specific unlocked levels
+	populateLevelGrid();
 }
 
 /**
