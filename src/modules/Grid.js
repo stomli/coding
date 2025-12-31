@@ -481,36 +481,37 @@ class Grid {
 		
 		// Process from bottom up, column by column
 		for (const col of columnsToProcess) {
-			let writeRow = this.rows - 1;
-			
-			// Scan from bottom to top
-			for (let readRow = this.rows - 1; readRow >= 0; readRow--) {
-				const ball = this.grid[readRow][col];
-				const hasBall = ball !== null;
-				
-				// Move ball down to write position
-				if (hasBall) {
-					const movedDown = writeRow !== readRow;
-					
-					// Track if ball moved
-					if (movedDown) {
-						ballsMoved = true;
-					}
-					else {
-						// Ball stayed in place
-					}
-					
-					this.grid[writeRow][col] = ball;
-					writeRow--;
-				}
-				else {
-					// Empty cell, skip
+			// Collect all balls in order from top to bottom
+			const balls = [];
+			for (let row = 0; row < this.rows; row++) {
+				const ball = this.grid[row][col];
+				if (ball !== null) {
+					balls.push(ball);
 				}
 			}
 			
-			// Clear cells above
-			for (let row = writeRow; row >= 0; row--) {
+			// Check if column needs compacting
+			if (balls.length > 0) {
+				const expectedBottomRow = this.rows - balls.length;
+				// Check if any ball is above where it should be
+				for (let row = 0; row < expectedBottomRow; row++) {
+					if (this.grid[row][col] !== null) {
+						ballsMoved = true;
+						break;
+					}
+				}
+			}
+			
+			// Clear the column
+			for (let row = 0; row < this.rows; row++) {
 				this.grid[row][col] = null;
+			}
+			
+			// Place balls at bottom in same order (last collected = bottom)
+			let writeRow = this.rows - 1;
+			for (let i = balls.length - 1; i >= 0; i--) {
+				this.grid[writeRow][col] = balls[i];
+				writeRow--;
 			}
 		}
 		
@@ -629,32 +630,53 @@ class Grid {
 	 */
 	processPainters(matches) {
 		const paintedPositions = [];
+		const processedPainters = []; // Track which painters we process
+		const allPositionsChecked = []; // Track ALL positions checked
+		
+		console.log(`[processPainters] Called with ${matches.length} matches`);
+		matches.forEach((m, i) => {
+			console.log(`  [processPainters] Match ${i}: ${m.direction}, ${m.positions.length} positions: ${m.positions.map(p => `(${p.row},${p.col})`).join(',')}`);
+		});
 		
 		// Find all painter balls in matches (painters trigger effects when matched)
 		for (const match of matches) {
 			for (const pos of match.positions) {
 				const ball = this.getBallAt(pos.row, pos.col);
+				allPositionsChecked.push(`(${pos.row},${pos.col}):${ball ? (ball.isPainter() ? ball.getPainterDirection() : 'normal') : 'null'}`);
 				
 				if (ball && ball.isPainter()) {
 					const painterColor = ball.getColor();
 					const painterDirection = ball.getPainterDirection();
 					
+					processedPainters.push(`(${pos.row},${pos.col}):${painterDirection},color=${painterColor}`);
+					console.log(`[processPainters] Processing ${painterDirection} painter at (${pos.row},${pos.col}), color=${painterColor}`);
+					
 					// Paint the appropriate line based on painter type
 					if (painterDirection === 'horizontal') {
 						// Paint entire row
+						const debugOutput = [];
+						debugOutput.push(`Painting row ${pos.row} with color ${painterColor}, cols=${this.cols}`);
 						for (let c = 0; c < this.cols; c++) {
 							const targetBall = this.getBallAt(pos.row, c);
+							debugOutput.push(`col ${c}: ball=${targetBall ? 'YES' : 'NO'}, type=${targetBall?.getType()}`);
 							if (targetBall && targetBall.getType() !== CONSTANTS.BALL_TYPES.BLOCKING) {
 								const oldColor = targetBall.getColor();
 								targetBall.setColor(painterColor);
+								debugOutput.push(`  PAINTED (${pos.row},${c}): ${oldColor} → ${painterColor}`);
 								paintedPositions.push({
 									row: pos.row,
 									col: c,
 									oldColor,
-									newColor: painterColor
+									newColor: painterColor,
+									_debug: debugOutput.join('\n') // Add debug info to first painted position
 								});
 							}
 						}
+						const paintedCount = paintedPositions.filter(p => p.row === pos.row).length;
+						debugOutput.push(`Finished: painted ${paintedCount} positions in row ${pos.row}`);
+						
+						// Always log debug for horizontal painters
+						console.log(`[H-Painter Debug]\n${debugOutput.join('\n')}`);
 					}
 					else if (painterDirection === 'vertical') {
 						// Paint entire column
@@ -712,11 +734,14 @@ class Grid {
 							}
 						}
 					}
-					
-					// Only process one painter per match
-					break;
 				}
 			}
+		}
+		
+		// Add processed painters info to first painted position for debugging
+		if (paintedPositions.length > 0) {
+			paintedPositions[0]._processedPainters = processedPainters.join(', ');
+			paintedPositions[0]._allPositionsChecked = allPositionsChecked.join(', ');
 		}
 		
 		return paintedPositions;

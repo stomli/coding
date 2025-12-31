@@ -146,6 +146,7 @@ export function testGrid() {
 		gravityGrid.setBallAt(0, 5, new Ball(BALL_TYPES.NORMAL, '#00FFFF'));
 		
 		// Remove middle ball from column 3 only
+		gravityGrid.removeBallAt(2, 3);
 		const removed = [{ row: 2, col: 3 }];
 		gravityGrid.applyGravity(removed);
 		
@@ -173,6 +174,8 @@ export function testGrid() {
 			{ row: 1, col: 5 },
 			{ row: 2, col: 5 }
 		];
+		// Remove the balls at specified positions (simulating match removal)
+		multiRemoved.forEach(pos => multiColGrid.removeBallAt(pos.row, pos.col));
 		multiColGrid.applyGravity(multiRemoved);
 		
 		tests.push({

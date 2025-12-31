@@ -119,9 +119,13 @@ class ScoreManagerClass {
 	_onCascadeComplete(data) {
 		console.log(`🏁 CASCADE_COMPLETE received, cascadeCount=${data.cascadeCount}, currentCascadeData=`, this.currentCascadeData);
 		
+		// Initialize if somehow missing (safety check)
 		if (!this.currentCascadeData) {
-			console.warn('⚠️ CASCADE_COMPLETE but no currentCascadeData!');
-			return;
+			console.warn('⚠️ CASCADE_COMPLETE but no currentCascadeData! Initializing with empty data.');
+			this.currentCascadeData = {
+				ballsPerLevel: [],
+				currentLevel: 0
+			};
 		}
 		
 		// Use cascade count from GameEngine (actual cascade iterations)

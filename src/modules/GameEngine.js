@@ -1071,21 +1071,153 @@ class GameEngineClass {
 	// 2. Process painters (paint lines before clearing)
 	const paintedPositions = this.grid.processPainters(matches);
 	
-	// 3. Build set of exploded positions (balls already removed from grid)
-	const explodedPositionSet = new Set();
-	if (explodedPositions.length > 0) {
-		explodedPositions.forEach(pos => {
-			explodedPositionSet.add(`${pos.row},${pos.col}`);
-		});
+	console.log(`🎨 processPainters returned ${paintedPositions.length} painted positions`);
+	
+	// Track positions of painters that triggered (they should always be cleared)
+	const painterPositions = new Set();
+	for (const match of matches) {
+		for (const pos of match.positions) {
+			const ball = this.grid.getBallAt(pos.row, pos.col);
+			if (ball && ball.isPainter()) {
+				painterPositions.add(`${pos.row},${pos.col}`);
+				console.log(`🎯 Original painter tracked: (${pos.row},${pos.col}) type=${ball.getType()} direction=${ball.getPainterDirection()}`);
+			}
+		}
 	}
 	
-	// 4. Determine which matches to clear
+	// 3. Chain reaction loop - keep processing special balls until no more trigger
 	let matchesToClear = matches;
+	let newExplosions = [];
+	let allChainPaintings = [];
+	
+	// Track which painters have already been processed to avoid infinite loops
+	const processedPainters = new Set();
+	for (const match of matches) {
+		for (const pos of match.positions) {
+			const ball = this.grid.getBallAt(pos.row, pos.col);
+			if (ball && ball.isPainter()) {
+				processedPainters.add(`${pos.row},${pos.col}`);
+			}
+		}
+	}
+	
 	if (paintedPositions.length > 0) {
-		// Re-find matches after painting to include newly painted lines
+		console.log(`🎨 Initial painter triggered, painted ${paintedPositions.length} positions`);
+		
+		// Keep processing chain reactions until no new special balls trigger
+		let keepProcessing = true;
+		let iterationCount = 0;
+		const maxIterations = 10; // Prevent infinite loops
+		
+		while (keepProcessing && iterationCount < maxIterations) {
+			iterationCount++;
+			console.log(`🔄 Chain iteration ${iterationCount}: re-finding matches...`);
+			
+			// Re-find matches after painting
+			matchesToClear = this.grid.findMatches();
+			console.log(`🔍 Found ${matchesToClear.length} matches after painting`);
+			
+			// Log what's in the matches
+			matchesToClear.forEach((match, idx) => {
+				console.log(`  Match ${idx}: ${match.direction}, ${match.positions.length} balls, color=${match.color}`);
+				match.positions.forEach(pos => {
+					const ball = this.grid.getBallAt(pos.row, pos.col);
+					console.log(`    (${pos.row},${pos.col}): type=${ball?.getType()}`);
+				});
+			});
+			
+			// Process special balls in the new matches (but skip already-processed painters)
+			const iterationExplosions = this.grid.processExplosions(matchesToClear);
+			
+			// For painters, only process ones we haven't seen before
+			const newPainterMatches = matchesToClear.map(match => ({
+				...match,
+				positions: match.positions.filter(pos => {
+					const ball = this.grid.getBallAt(pos.row, pos.col);
+					const posKey = `${pos.row},${pos.col}`;
+					// Keep position if it's not a painter, OR if it's a painter we haven't processed yet
+					return !ball || !ball.isPainter() || !processedPainters.has(posKey);
+				})
+			})).filter(match => match.positions.length >= 3); // Keep matches with 3+ positions
+			
+			const iterationPaintings = this.grid.processPainters(newPainterMatches);
+			
+			console.log(`💥 Iteration ${iterationCount}: ${iterationExplosions.length} explosions, ${iterationPaintings.length} paintings`);
+			
+			// Track new painters that triggered
+			if (iterationPaintings.length > 0) {
+				console.log(`🎨 New painters triggered in iteration ${iterationCount}`);
+				for (const match of newPainterMatches) {
+					for (const pos of match.positions) {
+						const ball = this.grid.getBallAt(pos.row, pos.col);
+						if (ball && ball.isPainter()) {
+							const posKey = `${pos.row},${pos.col}`;
+							painterPositions.add(posKey);
+							processedPainters.add(posKey);
+							console.log(`  📌 Painter at (${pos.row},${pos.col}) direction=${ball.getPainterDirection()}`);
+						}
+					}
+				}
+				allChainPaintings.push(...iterationPaintings);
+			}
+			
+			// If explosions triggered, handle their effects
+			if (iterationExplosions.length > 0) {
+				newExplosions.push(...iterationExplosions);
+				
+				AudioManager.playExplosion();
+				
+				// Build ball data for explosions
+				const explosionBallData = iterationExplosions
+					.filter(pos => pos.ball)
+					.map(pos => ({
+						type: pos.ball.type,
+						color: pos.ball.color
+					}));
+				
+				// Emit BALLS_CLEARED for exploded balls
+				EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, {
+					count: iterationExplosions.length,
+					balls: explosionBallData
+				});
+				
+				for (const pos of iterationExplosions) {
+					const screenX = pos.col * this.renderer.cellSize + this.renderer.offsetX;
+					const screenY = pos.row * this.renderer.cellSize + this.renderer.offsetY;
+					ParticleSystem.createExplosion(screenX, screenY, '#FFD700', 30);
+					AnimationManager.animateExplosion(pos.row, pos.col, 3, null);
+				}
+				
+				// Show floating text for explosions
+				let totalRow = 0;
+				let totalCol = 0;
+				for (const pos of iterationExplosions) {
+					totalRow += pos.row;
+					totalCol += pos.col;
+				}
+				const centerRow = totalRow / iterationExplosions.length;
+				const centerCol = totalCol / iterationExplosions.length;
+				const centerX = centerCol * this.renderer.cellSize + this.renderer.offsetX;
+				const centerY = centerRow * this.renderer.cellSize + this.renderer.offsetY;
+				this.floatingTextManager.add(`${iterationExplosions.length}`, centerX, centerY, 1500, '#FFD700');
+			}
+			
+			// Continue if new special balls triggered
+			keepProcessing = iterationExplosions.length > 0 || iterationPaintings.length > 0;
+		}
+		
+		// Final match detection after all chain reactions
 		matchesToClear = this.grid.findMatches();
 	}
 	
+	// 4. Build set of ALL exploded positions (original + new from painted balls)
+	const explodedPositionSet = new Set();
+	const allExplosions = [...explodedPositions, ...newExplosions];
+	if (allExplosions.length > 0) {
+		allExplosions.forEach(pos => {
+			explodedPositionSet.add(`${pos.row},${pos.col}`);
+		});
+	}
 	// 5. Filter out exploded positions from matches (balls already removed)
 	if (explodedPositionSet.size > 0) {
 		matchesToClear = matchesToClear.filter(match => {
@@ -1111,17 +1243,44 @@ class GameEngineClass {
 	if (matchesToClear.length > 0) {
 		clearedPositions = await this._clearMatches(matchesToClear, clearDelay);
 	}
+	
+	// Also clear painter positions that triggered (even if no longer in matches after explosion)
+	const paintersToClear = [];
+	for (const posStr of painterPositions) {
+		if (!explodedPositionSet.has(posStr)) {
+			const [row, col] = posStr.split(',').map(Number);
+			const ball = this.grid.getBallAt(row, col);
+			if (ball) {
+				const ballData = { type: ball.type, color: ball.color };
+				this.grid.removeBallAt(row, col);
+				paintersToClear.push({ row, col, ball: ballData });
+			}
+		}
+	}
+	
+	// Emit event for painter clears if any
+	if (paintersToClear.length > 0) {
+		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, {
+			count: paintersToClear.length,
+			balls: paintersToClear.map(p => p.ball)
+		});
+	}
 
-	// Combine exploded and cleared positions for gravity
+	// Combine all exploded, cleared, and painter positions for gravity
 	const allRemovedPositions = [
-		...explodedPositions.map(p => ({ row: p.row, col: p.col })),
-		...clearedPositions
+		...allExplosions.map(p => ({ row: p.row, col: p.col })),
+		...clearedPositions,
+		...paintersToClear.map(p => ({ row: p.row, col: p.col }))
 	];
 
 	// Count matches as scoring events (use actual cleared matches count)
-	totalScoringEvents += matchesToClear.length;			// Apply gravity only to affected columns
-			await this._applyGravity(allRemovedPositions);			// Emit CASCADE event to advance to next cascade level for scoring
-			EventEmitter.emit(CONSTANTS.EVENTS.CASCADE, { level: cascadeCount });
+	totalScoringEvents += matchesToClear.length;
+	
+	// Apply gravity only to affected columns (performance optimization)
+	await this._applyGravity(allRemovedPositions);
+	
+	// Emit CASCADE event to advance to next cascade level for scoring
+	EventEmitter.emit(CONSTANTS.EVENTS.CASCADE, { level: cascadeCount });
 			
 			// Wait before checking for next cascade
 			if (cascadeDelay > 0) {
@@ -1129,11 +1288,14 @@ class GameEngineClass {
 			}
 		}
 		
-	// Emit cascade event for scoring
+	// Emit cascade event for scoring (only if we had any cascades)
 	if (cascadeCount > 0) {
 		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount });
 		// Play cascade sound with escalating pitch
 		AudioManager.playCascade(cascadeCount);
+	} else {
+		// No cascades means no matches - reset cascade data in ScoreManager
+		this.scoreManager?.resetCascadeData?.();
 	}
 	
 	// Play celebration if we had 5+ scoring events
@@ -1292,6 +1454,8 @@ class GameEngineClass {
 			? [...new Set(removedPositions.map(p => p.col))]
 			: Array.from({ length: this.grid.cols }, (_, i) => i);
 		
+		console.log('[_applyGravity] Processing columns:', columnsToProcess, 'from removed positions:', removedPositions.length);
+		
 		// Keep dropping until no balls can fall
 		while (ballsMoved) {
 			ballsMoved = false;
@@ -1306,6 +1470,7 @@ class GameEngineClass {
 						this.grid.setBallAt(row + 1, col, ball);
 						this.grid.removeBallAt(row, col);
 						ballsMoved = true;
+						console.log(`[_applyGravity] Moved ball from (${row},${col}) to (${row+1},${col})`);
 					}
 				}
 			}
@@ -1316,6 +1481,8 @@ class GameEngineClass {
 				await this._delay(dropSpeed);
 			}
 		}
+		
+		console.log('[_applyGravity] Gravity complete');
 	}
 	
 	/**
