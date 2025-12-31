@@ -50,9 +50,24 @@ class AnalyticsManager {
 		if (!this.enabled) return;
 		
 		try {
-			this.mixpanel.identify(playerName);
+			// For Guest users, create a unique session ID to differentiate sessions
+			let distinctId = playerName;
+			if (playerName === 'Guest') {
+				// Check if we already have a guest session ID in this session
+				if (!sessionStorage.getItem('guestSessionId')) {
+					// Generate unique guest session ID: Guest_TIMESTAMP_RANDOM
+					const timestamp = Date.now();
+					const random = Math.random().toString(36).substring(2, 9);
+					sessionStorage.setItem('guestSessionId', `Guest_${timestamp}_${random}`);
+				}
+				distinctId = sessionStorage.getItem('guestSessionId');
+			}
+			
+			this.mixpanel.identify(distinctId);
 			this.mixpanel.people.set({
 				$name: playerName,
+				is_guest: playerName === 'Guest',
+				session_id: distinctId,
 				...properties
 			});
 		} catch (error) {
