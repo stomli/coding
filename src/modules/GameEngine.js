@@ -566,6 +566,9 @@ class GameEngineClass {
 		this.gameMode = mode || 'CLASSIC';
 		this.modeConfig = CONSTANTS.GAME_MODE_CONFIG[this.gameMode];
 		
+		// Set game mode in PieceFactory for mode-specific spawn rates
+		PieceFactory.setGameMode(this.gameMode);
+		
 		// Initialize mode-specific timers
 		if (this.gameMode === 'RISING_TIDE' || this.gameMode === 'GAUNTLET') {
 			this.risingTideTimer = 0;

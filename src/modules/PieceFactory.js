@@ -25,6 +25,8 @@ class PieceFactoryClass {
 		this.piecesDropped = 0;
 		// Track current level for color selection
 		this.currentLevel = 1;
+		// Track current game mode
+		this.gameMode = 'CLASSIC';
 	}
 	
 	/**
@@ -67,7 +69,13 @@ class PieceFactoryClass {
 	 * @returns {Boolean} True if special ball should spawn
 	 */
 	shouldSpawnSpecialBall(specialType) {
-		const spawnRate = ConfigManager.get(`specialBalls.${specialType}.spawnRate`, 0);
+		let spawnRate = ConfigManager.get(`specialBalls.${specialType}.spawnRate`, 0);
+		
+		// Increase exploding ball spawn rate in Rising Tide mode
+		if (this.gameMode === 'RISING_TIDE' && specialType === 'exploding') {
+			spawnRate = spawnRate * 3; // Triple the exploding ball spawn rate
+		}
+		
 		return randomFloat(0, 1) < spawnRate;
 	}
 	
@@ -134,6 +142,14 @@ class PieceFactoryClass {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Set the current game mode
+	 * @param {String} mode - Game mode (CLASSIC, ZEN, GAUNTLET, RISING_TIDE)
+	 */
+	setGameMode(mode) {
+		this.gameMode = mode || 'CLASSIC';
 	}
 	
 	/**
