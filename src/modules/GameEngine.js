@@ -1452,28 +1452,62 @@ class GameEngineClass {
 		const dropSpeed = ConfigManager.get('animations.dropAnimationSpeed', 50);
 		let ballsMoved = true;
 		
-		// Determine which columns to process
-		const columnsToProcess = removedPositions.length > 0
-			? [...new Set(removedPositions.map(p => p.col))]
-			: Array.from({ length: this.grid.cols }, (_, i) => i);
-		
-		console.log('[_applyGravity] Processing columns:', columnsToProcess, 'from removed positions:', removedPositions.length);
+		console.log('[_applyGravity] Starting gravity');
 		
 		// Keep dropping until no balls can fall
 		while (ballsMoved) {
 			ballsMoved = false;
 			
-			// Scan from bottom to top
+			// Step 1: Find all balls connected to the bottom (anchored balls)
+			const anchored = new Set();
+			
+			// Start flood fill from bottom row
+			const queue = [];
+			for (let col = 0; col < this.grid.cols; col++) {
+				if (this.grid.getBallAt(this.grid.rows - 1, col) !== null) {
+					queue.push({ row: this.grid.rows - 1, col });
+					anchored.add(`${this.grid.rows - 1},${col}`);
+				}
+			}
+			
+			// Flood fill to find all connected balls (including diagonals)
+			while (queue.length > 0) {
+				const { row, col } = queue.shift();
+				
+				// Check all 8 directions
+				const directions = [
+					[-1, 0], [1, 0], [0, -1], [0, 1],     // orthogonal
+					[-1, -1], [-1, 1], [1, -1], [1, 1]    // diagonal
+				];
+				
+				for (const [dr, dc] of directions) {
+					const newRow = row + dr;
+					const newCol = col + dc;
+					const key = `${newRow},${newCol}`;
+					
+					if (newRow >= 0 && newRow < this.grid.rows && 
+					    newCol >= 0 && newCol < this.grid.cols) {
+						if (this.grid.getBallAt(newRow, newCol) !== null && !anchored.has(key)) {
+							anchored.add(key);
+							queue.push({ row: newRow, col: newCol });
+						}
+					}
+				}
+			}
+			
+			// Step 2: Drop all unanchored balls one row down
+			// Scan from bottom to top to avoid moving same ball twice
 			for (let row = this.grid.rows - 2; row >= 0; row--) {
-				for (const col of columnsToProcess) {
+				for (let col = 0; col < this.grid.cols; col++) {
+					const key = `${row},${col}`;
 					const ball = this.grid.getBallAt(row, col);
 					
-					if (ball && this.grid.getBallAt(row + 1, col) === null) {
+					// If there's a ball and it's not anchored and space below is empty
+					if (ball && !anchored.has(key) && this.grid.getBallAt(row + 1, col) === null) {
 						// Move ball down
 						this.grid.setBallAt(row + 1, col, ball);
 						this.grid.removeBallAt(row, col);
 						ballsMoved = true;
-						console.log(`[_applyGravity] Moved ball from (${row},${col}) to (${row+1},${col})`);
 					}
 				}
 			}
@@ -1629,7 +1663,11 @@ class GameEngineClass {
 		
 		// Ensure no matches were created - if so, randomize those cells again
 		let matches = this.grid.findMatches();
-		while (matches.length > 0) {
+		let attempts = 0;
+		const maxAttempts = 100; // Prevent infinite loop
+		
+		while (matches.length > 0 && attempts < maxAttempts) {
+			attempts++;
 			// Break matches by changing one ball in each match
 			matches.forEach(match => {
 				if (match.positions.length > 0) {
@@ -1640,6 +1678,10 @@ class GameEngineClass {
 				}
 			});
 			matches = this.grid.findMatches();
+		}
+		
+		if (attempts >= maxAttempts) {
+			console.warn('_preFillRows: Could not eliminate all matches after', maxAttempts, 'attempts');
 		}
 	}
 	
@@ -1685,7 +1727,11 @@ class GameEngineClass {
 			
 			// Break any matches created in the new bottom row
 			let matches = this.grid.findMatches();
-			while (matches.length > 0) {
+			let attempts = 0;
+			const maxAttempts = 100; // Prevent infinite loop
+			
+			while (matches.length > 0 && attempts < maxAttempts) {
+				attempts++;
 				matches.forEach(match => {
 					// Only fix matches in the bottom row
 					match.positions.forEach(pos => {
@@ -1697,6 +1743,10 @@ class GameEngineClass {
 					});
 				});
 				matches = this.grid.findMatches();
+			}
+			
+			if (attempts >= maxAttempts) {
+				console.warn('_addRisingTideRow: Could not eliminate all matches after', maxAttempts, 'attempts');
 			}
 		} else {
 			// RISING_TIDE: Add blocking orbs

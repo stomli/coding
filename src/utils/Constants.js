@@ -109,11 +109,11 @@ const CONSTANTS = {
 		},
 		RISING_TIDE: {
 			name: 'Rising Tide',
-			description: 'Blocking orbs rise from the bottom every 5 seconds',
+			description: 'Blocking orbs rise from the bottom every 9 seconds',
 			timed: true,
 			preFillRows: 0,
 			risingBlocks: true,
-			risingInterval: 5000 // milliseconds
+			risingInterval: 9000 // milliseconds
 		}
 	},
 	

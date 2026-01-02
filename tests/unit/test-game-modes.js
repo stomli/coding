@@ -101,7 +101,7 @@ export function runGameModeTests() {
 	try {
 		const config = CONSTANTS.GAME_MODE_CONFIG[CONSTANTS.GAME_MODES.RISING_TIDE];
 		const pass = config.timed === true && config.preFillRows === 0 && 
-		             config.risingBlocks === true && config.risingInterval === 5000;
+		             config.risingBlocks === true && config.risingInterval === 9000;
 		tests.push({
 			name: 'RISING_TIDE mode has correct configuration',
 			pass: pass,
