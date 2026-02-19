@@ -770,6 +770,224 @@ All game parameters should be configurable via JSON:
 
 ---
 
-**Document Version:** 2.0  
-**Last Updated:** January 2025  
-**Status:** Living Document - Updated through Phase 9 Implementation
+## 15. Monetization Strategy
+
+### 15.1 Advertising Integration
+
+#### 15.1.1 Ad Placement
+**Display Advertising:**
+- **Provider:** Google AdSense (or alternative FOSS-friendly ad network)
+- **Ad Units:**
+  - **Banner Ad:** 728×90 leaderboard at top of page (desktop)
+  - **Mobile Banner:** 320×50 banner at bottom (mobile)
+  - **Interstitial:** Full-screen ad shown:
+    - Every 3rd game over (configurable)
+    - Every 5th level completion (configurable)
+    - Never during active gameplay
+  - **Sidebar Ad:** 300×250 medium rectangle in right sidebar (desktop only)
+
+#### 15.1.2 Ad Display Rules
+- **Frequency Caps:**
+  - Maximum 1 interstitial per 5 minutes
+  - No ads during active gameplay (only during menu/game-over states)
+- **User Experience:**
+  - Clear "Skip Ad" timer (5 seconds for interstitials)
+  - Non-intrusive placement that doesn't block game controls
+  - Responsive layout adjusts when ads load
+
+#### 15.1.3 Ad-Free State
+- **Trigger:** Buy Me a Coffee donation received
+- **Duration:** Configurable periods based on donation amount
+  - $3 donation: 7 days ad-free
+  - $5 donation: 30 days ad-free
+  - $10 donation: 90 days ad-free
+  - Custom amounts: Scale proportionally
+- **Storage:** localStorage tracks ad-free expiration timestamp
+- **Verification:** Check on every page load and ad display attempt
+- **Visual Indicator:** "Ad-Free Mode" badge in HUD when active
+
+### 15.2 Buy Me a Coffee Integration
+
+#### 15.2.1 BMAC Widget Placement
+- **Primary Button:** Floating "☕ Support" button in top-right corner
+  - Always visible, non-intrusive
+  - Opens BMAC widget/page in new tab
+- **Secondary Placement:**
+  - Game over screen: "Enjoying the game? Support development!"
+  - Settings menu: "Remove ads by supporting the developer"
+
+#### 15.2.2 Donation Detection & Processing
+**Manual Token System:**
+- After donating via BMAC, user receives a unique token/code
+- User enters token in game settings to activate ad-free period
+- Token validation:
+  - Hash-based verification using HMAC-SHA256
+  - Token format: `BMAC-[amount]-[timestamp]-[signature]`
+  - Generated server-side (simple API endpoint or manual generation)
+  - Single-use tokens to prevent sharing
+
+**Token Redemption Flow:**
+1. User clicks "Redeem Code" in settings menu
+2. Enters BMAC token
+3. Frontend validates signature and parses amount/duration
+4. Stores expiration timestamp in localStorage
+5. Shows confirmation message with expiration date
+6. Removes all ads immediately
+
+**Alternative: Honor System:**
+- Users can manually activate ad-free mode via settings
+- Trust-based system with clear messaging about supporting development
+- Simpler implementation, relies on user goodwill
+
+#### 15.2.3 Thank You Experience
+- **Confirmation Message:** "Thank you for your support! Ads disabled for [duration]"
+- **Supporter Badge:** Visual indicator in game (optional trophy/star icon)
+- **Special Features (Optional Future Enhancement):**
+  - Custom color themes for supporters
+  - Exclusive game modes
+  - Priority feature requests
+
+### 15.3 Monetization Configuration
+All monetization settings configurable via `config.json`:
+```json
+{
+  "monetization": {
+    "ads": {
+      "enabled": true,
+      "provider": "adsense",
+      "adSenseId": "ca-pub-XXXXXXXXXX",
+      "displayRules": {
+        "interstitialFrequency": 3,
+        "interstitialMinInterval": 300000,
+        "skipDelay": 5000
+      }
+    },
+    "bmac": {
+      "enabled": true,
+      "username": "yourusername",
+      "buttonText": "☕ Support",
+      "tokenValidation": true,
+      "adFreePeriods": {
+        "3": 7,
+        "5": 30,
+        "10": 90
+      }
+    }
+  }
+}
+```
+
+---
+
+## 16. Progressive Web App (PWA) Features
+
+### 16.1 PWA Core Requirements
+
+#### 16.1.1 Web App Manifest
+**File:** `manifest.json` in root directory
+
+**Required Fields:**
+- **name:** "Ball Drop Puzzle Game"
+- **short_name:** "Ball Drop"
+- **description:** "Match colored balls in this Tetris-inspired puzzle game"
+- **start_url:** "/"
+- **display:** "standalone" (full-screen app experience)
+- **background_color:** "#1a1a1a" (matches game background)
+- **theme_color:** "#4080FF" (primary blue)
+- **orientation:** "portrait-primary" (mobile) / "any" (desktop)
+- **icons:** Multiple sizes for different devices
+  - 72×72, 96×96, 128×128, 144×144, 152×152, 192×192, 384×384, 512×512
+  - PNG format with transparency
+
+#### 16.1.2 Service Worker
+**File:** `service-worker.js` in root directory
+
+**Caching Strategy:**
+- **App Shell Pattern:** Cache HTML, CSS, JS, and core assets
+- **Cache-First for Static Assets:**
+  - CSS files
+  - JavaScript files
+  - Images/icons
+  - Audio files (if implemented)
+- **Network-First for Dynamic Content:**
+  - Config file (check for updates)
+  - Ad scripts (always fresh)
+- **Offline Fallback:**
+  - Show cached game if network unavailable
+  - Display "Offline Mode" indicator
+  - Disable ads when offline
+
+**Cache Versioning:**
+- Version number in cache name: `ball-drop-v1`
+- Increment version on updates to force cache refresh
+
+**Service Worker Lifecycle:**
+```javascript
+// Install: Cache core assets
+self.addEventListener('install', event => {
+  // Cache app shell
+});
+
+// Activate: Clean up old caches
+self.addEventListener('activate', event => {
+  // Delete old cache versions
+});
+
+// Fetch: Serve from cache or network
+self.addEventListener('fetch', event => {
+  // Cache-first strategy
+});
+```
+
+#### 16.1.3 HTTPS Requirement
+- PWAs require HTTPS (except localhost for development)
+- Deploy to HTTPS-enabled hosting (GitHub Pages, Netlify, Vercel, etc.)
+
+### 16.2 Install Prompts
+
+#### 16.2.1 Browser Install Prompt
+- **Trigger:** After 2 minutes of gameplay or 3 game completions
+- **Prompt Text:** "Install Ball Drop for quick access and offline play!"
+- **Defer Logic:** If user dismisses, wait 7 days before prompting again
+- **Storage:** Track last prompt time in localStorage
+
+#### 16.2.2 Custom Install Button
+- **Location:** Settings menu
+- **Text:** "📥 Install App"
+- **Behavior:** Triggers browser's native install prompt
+- **Visibility:** Only shown if app is installable and not already installed
+
+### 16.3 PWA Enhancements
+
+#### 16.3.1 Offline Gameplay
+- **Full Functionality:** Game works entirely offline once cached
+- **Limitations When Offline:**
+  - Ads disabled (no network)
+  - BMAC donations require online connection
+  - High scores sync when back online (future enhancement)
+
+#### 16.3.2 Splash Screen
+- **Icon:** App icon centered
+- **Background:** `background_color` from manifest
+- **Display:** Automatic on app launch
+
+#### 16.3.3 App Badge/Notifications (Future Enhancement)
+- Daily play streak reminders
+- New high score achievements
+- Ad-free period expiration warnings (3 days before)
+
+### 16.4 PWA Testing
+- **Lighthouse:** 100% PWA score
+- **Chrome DevTools:** Application tab verification
+- **Install Test:** Successful installation on:
+  - Chrome Desktop
+  - Chrome Android
+  - Edge Desktop
+  - Samsung Internet
+- **Offline Test:** Full functionality without network
+
+---
+
+**Document Version:** 3.0  
+**Last Updated:** February 2026  
+**Status:** Living Document - Updated with Monetization & PWA Requirements
