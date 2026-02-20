@@ -5,7 +5,7 @@ A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+
 ## 🎮 Game Features
 
 - **Four Game Modes:**
-  - 🕐 **Classic:** Standard timed gameplay (15 seconds per level)
+  - 🕐 **Classic:** Standard timed gameplay (90 seconds per level)
   - 🧘 **Zen:** Untimed mode - fill the grid to complete levels
   - ⚔️ **Gauntlet:** Pre-filled challenge with rising random orbs
   - 🌊 **Rising Tide:** Rising blocking orbs - clear with explosions
@@ -36,14 +36,14 @@ A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+
 ## 🎯 How to Play
 
 ### Game Modes
-- **Classic:** Survive 15 seconds per level, avoid filling columns
+- **Classic:** Survive 90 seconds per level, avoid filling columns
 - **Zen:** No timer - strategically fill the grid to complete levels
 - **Gauntlet:** Start with 5 pre-filled rows, random orbs rise every 5 seconds
 - **Rising Tide:** Blocking orbs rise every 5 seconds, use explosions to clear
 
 ### Controls
 ### Objective
-**Classic/Gauntlet/Rising Tide:** Survive for 15 seconds per level by matching colored balls. Avoid filling any column to the top!
+**Classic/Gauntlet/Rising Tide:** Survive for 90 seconds per level by matching colored balls. Avoid filling any column to the top!
 
 **Zen:** Fill the grid completely to successfully complete the level. Take your time and plan strategically!
 - **↓** Hard drop (instant fall)

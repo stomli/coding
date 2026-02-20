@@ -5,7 +5,7 @@ Manages level progression, difficulty settings, timer countdown, and level unloc
 
 ## Responsibility
 - Track current difficulty (1-5) and level number (1-∞)
-- Manage 15-second countdown timer per level
+- Manage 90-second countdown timer per level
 - Calculate drop speed scaling based on difficulty and level
 - Control blocking ball spawn rates
 - Handle color unlocking at specific levels (3, 7, 11, 15, 19)
@@ -38,7 +38,7 @@ Initializes level manager with starting difficulty and level.
 
 **Side Effects:**
 - Sets current difficulty and level
-- Resets timer to 15 seconds (configurable)
+- Resets timer to 90 seconds (configurable)
 - Calculates initial drop speed
 - Determines available colors
 - Loads unlocked levels from PlayerManager
@@ -57,7 +57,7 @@ startTimer() → void
 Starts the level countdown timer.
 
 **Side Effects:**
-- Begins countdown from configured time (default: 15 seconds)
+- Begins countdown from configured time (default: 90 seconds)
 - Emits TIMER_UPDATE events every 100ms
 - Emits LEVEL_COMPLETE when timer reaches 0
 

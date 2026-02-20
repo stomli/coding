@@ -165,7 +165,7 @@ Checks if game over conditions are met.
 ## Game Modes
 
 ### CLASSIC
-- **Timer:** 15 seconds per level
+- **Timer:** 90 seconds per level
 - **Pre-fill:** None
 - **Rising Blocks:** Disabled
 - **Win Condition:** Survive timer without column breach
@@ -180,14 +180,14 @@ Checks if game over conditions are met.
 - **HUD:** Timer hidden from display
 
 ### GAUNTLET
-- **Timer:** 15 seconds per level
+- **Timer:** 90 seconds per level
 - **Pre-fill:** 5 rows at game start (random colored orbs + special balls)
 - **Rising Blocks:** Random colored orbs every 5 seconds with special balls
 - **Win Condition:** Survive timer without column breach
 - **Lose Condition:** Column filled to top
 
 ### RISING_TIDE
-- **Timer:** 15 seconds per level
+- **Timer:** 90 seconds per level
 - **Pre-fill:** None
 - **Rising Blocks:** Blocking orbs only, every 5 seconds
 - **Win Condition:** Survive timer without column breach

@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^powershell -Command \"\\(Get-Content 'c:\\\\Users\\\\stoml\\\\OneDrive\\\\Desktop\\\\coding\\.worktrees\\\\copilot-worktree-2026-02-20T02-26-49\\\\src\\\\styles\\\\main\\.css'\\)\\.Count\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

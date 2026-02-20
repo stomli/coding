@@ -247,7 +247,7 @@ Each difficulty affects:
 Four distinct game modes offer different play styles:
 
 **CLASSIC Mode**
-- Standard timed gameplay (15 seconds per level)
+- Standard timed gameplay (90 seconds per level)
 - No special mechanics
 - Traditional progression system
 - Recommended for new players
@@ -283,7 +283,7 @@ Four distinct game modes offer different play styles:
 - High scores: `"MODE-difficulty-level"` format (e.g., `"ZEN-2-3"`)
 
 #### 6.2.2 Level Duration
-- **Time Limit:** 15 seconds (configurable)
+- **Time Limit:** 90 seconds (configurable)
 - **Completion:** Survive full duration without game over
 
 #### 6.2.3 Level Advancement
@@ -690,7 +690,7 @@ All game parameters should be configurable via JSON:
 
 ✅ **Level & Difficulty System (Phase 6)**
 - LevelManager module with 5 difficulty levels
-- Level timer (configurable, default 15 seconds)
+- Level timer (configurable, default 90 seconds)
 - Difficulty selection (1-5) with independent progression
 - Level progression and unlocking system
 - Drop speed scaling (configurable per difficulty)
@@ -730,7 +730,7 @@ All game parameters should be configurable via JSON:
 
 ✅ **Game Modes System (Phase 9.5)**
 - Four distinct game modes with unique mechanics:
-  - **CLASSIC:** Standard timed gameplay (15s per level)
+  - **CLASSIC:** Standard timed gameplay (90s per level)
   - **ZEN:** Untimed, grid breach = success, strategic play
   - **GAUNTLET:** 5 pre-filled rows + rising random orbs every 5s
   - **RISING_TIDE:** Rising blocking orbs every 5s, requires explosions

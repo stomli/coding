@@ -95,7 +95,7 @@ Special Ball Details:
 6. Painting ball types - Are there 3 types (horizontal-only, vertical-only, diagonal-only), or one type that paints in whichever direction it matches? good idea
 
 Level Transitions:
-7. Level complete behavior - When a column reaches the top, does the level immediately end and clear the board, or is it game over? (You said both "level finishes" and "game over") game is over, but we will need another mechanism to finish a level. Probably time 15 seconds but a configurable number
+7. Level complete behavior - When a column reaches the top, does the level immediately end and clear the board, or is it game over? (You said both "level finishes" and "game over") game is over, but we will need another mechanism to finish a level. Probably time 90 seconds but a configurable number
 8. Difficulty levels - Are there preset difficulty levels (easy/medium/hard) that change blocking ball timing, or just progressive difficulty as you advance through numbered levels? good idea, lets do a scale of 1 to 5 for difficulty, increasing teh points per pop, but also increasing the frequency of the enemy pieces
 
 Config Structure:
@@ -104,7 +104,7 @@ Config Structure:
 
 Level & Difficulty System:
 
-Level vs Difficulty - Just to confirm: There are 5 difficulty settings (1-5), and within each difficulty there are numbered levels that last 15 seconds each. Is that correct? Correct
+Level vs Difficulty - Just to confirm: There are 5 difficulty settings (1-5), and within each difficulty there are numbered levels that last 90 seconds each. Is that correct? Correct
 Level progression within difficulty - Within a single difficulty setting, do levels keep progressing (Level 1, 2, 3...) until game over, or is there a final level? no final level
 Score tracking - Do we track high scores per difficulty level, or per (difficulty + level number) combination? the combination
 Exploding Ball Clarification:

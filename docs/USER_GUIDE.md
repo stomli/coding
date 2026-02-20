@@ -57,7 +57,7 @@
 ## How to Play
 
 ### Objective
-Survive for **15 seconds** without filling any column to the top of the board.
+Survive for **90 seconds** without filling any column to the top of the board.
 
 ### Basic Gameplay Loop
 1. **Falling Pieces:** Colored ball pieces fall from the top (like Tetris)
@@ -210,7 +210,7 @@ Each difficulty affects:
 
 ### Level Progression
 - **Unlimited Levels:** There's no final level - keep going!
-- **Time per Level:** 15 seconds (configurable)
+- **Time per Level:** 90 seconds (configurable)
 - **Speed Increase:** Each level makes pieces fall slightly faster
 - **Unlocking:** Completing a level unlocks the next one
 - **Replay:** You can replay any unlocked level
@@ -351,7 +351,7 @@ Access from the settings panel (gear icon):
 4. Click **Start**
 5. Use **arrow keys** to control falling pieces
 6. Match **3+ balls** of same color
-7. Survive **15 seconds** to complete level!
+7. Survive **90 seconds** to complete level!
 
 **Goal:** Create cascades by setting up chain reactions for high scores!
 

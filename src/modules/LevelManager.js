@@ -19,7 +19,7 @@ class LevelManagerClass {
 		this.maxLevel = 30;
 		this.unlockedLevels = [1]; // Start with level 1 unlocked
 		this.levelTimer = 0;
-		this.levelTimeLimit = 15; // seconds
+		this.levelTimeLimit = 90; // seconds
 		this.timerRunning = false;
 	}
 
