@@ -16,6 +16,7 @@ import WeatherBackground from './modules/WeatherBackground.js';
 import PlayerManager from './modules/PlayerManager.js';
 import AnalyticsManager from './modules/AnalyticsManager.js';
 import AdManager from './modules/AdManager.js';
+import MonetizationManager from './modules/MonetizationManager.js';
 import { ANALYTICS_CONFIG } from './config/analytics.config.js';
 
 /**
@@ -46,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 		
 		// Initialize ad manager (non-intrusive, natural breaks only)
 		AdManager.initialize();
+		
+		// Initialize monetization (BMAC support button, token redemption)
+		MonetizationManager.initialize();
 		
 		// Initialize weather background
 		WeatherBackground.initialize();
@@ -599,6 +603,16 @@ function setupSettingsControls() {
 				// Show success message
 				alert(`Player data has been reset for "${playerName}".`);
 			}
+		});
+	}
+	
+	// Redeem support code button
+	const redeemBtn = document.getElementById('redeemCodeButton');
+	if (redeemBtn) {
+		redeemBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			hideSettingsOverlay();
+			MonetizationManager.showRedeemDialog();
 		});
 	}
 }
