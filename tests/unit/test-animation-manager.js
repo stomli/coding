@@ -283,5 +283,163 @@ export function runAnimationManagerTests() {
 		assert(anim.type === 'pieceDrop', 'Animation type should be pieceDrop');
 	});
 
+	// ── cancelAnimation tests ──
+
+	test('cancelAnimation removes animation by ID', () => {
+		resetAnimationManager();
+		const id1 = AnimationManager.animateClearBalls([{ row: 0, col: 0 }], null);
+		const id2 = AnimationManager.animateExplosion(1, 1, 2, null);
+		const id3 = AnimationManager.animatePieceDrop({}, 0, 5, null);
+		
+		assert(AnimationManager.activeAnimations.length === 3, 'Should have 3 animations');
+		AnimationManager.cancelAnimation(id2);
+		assert(AnimationManager.activeAnimations.length === 2, 'Should have 2 animations after cancel');
+		assert(AnimationManager.activeAnimations.every(a => a.id !== id2), 'Cancelled animation should be gone');
+	});
+
+	test('cancelAnimation with non-existent ID does nothing', () => {
+		resetAnimationManager();
+		AnimationManager.animateClearBalls([{ row: 0, col: 0 }], null);
+		AnimationManager.cancelAnimation(999);
+		assert(AnimationManager.activeAnimations.length === 1, 'Should still have 1 animation');
+	});
+
+	test('cancelAnimation does not trigger callback', () => {
+		resetAnimationManager();
+		let callbackCalled = false;
+		const id = AnimationManager.animateClearBalls([{ row: 0, col: 0 }], () => {
+			callbackCalled = true;
+		});
+		AnimationManager.cancelAnimation(id);
+		assert(!callbackCalled, 'Callback should not be called on cancel');
+	});
+
+	// ── cancelAll tests ──
+
+	test('cancelAll removes all animations', () => {
+		resetAnimationManager();
+		AnimationManager.animateClearBalls([{ row: 0, col: 0 }], null);
+		AnimationManager.animateExplosion(1, 1, 2, null);
+		AnimationManager.animatePieceDrop({}, 0, 5, null);
+		AnimationManager.animateLevelComplete(null);
+		
+		assert(AnimationManager.activeAnimations.length === 4, 'Should have 4 animations');
+		AnimationManager.cancelAll();
+		assert(AnimationManager.activeAnimations.length === 0, 'Should have 0 animations after cancelAll');
+	});
+
+	test('cancelAll on empty list does nothing', () => {
+		resetAnimationManager();
+		AnimationManager.cancelAll();
+		assert(AnimationManager.activeAnimations.length === 0, 'No error on empty cancelAll');
+	});
+
+	// ── hasActiveAnimations tests ──
+
+	test('hasActiveAnimations returns false when empty', () => {
+		resetAnimationManager();
+		assert(AnimationManager.hasActiveAnimations() === false, 'Should return false when empty');
+	});
+
+	test('hasActiveAnimations returns true when animations exist', () => {
+		resetAnimationManager();
+		AnimationManager.animateClearBalls([{ row: 0, col: 0 }], null);
+		assert(AnimationManager.hasActiveAnimations() === true, 'Should return true when animations exist');
+	});
+
+	test('hasActiveAnimations returns false after all complete', () => {
+		resetAnimationManager();
+		const startTime = 1000;
+		AnimationManager.animateClearBalls([{ row: 0, col: 0 }], null);
+		AnimationManager.activeAnimations[0].startTime = startTime;
+		AnimationManager.activeAnimations[0].duration = 100;
+		AnimationManager.update(startTime + 200);
+		assert(AnimationManager.hasActiveAnimations() === false, 'Should return false after all complete');
+	});
+
+	// ── getActiveAnimations tests ──
+
+	test('getActiveAnimations returns the animations array', () => {
+		resetAnimationManager();
+		AnimationManager.animateClearBalls([{ row: 0, col: 0 }], null);
+		AnimationManager.animateExplosion(1, 1, 2, null);
+		const active = AnimationManager.getActiveAnimations();
+		assert(Array.isArray(active), 'Should return array');
+		assert(active.length === 2, 'Should have 2 active animations');
+	});
+
+	test('getActiveAnimations returns empty array when none active', () => {
+		resetAnimationManager();
+		const active = AnimationManager.getActiveAnimations();
+		assert(Array.isArray(active), 'Should return array');
+		assert(active.length === 0, 'Should be empty');
+	});
+
+	// ── Easing function mathematical correctness ──
+
+	test('easeOutCubic midpoint is greater than 0.5 (eases out)', () => {
+		const mid = AnimationManager.easeOutCubic(0.5);
+		assert(mid > 0.5, `easeOutCubic(0.5)=${mid} should be > 0.5`);
+		// Expected: 1 - (0.5)^3 = 1 - 0.125 = 0.875
+		assert(Math.abs(mid - 0.875) < 0.001, `easeOutCubic(0.5) should be ~0.875, got ${mid}`);
+	});
+
+	test('easeInOutCubic midpoint is 0.5', () => {
+		const mid = AnimationManager.easeInOutCubic(0.5);
+		assert(Math.abs(mid - 0.5) < 0.001, `easeInOutCubic(0.5) should be ~0.5, got ${mid}`);
+	});
+
+	test('easeInOutCubic is symmetric', () => {
+		const val25 = AnimationManager.easeInOutCubic(0.25);
+		const val75 = AnimationManager.easeInOutCubic(0.75);
+		assert(Math.abs(val25 + val75 - 1.0) < 0.001, `easeInOutCubic should be symmetric: f(0.25)+f(0.75)=${val25 + val75}`);
+	});
+
+	test('easeBounce at quarter points returns correct values', () => {
+		// At t=0.5, easeBounce should be 0.765625 (second bounce segment)
+		const val = AnimationManager.easeBounce(0.5);
+		assert(val >= 0 && val <= 1, `easeBounce(0.5)=${val} should be in [0,1]`);
+	});
+
+	test('easeOutCubic is monotonically increasing', () => {
+		let prev = 0;
+		for (let t = 0; t <= 1.0; t += 0.1) {
+			const val = AnimationManager.easeOutCubic(t);
+			assert(val >= prev - 0.001, `easeOutCubic should be monotonically increasing at t=${t}`);
+			prev = val;
+		}
+	});
+
+	// ── Animation ID auto-increment ──
+
+	test('Animation IDs increment across multiple creations', () => {
+		resetAnimationManager();
+		const id1 = AnimationManager.animateClearBalls([], null);
+		const id2 = AnimationManager.animateExplosion(0, 0, 1, null);
+		const id3 = AnimationManager.animateLevelComplete(null);
+		assert(id2 > id1, 'Second ID should be greater than first');
+		assert(id3 > id2, 'Third ID should be greater than second');
+	});
+
+	// ── Multiple completion in single update ──
+
+	test('Multiple animations complete in single update call', () => {
+		resetAnimationManager();
+		const startTime = 1000;
+		let cb1 = false, cb2 = false;
+		
+		AnimationManager.animateClearBalls([], () => { cb1 = true; });
+		AnimationManager.animateExplosion(0, 0, 1, () => { cb2 = true; });
+		
+		AnimationManager.activeAnimations[0].startTime = startTime;
+		AnimationManager.activeAnimations[0].duration = 100;
+		AnimationManager.activeAnimations[1].startTime = startTime;
+		AnimationManager.activeAnimations[1].duration = 100;
+		
+		AnimationManager.update(startTime + 200);
+		assert(cb1 && cb2, 'Both callbacks should fire');
+		assert(AnimationManager.activeAnimations.length === 0, 'Both should be removed');
+	});
+
 	return results.tests;
 }

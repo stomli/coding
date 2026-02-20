@@ -27,6 +27,7 @@ import { runGameModeTests } from './test-game-modes.js';
 import { runSpecialBallInteractionTests } from './test-special-ball-interactions.js';
 import { runGravityOptimizationTests } from './test-gravity-optimization.js';
 import testMobileInteractions from './test-mobile-interactions.js';
+import { runConstantsTests } from './test-constants.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -38,6 +39,7 @@ export async function runAllTests() {
 	await ConfigManager.loadConfig();
 	
 	const suites = [
+		{ name: 'Constants', tests: runConstantsTests() },
 		{ name: 'Helpers', tests: testHelpers() },
 		{ name: 'DOMHelpers', tests: testDOMHelpers() },
 		{ name: 'EventEmitter', tests: testEventEmitter() },

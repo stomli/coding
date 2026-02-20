@@ -15,7 +15,7 @@ const { BALL_TYPES } = CONSTANTS;
 export function runGravityOptimizationTests() {
 	const tests = [];
 
-	// Test 1: Gravity only affects column with removed ball
+	// Test 1: Flood-fill gravity compacts all floating balls to bottom
 	try {
 		const grid = new Grid(10, 10);
 		
@@ -25,11 +25,11 @@ export function runGravityOptimizationTests() {
 		grid.setBallAt(1, 3, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
 		grid.setBallAt(2, 3, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
 		
-		// Column 5: Balls that should NOT move
+		// Column 5: Floating balls
 		grid.setBallAt(0, 5, new Ball(BALL_TYPES.NORMAL, '#FFFF00'));
 		grid.setBallAt(2, 5, new Ball(BALL_TYPES.NORMAL, '#FF00FF'));
 		
-		// Column 7: Balls that should NOT move
+		// Column 7: Floating balls
 		grid.setBallAt(1, 7, new Ball(BALL_TYPES.NORMAL, '#00FFFF'));
 		grid.setBallAt(3, 7, new Ball(BALL_TYPES.NORMAL, '#FFFFFF'));
 		
@@ -38,44 +38,44 @@ export function runGravityOptimizationTests() {
 		const removed = [{ row: 1, col: 3 }];
 		grid.applyGravity(removed);
 		
-		// Verify column 3 was compacted (2 balls at bottom)
+		// Flood-fill gravity compacts ALL unanchored balls to bottom
+		// Column 3: 2 remaining balls at bottom
 		const col3Compacted = grid.getBallAt(9, 3) !== null && 
 		                      grid.getBallAt(8, 3) !== null &&
 		                      grid.getBallAt(7, 3) === null;
 		
-		// Verify columns 5 and 7 were NOT affected
-		const col5Unchanged = grid.getBallAt(0, 5) !== null &&
-		                      grid.getBallAt(2, 5) !== null &&
-		                      grid.getBallAt(9, 5) === null;
+		// Column 5: also compacted to bottom (flood-fill affects all)
+		const col5Compacted = grid.getBallAt(9, 5) !== null &&
+		                      grid.getBallAt(8, 5) !== null;
 		
-		const col7Unchanged = grid.getBallAt(1, 7) !== null &&
-		                      grid.getBallAt(3, 7) !== null &&
-		                      grid.getBallAt(9, 7) === null;
+		// Column 7: also compacted to bottom
+		const col7Compacted = grid.getBallAt(9, 7) !== null &&
+		                      grid.getBallAt(8, 7) !== null;
 		
 		if (!col3Compacted) {
 			throw new Error(`Column 3 should be compacted: row9=${grid.getBallAt(9, 3)}, row8=${grid.getBallAt(8, 3)}, row7=${grid.getBallAt(7, 3)}`);
 		}
-		if (!col5Unchanged) {
-			throw new Error('Column 5 should remain unchanged');
+		if (!col5Compacted) {
+			throw new Error('Column 5 should be compacted to bottom');
 		}
-		if (!col7Unchanged) {
-			throw new Error('Column 7 should remain unchanged');
+		if (!col7Compacted) {
+			throw new Error('Column 7 should be compacted to bottom');
 		}
 		
 		tests.push({
-			name: 'GravityOpt - Only affects removed ball columns',
+			name: 'GravityOpt - Flood-fill compacts all floating balls',
 			pass: true,
 			error: null
 		});
 	} catch (error) {
 		tests.push({
-			name: 'GravityOpt - Only affects removed ball columns',
+			name: 'GravityOpt - Flood-fill compacts all floating balls',
 			pass: false,
 			error: error.message
 		});
 	}
 
-	// Test 2: Multiple columns with removals
+	// Test 2: Multiple columns all compact with flood-fill gravity
 	try {
 		const grid = new Grid(10, 10);
 		
@@ -83,7 +83,7 @@ export function runGravityOptimizationTests() {
 		grid.setBallAt(0, 2, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
 		grid.setBallAt(3, 2, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
 		
-		// Column 4: balls at 1, 4 (should NOT move)
+		// Column 4: balls at 1, 4 (also compact with flood-fill)
 		grid.setBallAt(1, 4, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
 		grid.setBallAt(4, 4, new Ball(BALL_TYPES.NORMAL, '#FFFF00'));
 		
@@ -106,10 +106,9 @@ export function runGravityOptimizationTests() {
 		const col2Ok = grid.getBallAt(9, 2) !== null && 
 		               grid.getBallAt(8, 2) !== null;
 		
-		// Column 4 should be unchanged (not in removed list)
-		const col4Ok = grid.getBallAt(1, 4) !== null &&
-		               grid.getBallAt(4, 4) !== null &&
-		               grid.getBallAt(9, 4) === null;
+		// Column 4 also compacted (flood-fill affects all floating balls)
+		const col4Ok = grid.getBallAt(9, 4) !== null &&
+		               grid.getBallAt(8, 4) !== null;
 		
 		// Column 6 should be compacted to bottom
 		const col6Ok = grid.getBallAt(9, 6) !== null &&
@@ -121,13 +120,13 @@ export function runGravityOptimizationTests() {
 		}
 		
 		tests.push({
-			name: 'GravityOpt - Handles multiple affected columns',
+			name: 'GravityOpt - All columns compact with flood-fill',
 			pass: true,
 			error: null
 		});
 	} catch (error) {
 		tests.push({
-			name: 'GravityOpt - Handles multiple affected columns',
+			name: 'GravityOpt - All columns compact with flood-fill',
 			pass: false,
 			error: error.message
 		});
@@ -234,7 +233,7 @@ export function runGravityOptimizationTests() {
 		});
 	}
 
-	// Test 6: Complex cascade scenario
+	// Test 6: Complex cascade scenario - all columns compact
 	try {
 		const grid = new Grid(15, 10);
 		
@@ -249,7 +248,7 @@ export function runGravityOptimizationTests() {
 		grid.setBallAt(4, 5, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
 		grid.setBallAt(7, 5, new Ball(BALL_TYPES.NORMAL, '#FFFF00'));
 		
-		// Column 8: should not be affected
+		// Column 8: also compacted by flood-fill gravity
 		grid.setBallAt(2, 8, new Ball(BALL_TYPES.NORMAL, '#FF00FF'));
 		grid.setBallAt(6, 8, new Ball(BALL_TYPES.NORMAL, '#00FFFF'));
 		
@@ -268,12 +267,12 @@ export function runGravityOptimizationTests() {
 		// Column 5: should have 2 balls at bottom (3 original - 1 removed)
 		const col5Count = [14, 13].filter(r => grid.getBallAt(r, 5) !== null).length;
 		
-		// Column 8: should be unchanged
-		const col8Unchanged = grid.getBallAt(2, 8) !== null &&
-		                      grid.getBallAt(6, 8) !== null;
+		// Column 8: also compacted to bottom (flood-fill gravity affects all)
+		const col8Compacted = grid.getBallAt(14, 8) !== null &&
+		                      grid.getBallAt(13, 8) !== null;
 		
-		if (col3Count !== 5 || col5Count !== 2 || !col8Unchanged) {
-			throw new Error(`Cascade scenario failed: col3=${col3Count}/5, col5=${col5Count}/2, col8=${col8Unchanged}`);
+		if (col3Count !== 5 || col5Count !== 2 || !col8Compacted) {
+			throw new Error(`Cascade scenario failed: col3=${col3Count}/5, col5=${col5Count}/2, col8=${col8Compacted}`);
 		}
 		
 		tests.push({

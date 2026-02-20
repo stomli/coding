@@ -135,6 +135,10 @@ export function runGameModeTests() {
 	
 	// Test 8: Level completion is tracked by mode
 	try {
+		// Reset to a clean player state
+		localStorage.removeItem('ballMatcher_players');
+		PlayerManager.loadPlayers();
+		
 		// Simulate completing a level in CLASSIC mode
 		PlayerManager.updateStats({
 			score: 1000,

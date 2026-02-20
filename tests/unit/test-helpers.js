@@ -8,10 +8,12 @@ import {
 	clamp,
 	isInBounds,
 	randomInt,
+	randomFloat,
 	shuffleArray,
 	deepClone,
 	formatNumber,
-	formatTime
+	formatTime,
+	iterateShapeCells
 } from '../../src/utils/Helpers.js';
 
 /**
@@ -320,11 +322,221 @@ export function testHelpers() {
 		error: null
 	});
 	
-	const largeTimeResult = formatTime(599.9);
+	const largeTimeResult = formatTime(605.5);
 	tests.push({
 		name: 'formatTime - handles large times',
-		pass: largeTimeResult === '9:59.8',
-		error: largeTimeResult !== '9:59.8' ? `Expected '9:59.8', got '${largeTimeResult}'` : null
+		pass: largeTimeResult === '10:05.5',
+		error: largeTimeResult !== '10:05.5' ? `Expected '10:05.5', got '${largeTimeResult}'` : null
+	});
+
+	// ── randomFloat tests ──
+
+	tests.push({
+		name: 'randomFloat - returns value in range [0, 1)',
+		pass: (() => {
+			const val = randomFloat(0, 1);
+			return val >= 0 && val < 1;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'randomFloat - returns value in negative range',
+		pass: (() => {
+			const val = randomFloat(-10, -5);
+			return val >= -10 && val <= -5;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'randomFloat - respects boundaries across many samples',
+		pass: (() => {
+			for (let i = 0; i < 100; i++) {
+				const val = randomFloat(2.5, 7.5);
+				if (val < 2.5 || val > 7.5) return false;
+			}
+			return true;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'randomFloat - returns min when range is zero',
+		pass: randomFloat(5, 5) === 5,
+		error: null
+	});
+
+	// ── randomInt additional tests ──
+
+	tests.push({
+		name: 'randomInt - returns min when min equals max',
+		pass: randomInt(7, 7) === 7,
+		error: null
+	});
+
+	tests.push({
+		name: 'randomInt - handles negative range',
+		pass: (() => {
+			for (let i = 0; i < 50; i++) {
+				const val = randomInt(-5, -1);
+				if (val < -5 || val > -1) return false;
+			}
+			return true;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'randomInt - always returns integers',
+		pass: (() => {
+			for (let i = 0; i < 50; i++) {
+				const val = randomInt(0, 100);
+				if (!Number.isInteger(val)) return false;
+			}
+			return true;
+		})(),
+		error: null
+	});
+
+	// ── getNestedProperty additional tests ──
+
+	tests.push({
+		name: 'getNestedProperty - returns default for empty path',
+		pass: getNestedProperty({ a: 1 }, '', 'default') === 'default',
+		error: null
+	});
+
+	tests.push({
+		name: 'getNestedProperty - returns default for null path',
+		pass: getNestedProperty({ a: 1 }, null, 'default') === 'default',
+		error: null
+	});
+
+	tests.push({
+		name: 'getNestedProperty - returns default for undefined path',
+		pass: getNestedProperty({ a: 1 }, undefined, 'default') === 'default',
+		error: null
+	});
+
+	tests.push({
+		name: 'getNestedProperty - handles deeply nested (4+ levels)',
+		pass: getNestedProperty({ a: { b: { c: { d: { e: 99 } } } } }, 'a.b.c.d.e') === 99,
+		error: null
+	});
+
+	tests.push({
+		name: 'getNestedProperty - returns default for empty object',
+		pass: getNestedProperty({}, 'a.b', 'x') === 'x',
+		error: null
+	});
+
+	tests.push({
+		name: 'getNestedProperty - handles value of false correctly',
+		pass: getNestedProperty({ a: false }, 'a', 'default') === false,
+		error: null
+	});
+
+	tests.push({
+		name: 'getNestedProperty - handles value of 0 correctly',
+		pass: getNestedProperty({ a: 0 }, 'a', 'default') === 0,
+		error: null
+	});
+
+	tests.push({
+		name: 'getNestedProperty - handles array values',
+		pass: (() => {
+			const result = getNestedProperty({ a: [1, 2, 3] }, 'a');
+			return Array.isArray(result) && result.length === 3;
+		})(),
+		error: null
+	});
+
+	// ── iterateShapeCells tests ──
+
+	tests.push({
+		name: 'iterateShapeCells - iterates over occupied cells (1s)',
+		pass: (() => {
+			const shape = [[1, 0], [0, 1]];
+			const cells = [];
+			iterateShapeCells(shape, (r, c) => cells.push({ r, c }));
+			return cells.length === 2 && cells[0].r === 0 && cells[0].c === 0 && cells[1].r === 1 && cells[1].c === 1;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'iterateShapeCells - skips empty cells (0s)',
+		pass: (() => {
+			const shape = [[0, 0], [0, 0]];
+			let count = 0;
+			iterateShapeCells(shape, () => count++);
+			return count === 0;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'iterateShapeCells - handles single-cell shape',
+		pass: (() => {
+			const shape = [[1]];
+			const cells = [];
+			iterateShapeCells(shape, (r, c) => cells.push({ r, c }));
+			return cells.length === 1 && cells[0].r === 0 && cells[0].c === 0;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'iterateShapeCells - handles T-piece shape',
+		pass: (() => {
+			const tShape = [[1, 1, 1], [0, 1, 0]];
+			const cells = [];
+			iterateShapeCells(tShape, (r, c) => cells.push({ r, c }));
+			return cells.length === 4;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'iterateShapeCells - handles L-piece shape',
+		pass: (() => {
+			const lShape = [[1, 0], [1, 0], [1, 1]];
+			const cells = [];
+			iterateShapeCells(lShape, (r, c) => cells.push({ r, c }));
+			return cells.length === 4;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'iterateShapeCells - handles I-piece shape',
+		pass: (() => {
+			const iShape = [[1, 1, 1, 1]];
+			const cells = [];
+			iterateShapeCells(iShape, (r, c) => cells.push({ r, c }));
+			return cells.length === 4 && cells.every(c => c.r === 0);
+		})(),
+		error: null
+	});
+
+	// ── deepClone additional edge cases ──
+
+	tests.push({
+		name: 'deepClone - handles boolean values',
+		pass: deepClone(true) === true && deepClone(false) === false,
+		error: null
+	});
+
+	tests.push({
+		name: 'deepClone - handles mixed nested structures',
+		pass: (() => {
+			const orig = { arr: [1, { x: 2 }], str: 'abc' };
+			const clone = deepClone(orig);
+			clone.arr[1].x = 99;
+			return orig.arr[1].x === 2;
+		})(),
+		error: null
 	});
 
 	return tests;

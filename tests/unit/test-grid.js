@@ -133,41 +133,37 @@ export function testGrid() {
 			error: null
 		});
 		
-		// Test optimized gravity - only affected columns
+		// Test flood-fill gravity - all floating balls compact to bottom
 		const gravityGrid = new Grid(10, 10);
-		// Column 3: balls at rows 0, 2, 4
+		// Column 3: balls at rows 0, 4 (gap at 2 removed)
 		gravityGrid.setBallAt(0, 3, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
-		gravityGrid.setBallAt(2, 3, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
 		gravityGrid.setBallAt(4, 3, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
 		// Column 7: balls at rows 1, 3
 		gravityGrid.setBallAt(1, 7, new Ball(BALL_TYPES.NORMAL, '#FFFF00'));
 		gravityGrid.setBallAt(3, 7, new Ball(BALL_TYPES.NORMAL, '#FF00FF'));
-		// Column 5: ball at row 0 (unaffected column)
+		// Column 5: ball at row 0
 		gravityGrid.setBallAt(0, 5, new Ball(BALL_TYPES.NORMAL, '#00FFFF'));
 		
-		// Remove middle ball from column 3 only
-		gravityGrid.removeBallAt(2, 3);
 		const removed = [{ row: 2, col: 3 }];
 		gravityGrid.applyGravity(removed);
 		
 		tests.push({
-			name: 'Gravity - only affects specified columns',
+			name: 'Gravity - flood-fill compacts all floating balls to bottom',
 			pass: gravityGrid.getBallAt(9, 3) !== null && // Column 3 compacted
 			      gravityGrid.getBallAt(8, 3) !== null &&
-			      gravityGrid.getBallAt(7, 3) === null &&
-			      gravityGrid.getBallAt(1, 7) !== null && // Column 7 unchanged
-			      gravityGrid.getBallAt(3, 7) !== null &&
-			      gravityGrid.getBallAt(0, 5) !== null, // Column 5 unchanged
+			      gravityGrid.getBallAt(9, 7) !== null && // Column 7 also compacted
+			      gravityGrid.getBallAt(8, 7) !== null &&
+			      gravityGrid.getBallAt(9, 5) !== null, // Column 5 also compacted
 			error: null
 		});
 		
-		// Test gravity with multiple columns
+		// Test gravity with multiple columns - all floating balls drop
 		const multiColGrid = new Grid(10, 10);
 		multiColGrid.setBallAt(0, 2, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
 		multiColGrid.setBallAt(2, 2, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
 		multiColGrid.setBallAt(0, 5, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
 		multiColGrid.setBallAt(3, 5, new Ball(BALL_TYPES.NORMAL, '#FFFF00'));
-		multiColGrid.setBallAt(0, 8, new Ball(BALL_TYPES.NORMAL, '#FF00FF')); // Unaffected
+		multiColGrid.setBallAt(0, 8, new Ball(BALL_TYPES.NORMAL, '#FF00FF'));
 		
 		const multiRemoved = [
 			{ row: 1, col: 2 },
@@ -179,12 +175,12 @@ export function testGrid() {
 		multiColGrid.applyGravity(multiRemoved);
 		
 		tests.push({
-			name: 'Gravity - handles multiple affected columns',
+			name: 'Gravity - handles multiple columns compacting',
 			pass: multiColGrid.getBallAt(9, 2) !== null && // Column 2 compacted
 			      multiColGrid.getBallAt(8, 2) !== null &&
 			      multiColGrid.getBallAt(9, 5) !== null && // Column 5 compacted
 			      multiColGrid.getBallAt(8, 5) !== null &&
-			      multiColGrid.getBallAt(0, 8) !== null, // Column 8 unchanged
+			      multiColGrid.getBallAt(9, 8) !== null, // Column 8 also compacted (flood-fill)
 			error: null
 		});
 		
@@ -201,22 +197,22 @@ export function testGrid() {
 			error: null
 		});
 		
-		// Test gravity preserves ball order
+		// Test gravity preserves relative ball order (top stays on top)
 		const orderGrid = new Grid(10, 10);
 		const redBall = new Ball(BALL_TYPES.NORMAL, '#FF0000');
 		const greenBall = new Ball(BALL_TYPES.NORMAL, '#00FF00');
 		const blueBall = new Ball(BALL_TYPES.NORMAL, '#0000FF');
-		orderGrid.setBallAt(1, 4, redBall);
-		orderGrid.setBallAt(3, 4, greenBall);
-		orderGrid.setBallAt(5, 4, blueBall);
+		orderGrid.setBallAt(1, 4, redBall);   // top
+		orderGrid.setBallAt(3, 4, greenBall); // middle
+		orderGrid.setBallAt(5, 4, blueBall);  // bottom
 		
 		orderGrid.applyGravity([{ row: 2, col: 4 }]);
 		
 		tests.push({
-			name: 'Gravity - preserves ball order when compacting',
-			pass: orderGrid.getBallAt(9, 4) === redBall &&
-			      orderGrid.getBallAt(8, 4) === greenBall &&
-			      orderGrid.getBallAt(7, 4) === blueBall,
+			name: 'Gravity - preserves relative ball order when compacting',
+			pass: orderGrid.getBallAt(7, 4) === redBall &&   // top ball stays on top
+			      orderGrid.getBallAt(8, 4) === greenBall && // middle stays middle
+			      orderGrid.getBallAt(9, 4) === blueBall,    // bottom ball at bottom
 			error: null
 		});
 		
@@ -929,6 +925,172 @@ export function testGrid() {
 			name: 'Grid - processPainters paints non-blocking balls',
 			pass: painterGrid4.getBallAt(5, 8).getColor() === '#FF0000',
 			error: 'Normal ball was not painted'
+		});
+
+		// ── getHighestBallRow tests ──
+
+		const highRowGrid = new Grid(10, 10);
+		tests.push({
+			name: 'Grid - getHighestBallRow returns -1 for empty grid',
+			pass: highRowGrid.getHighestBallRow() === -1,
+			error: null
+		});
+
+		highRowGrid.setBall(7, 3, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		tests.push({
+			name: 'Grid - getHighestBallRow returns row of highest ball',
+			pass: highRowGrid.getHighestBallRow() === 7,
+			error: `Expected 7, got ${highRowGrid.getHighestBallRow()}`
+		});
+
+		highRowGrid.setBall(2, 5, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+		tests.push({
+			name: 'Grid - getHighestBallRow returns topmost row',
+			pass: highRowGrid.getHighestBallRow() === 2,
+			error: `Expected 2, got ${highRowGrid.getHighestBallRow()}`
+		});
+
+		// ── isAnyColumnFull tests ──
+
+		const fullColGrid2 = new Grid(5, 5);
+		tests.push({
+			name: 'Grid - isAnyColumnFull returns false for empty grid',
+			pass: fullColGrid2.isAnyColumnFull() === false,
+			error: null
+		});
+
+		// Fill one column completely
+		for (let r = 0; r < 5; r++) {
+			fullColGrid2.setBall(r, 2, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		}
+		tests.push({
+			name: 'Grid - isAnyColumnFull returns true when one column is full',
+			pass: fullColGrid2.isAnyColumnFull() === true,
+			error: null
+		});
+
+		// ── getGrid tests ──
+
+		const getGridTest = new Grid(3, 3);
+		const rawGrid = getGridTest.getGrid();
+		tests.push({
+			name: 'Grid - getGrid returns 2D array',
+			pass: Array.isArray(rawGrid) && rawGrid.length === 3 && Array.isArray(rawGrid[0]) && rawGrid[0].length === 3,
+			error: null
+		});
+
+		tests.push({
+			name: 'Grid - getGrid returns same reference as internal grid',
+			pass: rawGrid === getGridTest.grid,
+			error: null
+		});
+
+		// ── mapCells comprehensive test ──
+
+		const mapGrid = new Grid(3, 3);
+		mapGrid.setBall(0, 0, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		mapGrid.setBall(1, 1, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+		const mapped = mapGrid.mapCells((row, col, ball) => ball !== null ? 1 : 0);
+		tests.push({
+			name: 'Grid - mapCells maps all cells',
+			pass: mapped.length === 9 && mapped.filter(v => v === 1).length === 2,
+			error: null
+		});
+
+		// ── filterCells comprehensive test ──
+
+		const filterGrid = new Grid(3, 3);
+		filterGrid.setBall(0, 0, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		filterGrid.setBall(1, 1, new Ball(BALL_TYPES.EXPLODING, '#00FF00'));
+		filterGrid.setBall(2, 2, new Ball(BALL_TYPES.NORMAL, '#0000FF'));
+		const filtered = filterGrid.filterCells((row, col, ball) => ball !== null && ball.getType() === BALL_TYPES.NORMAL);
+		tests.push({
+			name: 'Grid - filterCells returns only matching cells',
+			pass: filtered.length === 2 && filtered.every(c => c.ball.getType() === BALL_TYPES.NORMAL),
+			error: null
+		});
+
+		// ── iterateCells generator test ──
+
+		const iterGrid2 = new Grid(2, 2);
+		iterGrid2.setBall(0, 0, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		let iterCount = 0;
+		let iterBallCount = 0;
+		for (const cell of iterGrid2.iterateCells()) {
+			iterCount++;
+			if (cell.ball !== null) iterBallCount++;
+		}
+		tests.push({
+			name: 'Grid - iterateCells yields all cells',
+			pass: iterCount === 4 && iterBallCount === 1,
+			error: null
+		});
+
+		// ── setBall/getBall out of bounds ──
+
+		const boundsGrid = new Grid(5, 5);
+		tests.push({
+			name: 'Grid - getBall returns null for out of bounds',
+			pass: boundsGrid.getBall(-1, 0) === null && boundsGrid.getBall(0, -1) === null && boundsGrid.getBall(5, 0) === null,
+			error: null
+		});
+
+		// setBall out of bounds should not throw
+		let setBallNoThrow = true;
+		try {
+			boundsGrid.setBall(-1, 0, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+			boundsGrid.setBall(0, 100, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		} catch (e) {
+			setBallNoThrow = false;
+		}
+		tests.push({
+			name: 'Grid - setBall out of bounds does not throw',
+			pass: setBallNoThrow,
+			error: null
+		});
+
+		// ── removeBall / removeBallAt ──
+
+		const removeGrid = new Grid(5, 5);
+		removeGrid.setBall(2, 2, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		removeGrid.removeBall(2, 2);
+		tests.push({
+			name: 'Grid - removeBall clears the cell',
+			pass: removeGrid.getBall(2, 2) === null,
+			error: null
+		});
+
+		removeGrid.setBall(3, 3, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+		removeGrid.removeBallAt(3, 3);
+		tests.push({
+			name: 'Grid - removeBallAt clears the cell (alias)',
+			pass: removeGrid.getBallAt(3, 3) === null,
+			error: null
+		});
+
+		// ── clear() ──
+
+		const clearGrid = new Grid(3, 3);
+		clearGrid.setBall(0, 0, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		clearGrid.setBall(1, 1, new Ball(BALL_TYPES.NORMAL, '#00FF00'));
+		clearGrid.clear();
+		let allNull = true;
+		clearGrid.forEachCell((r, c, b) => { if (b !== null) allNull = false; });
+		tests.push({
+			name: 'Grid - clear() empties all cells',
+			pass: allNull,
+			error: null
+		});
+
+		// ── forEachCell counts all cells ──
+
+		const forEachGrid = new Grid(4, 3);
+		let forEachCount = 0;
+		forEachGrid.forEachCell(() => forEachCount++);
+		tests.push({
+			name: 'Grid - forEachCell visits all cells (4x3=12)',
+			pass: forEachCount === 12,
+			error: null
 		});
 	}
 	catch (error) {

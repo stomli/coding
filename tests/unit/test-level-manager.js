@@ -278,6 +278,112 @@ export function runLevelManagerTests() {
 		
 		assertEquals(remaining, 0, 'Remaining time should be 0, not negative');
 	});
+
+	// ── setLevel with invalid values ──
+
+	test('setLevel() ignores 0', () => {
+		LevelManager.initialize();
+		LevelManager.setLevel(5);
+		LevelManager.setLevel(0);
+		assertEquals(LevelManager.getLevel(), 5, 'Level should remain 5');
+	});
+
+	test('setLevel() ignores negative values', () => {
+		LevelManager.initialize();
+		LevelManager.setLevel(3);
+		LevelManager.setLevel(-1);
+		assertEquals(LevelManager.getLevel(), 3, 'Level should remain 3');
+	});
+
+	test('setLevel() ignores values beyond maxLevel', () => {
+		LevelManager.initialize();
+		LevelManager.setLevel(5);
+		LevelManager.setLevel(999);
+		assertEquals(LevelManager.getLevel(), 5, 'Level should remain 5');
+	});
+
+	test('setLevel() accepts valid boundary (1)', () => {
+		LevelManager.initialize();
+		LevelManager.setLevel(1);
+		assertEquals(LevelManager.getLevel(), 1, 'Level should be 1');
+	});
+
+	test('setLevel() accepts valid boundary (maxLevel)', () => {
+		LevelManager.initialize();
+		LevelManager.setLevel(LevelManager.getMaxLevel());
+		assertEquals(LevelManager.getLevel(), 30, 'Level should be 30');
+	});
+
+	// ── completeLevel edge cases ──
+
+	test('completeLevel() for already-unlocked next level does not duplicate', () => {
+		setupMockStorage();
+		LevelManager.initialize();
+		LevelManager.setLevel(1);
+		LevelManager.completeLevel(); // Unlocks level 2
+		const beforeLen = LevelManager.unlockedLevels.length;
+		LevelManager.setLevel(1);
+		LevelManager.completeLevel(); // Level 2 already unlocked
+		assertEquals(LevelManager.unlockedLevels.length, beforeLen, 'Should not duplicate unlocked level');
+		teardownMockStorage();
+	});
+
+	test('completeLevel() stops timer', () => {
+		setupMockStorage();
+		LevelManager.initialize();
+		LevelManager.startTimer();
+		assert(LevelManager.timerRunning === true, 'Timer should be running');
+		LevelManager.completeLevel();
+		assert(LevelManager.timerRunning === false, 'Timer should be stopped after completeLevel');
+		teardownMockStorage();
+	});
+
+	// ── getTimerDisplay ──
+
+	test('getTimerDisplay returns formatted string', () => {
+		LevelManager.initialize();
+		LevelManager.startTimer();
+		LevelManager.levelTimeLimit = 90;
+		LevelManager.levelTimer = 0;
+		const display = LevelManager.getTimerDisplay();
+		assert(typeof display === 'string', 'Timer display should be a string');
+		assert(display.endsWith('s'), 'Timer display should end with s');
+	});
+
+	// ── getUnlockedLevels returns copy ──
+
+	test('getUnlockedLevels returns a copy not a reference', () => {
+		setupMockStorage();
+		LevelManager.initialize();
+		const levels = LevelManager.getUnlockedLevels();
+		levels.push(999);
+		assert(!LevelManager.unlockedLevels.includes(999), 'Modifying copy should not affect internal array');
+		teardownMockStorage();
+	});
+
+	// ── updateTimer returns false when not running ──
+
+	test('updateTimer returns false when timer not started', () => {
+		LevelManager.initialize();
+		const result = LevelManager.updateTimer(1);
+		assertEquals(result, false, 'Should return false when timer is not running');
+	});
+
+	test('updateTimer returns true when time is exceeded', () => {
+		LevelManager.initialize();
+		LevelManager.startTimer();
+		LevelManager.levelTimeLimit = 10;
+		const result = LevelManager.updateTimer(15);
+		assertEquals(result, true, 'Should return true when time is up');
+	});
+
+	test('updateTimer returns false when time remaining', () => {
+		LevelManager.initialize();
+		LevelManager.startTimer();
+		LevelManager.levelTimeLimit = 90;
+		const result = LevelManager.updateTimer(5);
+		assertEquals(result, false, 'Should return false when time remaining');
+	});
 	
 	// Print summary
 	const passed = results.filter(r => r.pass).length;

@@ -345,6 +345,156 @@ export function runPlayerManagerTests() {
 		assert(unlockedLevels.includes(5), 'Should include level 5');
 		assert(unlockedLevels.includes(6), 'Should include level 6');
 	});
+
+	// ── resetPlayerData tests ──
+
+	test('resetPlayerData() resets stats but keeps settings', () => {
+		PlayerManager.addPlayer('ResetTest');
+		PlayerManager.switchPlayer('ResetTest');
+		
+		// Set custom settings
+		PlayerManager.updateSettings({ isMuted: true, masterVolume: 0.3 });
+		
+		// Add some stats
+		PlayerManager.updateStats({ score: 500, gameStarted: true });
+		
+		// Reset
+		const result = PlayerManager.resetPlayerData();
+		assert(result === true, 'resetPlayerData should return true');
+		
+		const data = PlayerManager.getCurrentPlayerData();
+		assertEquals(data.stats.totalScore, 0, 'Total score should be 0');
+		assertEquals(data.stats.gamesPlayed, 0, 'Games played should be 0');
+		assertEquals(data.stats.highScore, 0, 'High score should be 0');
+		
+		// Settings should be preserved
+		assertEquals(data.settings.isMuted, true, 'Muted setting should be preserved');
+		assertEquals(data.settings.masterVolume, 0.3, 'Volume setting should be preserved');
+	});
+
+	// ── getHighScore / getLongestTime tests ──
+
+	test('getHighScore() returns high score for current player', () => {
+		PlayerManager.addPlayer('HighScoreTest');
+		PlayerManager.switchPlayer('HighScoreTest');
+		PlayerManager.updateStats({ score: 100 });
+		PlayerManager.updateStats({ score: 500 });
+		PlayerManager.updateStats({ score: 250 });
+		
+		assertEquals(PlayerManager.getHighScore(), 500, 'High score should be 500');
+	});
+
+	test('getLongestTime() returns longest time for current player', () => {
+		PlayerManager.addPlayer('LongestTimeTest');
+		PlayerManager.switchPlayer('LongestTimeTest');
+		PlayerManager.updateStats({ time: 30 });
+		PlayerManager.updateStats({ time: 120 });
+		PlayerManager.updateStats({ time: 60 });
+		
+		assertEquals(PlayerManager.getLongestTime(), 120, 'Longest time should be 120');
+	});
+
+	// ── isLevelCompleted with mode parameter ──
+
+	test('isLevelCompleted() checks mode-specific completion', () => {
+		PlayerManager.addPlayer('ModeCompleteTest');
+		PlayerManager.switchPlayer('ModeCompleteTest');
+		
+		PlayerManager.updateStats({
+			levelCompleted: 1,
+			difficulty: 1,
+			mode: 'CLASSIC',
+			score: 100
+		});
+		
+		assert(PlayerManager.isLevelCompleted(1, 1, 'CLASSIC'), 'CLASSIC-1-1 should be completed');
+		assert(!PlayerManager.isLevelCompleted(1, 1, 'ZEN'), 'ZEN-1-1 should not be completed');
+	});
+
+	// ── getLevelBestScore with mode parameter ──
+
+	test('getLevelBestScore() returns mode-specific best score', () => {
+		PlayerManager.addPlayer('ModeBestScoreTest');
+		PlayerManager.switchPlayer('ModeBestScoreTest');
+		
+		PlayerManager.updateStats({
+			levelCompleted: 1,
+			difficulty: 1,
+			mode: 'CLASSIC',
+			score: 200
+		});
+		
+		PlayerManager.updateStats({
+			levelCompleted: 1,
+			difficulty: 1,
+			mode: 'ZEN',
+			score: 500
+		});
+		
+		assertEquals(PlayerManager.getLevelBestScore(1, 1, 'CLASSIC'), 200, 'CLASSIC best should be 200');
+		assertEquals(PlayerManager.getLevelBestScore(1, 1, 'ZEN'), 500, 'ZEN best should be 500');
+	});
+
+	// ── deletePlayer of non-existent player ──
+
+	test('deletePlayer() returns false for non-existent player', () => {
+		const result = PlayerManager.deletePlayer('NonExistent_XYZ');
+		assert(result === false, 'Should return false for non-existent player');
+	});
+
+	// ── createNewPlayerData structure ──
+
+	test('createNewPlayerData() returns all required fields', () => {
+		const data = PlayerManager.createNewPlayerData('TestPlayer');
+		assertEquals(data.name, 'TestPlayer', 'Name should match');
+		assert(typeof data.createdAt === 'string', 'createdAt should be string');
+		assert(typeof data.lastPlayed === 'string', 'lastPlayed should be string');
+		assertEquals(data.stats.gamesPlayed, 0, 'gamesPlayed should be 0');
+		assertEquals(data.stats.totalScore, 0, 'totalScore should be 0');
+		assertEquals(data.stats.highScore, 0, 'highScore should be 0');
+		assertEquals(data.stats.longestTime, 0, 'longestTime should be 0');
+		assertEquals(data.stats.levelsCompleted, 0, 'levelsCompleted should be 0');
+		assert(data.levelProgress !== undefined, 'levelProgress should exist');
+		assert(data.levelProgress.unlockedLevelsByMode !== undefined, 'unlockedLevelsByMode should exist');
+		assert(Array.isArray(data.levelProgress.completedLevels), 'completedLevels should be array');
+		assertEquals(data.levelProgress.completedLevels.length, 0, 'completedLevels should be empty');
+		assert(data.settings !== undefined, 'settings should exist');
+		assertEquals(data.settings.isMuted, false, 'isMuted default should be false');
+	});
+
+	// ── addPlayer validation ──
+
+	test('addPlayer() rejects empty string', () => {
+		const result = PlayerManager.addPlayer('');
+		assert(result === false, 'Should reject empty name');
+	});
+
+	test('addPlayer() rejects whitespace-only string', () => {
+		const result = PlayerManager.addPlayer('   ');
+		assert(result === false, 'Should reject whitespace-only name');
+	});
+
+	test('addPlayer() rejects duplicate name', () => {
+		PlayerManager.addPlayer('DuplicateTest');
+		const result = PlayerManager.addPlayer('DuplicateTest');
+		assert(result === false, 'Should reject duplicate name');
+	});
+
+	// ── getPlayerNames ──
+
+	test('getPlayerNames() returns array of all players', () => {
+		const names = PlayerManager.getPlayerNames();
+		assert(Array.isArray(names), 'Should return array');
+		assert(names.includes('Guest'), 'Should include Guest');
+	});
+
+	// ── getCurrentPlayerName ──
+
+	test('getCurrentPlayerName() returns current player', () => {
+		const name = PlayerManager.getCurrentPlayerName();
+		assert(typeof name === 'string', 'Should return string');
+		assert(name.length > 0, 'Should not be empty');
+	});
 	
 	// Clean up after tests
 	afterTests();

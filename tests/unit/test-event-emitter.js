@@ -226,6 +226,83 @@ export function testEventEmitter() {
 			error: !complexData ? 'No data received' : null
 		});
 
+		// Test once with data arguments
+		EventEmitter.removeAllListeners();
+		let onceData = null;
+		EventEmitter.once('once-data', (a, b) => { onceData = { a, b }; });
+		EventEmitter.emit('once-data', 'alpha', 'beta');
+		EventEmitter.emit('once-data', 'gamma', 'delta');
+		
+		tests.push({
+			name: 'once - passes data to handler',
+			pass: onceData && onceData.a === 'alpha' && onceData.b === 'beta',
+			error: onceData ? null : 'No data received'
+		});
+
+		// Test removing once handler before it fires
+		EventEmitter.removeAllListeners();
+		let onceFired = false;
+		const earlyRemoveHandler = () => { onceFired = true; };
+		EventEmitter.once('early-remove', earlyRemoveHandler);
+		// The once wrapper is different from earlyRemoveHandler, so removeAllListeners is the safe way
+		EventEmitter.removeAllListeners('early-remove');
+		EventEmitter.emit('early-remove');
+		
+		tests.push({
+			name: 'once - removeAllListeners prevents once handler from firing',
+			pass: onceFired === false,
+			error: onceFired ? 'Once handler should not have fired' : null
+		});
+
+		// Test many listeners (stress test)
+		EventEmitter.removeAllListeners();
+		let stressCount = 0;
+		const numHandlers = 100;
+		for (let i = 0; i < numHandlers; i++) {
+			EventEmitter.on('stress-event', () => stressCount++);
+		}
+		EventEmitter.emit('stress-event');
+		
+		tests.push({
+			name: 'on/emit - handles many listeners (100)',
+			pass: stressCount === numHandlers,
+			error: stressCount !== numHandlers ? `Expected ${numHandlers}, got ${stressCount}` : null
+		});
+
+		// Test removeAllListeners with no event clears everything
+		EventEmitter.removeAllListeners();
+		EventEmitter.on('ev-x', () => {});
+		EventEmitter.on('ev-y', () => {});
+		EventEmitter.on('ev-z', () => {});
+		EventEmitter.removeAllListeners();
+		
+		tests.push({
+			name: 'removeAllListeners - no arg empties all listeners',
+			pass: Object.keys(EventEmitter.listeners).length === 0,
+			error: Object.keys(EventEmitter.listeners).length !== 0 ? 'Listeners should be empty' : null
+		});
+
+		// Test on returns void (no chaining)
+		EventEmitter.removeAllListeners();
+		const onResult = EventEmitter.on('void-test', () => {});
+		tests.push({
+			name: 'on - returns undefined',
+			pass: onResult === undefined,
+			error: onResult !== undefined ? `Expected undefined, got ${onResult}` : null
+		});
+
+		// Test emit with zero arguments
+		EventEmitter.removeAllListeners();
+		let noArgCalled = false;
+		EventEmitter.on('no-arg', () => { noArgCalled = true; });
+		EventEmitter.emit('no-arg');
+		
+		tests.push({
+			name: 'emit - works with zero arguments',
+			pass: noArgCalled === true,
+			error: !noArgCalled ? 'Handler should have been called' : null
+		});
+
 		// Clean up at end
 		EventEmitter.removeAllListeners();
 	}

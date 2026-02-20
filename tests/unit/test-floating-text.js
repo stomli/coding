@@ -246,4 +246,156 @@ testSuite.tests.push({
 	}
 });
 
+// Test: _hexToRgb parses valid 6-char hex with #
+testSuite.tests.push({
+	name: '_hexToRgb - Parses #RRGGBB correctly',
+	async run() {
+		const manager = new FloatingTextManager();
+		const result = manager._hexToRgb('#FF0000');
+		if (result.r !== 255 || result.g !== 0 || result.b !== 0) {
+			throw new Error(`Expected {r:255,g:0,b:0}, got {r:${result.r},g:${result.g},b:${result.b}}`);
+		}
+	}
+});
+
+// Test: _hexToRgb parses hex without #
+testSuite.tests.push({
+	name: '_hexToRgb - Parses RRGGBB without # prefix',
+	async run() {
+		const manager = new FloatingTextManager();
+		const result = manager._hexToRgb('00FF00');
+		if (result.r !== 0 || result.g !== 255 || result.b !== 0) {
+			throw new Error(`Expected {r:0,g:255,b:0}, got {r:${result.r},g:${result.g},b:${result.b}}`);
+		}
+	}
+});
+
+// Test: _hexToRgb parses blue color
+testSuite.tests.push({
+	name: '_hexToRgb - Parses blue correctly',
+	async run() {
+		const manager = new FloatingTextManager();
+		const result = manager._hexToRgb('#0000FF');
+		if (result.r !== 0 || result.g !== 0 || result.b !== 255) {
+			throw new Error(`Expected {r:0,g:0,b:255}, got {r:${result.r},g:${result.g},b:${result.b}}`);
+		}
+	}
+});
+
+// Test: _hexToRgb parses white
+testSuite.tests.push({
+	name: '_hexToRgb - Parses white (#FFFFFF)',
+	async run() {
+		const manager = new FloatingTextManager();
+		const result = manager._hexToRgb('#FFFFFF');
+		if (result.r !== 255 || result.g !== 255 || result.b !== 255) {
+			throw new Error(`Expected {r:255,g:255,b:255}, got {r:${result.r},g:${result.g},b:${result.b}}`);
+		}
+	}
+});
+
+// Test: _hexToRgb returns white for invalid hex
+testSuite.tests.push({
+	name: '_hexToRgb - Returns white for invalid input',
+	async run() {
+		const manager = new FloatingTextManager();
+		const result = manager._hexToRgb('not-a-color');
+		if (result.r !== 255 || result.g !== 255 || result.b !== 255) {
+			throw new Error(`Expected default white, got {r:${result.r},g:${result.g},b:${result.b}}`);
+		}
+	}
+});
+
+// Test: _hexToRgb returns white for empty string
+testSuite.tests.push({
+	name: '_hexToRgb - Returns white for empty string',
+	async run() {
+		const manager = new FloatingTextManager();
+		const result = manager._hexToRgb('');
+		if (result.r !== 255 || result.g !== 255 || result.b !== 255) {
+			throw new Error(`Expected default white for empty string`);
+		}
+	}
+});
+
+// Test: _hexToRgb handles lowercase hex
+testSuite.tests.push({
+	name: '_hexToRgb - Handles lowercase hex',
+	async run() {
+		const manager = new FloatingTextManager();
+		const result = manager._hexToRgb('#ff8800');
+		if (result.r !== 255 || result.g !== 136 || result.b !== 0) {
+			throw new Error(`Expected {r:255,g:136,b:0}, got {r:${result.r},g:${result.g},b:${result.b}}`);
+		}
+	}
+});
+
+// Test: add() with custom color parameter
+testSuite.tests.push({
+	name: 'add - Accepts custom color',
+	async run() {
+		const manager = new FloatingTextManager();
+		manager.add('+50', 100, 200, 1000, '#FF0000');
+		const text = manager.texts[0];
+		if (text.color !== '#FF0000') {
+			throw new Error(`Expected color '#FF0000', got '${text.color}'`);
+		}
+	}
+});
+
+// Test: add() default color is white
+testSuite.tests.push({
+	name: 'add - Default color is white (#FFFFFF)',
+	async run() {
+		const manager = new FloatingTextManager();
+		manager.add('+10', 100, 200);
+		const text = manager.texts[0];
+		if (text.color !== '#FFFFFF') {
+			throw new Error(`Expected default color '#FFFFFF', got '${text.color}'`);
+		}
+	}
+});
+
+// Test: FloatingText update returns true when active
+testSuite.tests.push({
+	name: 'FloatingText update - Returns true when active',
+	async run() {
+		const manager = new FloatingTextManager();
+		manager.add('+10', 100, 200, 5000);
+		const text = manager.texts[0];
+		const result = text.update();
+		if (result !== true) {
+			throw new Error(`Expected true for active text, got ${result}`);
+		}
+	}
+});
+
+// Test: FloatingText update returns false when expired
+testSuite.tests.push({
+	name: 'FloatingText update - Returns false when expired',
+	async run() {
+		const manager = new FloatingTextManager();
+		manager.add('+10', 100, 200, 10); // Very short duration
+		await new Promise(resolve => setTimeout(resolve, 50));
+		const text = manager.texts[0];
+		const result = text.update();
+		if (result !== false) {
+			throw new Error(`Expected false for expired text, got ${result}`);
+		}
+	}
+});
+
+// Test: FloatingText stores initial position
+testSuite.tests.push({
+	name: 'FloatingText - Stores startX and startY',
+	async run() {
+		const manager = new FloatingTextManager();
+		manager.add('+10', 123, 456);
+		const text = manager.texts[0];
+		if (text.startX !== 123 || text.startY !== 456) {
+			throw new Error(`Expected startX=123, startY=456, got startX=${text.startX}, startY=${text.startY}`);
+		}
+	}
+});
+
 export default testSuite;

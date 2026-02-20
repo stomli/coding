@@ -340,5 +340,91 @@ export function runParticleSystemTests() {
 		assert(p.alpha === 1, 'Initial alpha should be 1');
 	});
 
+	// ── clear() tests ──
+
+	test('clear() removes all particles', () => {
+		resetParticleSystem();
+		ParticleSystem.createExplosion(0, 0, '#FFFFFF', 10);
+		ParticleSystem.createBurst(0, 0, ['#FF0000'], 5);
+		assert(ParticleSystem.particles.length === 15, 'Should have 15 particles');
+		
+		ParticleSystem.clear();
+		assert(ParticleSystem.particles.length === 0, 'clear() should remove all particles');
+	});
+
+	test('clear() on empty system does nothing', () => {
+		resetParticleSystem();
+		ParticleSystem.clear();
+		assert(ParticleSystem.particles.length === 0, 'No error clearing empty system');
+	});
+
+	// ── getParticleCount() tests ──
+
+	test('getParticleCount() returns 0 when empty', () => {
+		resetParticleSystem();
+		assert(ParticleSystem.getParticleCount() === 0, 'Should return 0 for empty system');
+	});
+
+	test('getParticleCount() returns correct count', () => {
+		resetParticleSystem();
+		ParticleSystem.createExplosion(0, 0, '#FFFFFF', 7);
+		assert(ParticleSystem.getParticleCount() === 7, 'Should return 7');
+	});
+
+	test('getParticleCount() updates after clear()', () => {
+		resetParticleSystem();
+		ParticleSystem.createExplosion(0, 0, '#FFFFFF', 5);
+		assert(ParticleSystem.getParticleCount() === 5, 'Should return 5');
+		ParticleSystem.clear();
+		assert(ParticleSystem.getParticleCount() === 0, 'Should return 0 after clear');
+	});
+
+	test('getParticleCount() reflects particles after update removes dead', () => {
+		resetParticleSystem();
+		ParticleSystem.createExplosion(0, 0, '#FFFFFF', 3);
+		ParticleSystem.particles.forEach(p => { p.age = p.lifetime + 1; });
+		ParticleSystem.update(16);
+		assert(ParticleSystem.getParticleCount() === 0, 'Dead particles removed, count should be 0');
+	});
+
+	// ── createConfetti overlay param tests ──
+
+	test('createConfetti with overlay=true adds to overlayParticles', () => {
+		resetParticleSystem();
+		ParticleSystem.overlayParticles = [];
+		ParticleSystem.createConfetti(100, 100, 10, true);
+		assert(ParticleSystem.overlayParticles.length === 10, 'Overlay particles should have 10');
+		assert(ParticleSystem.particles.length === 0, 'Normal particles should be empty');
+	});
+
+	test('createConfetti with overlay=false adds to normal particles', () => {
+		resetParticleSystem();
+		ParticleSystem.overlayParticles = [];
+		ParticleSystem.createConfetti(100, 100, 10, false);
+		assert(ParticleSystem.particles.length === 10, 'Normal particles should have 10');
+		assert(ParticleSystem.overlayParticles.length === 0, 'Overlay particles should be empty');
+	});
+
+	// ── update removes dead overlay particles ──
+
+	test('update() removes dead overlay particles', () => {
+		resetParticleSystem();
+		ParticleSystem.overlayParticles = [];
+		ParticleSystem.createConfetti(0, 0, 5, true);
+		ParticleSystem.overlayParticles.forEach(p => { p.age = p.lifetime + 1; });
+		ParticleSystem.update(16);
+		assert(ParticleSystem.overlayParticles.length === 0, 'Dead overlay particles should be removed');
+	});
+
+	// ── Particle constructor defaults ──
+
+	test('Particle starts with age 0 and alpha 1', () => {
+		resetParticleSystem();
+		ParticleSystem.createTrail(50, 50, '#AABBCC');
+		const p = ParticleSystem.particles[0];
+		assert(p.age === 0, 'Initial age should be 0');
+		assert(p.alpha === 1, 'Initial alpha should be 1');
+	});
+
 	return results.tests;
 }

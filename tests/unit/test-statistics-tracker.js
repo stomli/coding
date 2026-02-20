@@ -480,6 +480,99 @@ export function runStatisticsTrackerTests() {
 		assertEquals(explodingRed, 1, 'Exploding red should be 1');
 		assertEquals(total, 3, 'Total should be 3');
 	});
+
+	// ── getStat tests ──
+
+	test('getStat returns count for existing type/color', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		const stat = StatisticsTracker.getStat(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		assertEquals(stat, 3, 'getStat should return 3');
+	});
+
+	test('getStat returns 0 for non-existent type', () => {
+		StatisticsTracker.reset(1);
+		const stat = StatisticsTracker.getStat('UNKNOWN_TYPE', '#FF0000');
+		assertEquals(stat, 0, 'getStat should return 0 for unknown type');
+	});
+
+	test('getStat returns 0 for non-existent color', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		const stat = StatisticsTracker.getStat(CONSTANTS.BALL_TYPES.NORMAL, '#ABCDEF');
+		assertEquals(stat, 0, 'getStat should return 0 for unrecorded color');
+	});
+
+	// ── getStats returns full stats object ──
+
+	test('getStats returns the internal stats reference', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		const stats = StatisticsTracker.getStats();
+		assert(typeof stats === 'object', 'getStats should return an object');
+		assert(stats[CONSTANTS.BALL_TYPES.NORMAL] !== undefined, 'Should have NORMAL key');
+		assertEquals(stats[CONSTANTS.BALL_TYPES.NORMAL]['#FF0000'], 1, 'Should have count 1');
+	});
+
+	// ── getTotalMatches / getTotalCount aliasing ──
+
+	test('getTotalMatches and getTotalCount return same value', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.EXPLODING, '#00FF00');
+		assertEquals(StatisticsTracker.getTotalMatches(), StatisticsTracker.getTotalCount(), 'Aliased methods should agree');
+	});
+
+	// ── reset clears everything ──
+
+	test('reset clears all previously recorded stats', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.EXPLODING, '#00FF00');
+		assertEquals(StatisticsTracker.getTotalCount(), 2, 'Should have 2 before reset');
+		StatisticsTracker.reset(1);
+		assertEquals(StatisticsTracker.getTotalCount(), 0, 'Should have 0 after reset');
+	});
+
+	// ── getCount for unknown combos ──
+
+	test('getCount returns 0 for unrecorded type', () => {
+		StatisticsTracker.reset(1);
+		assertEquals(StatisticsTracker.getCount('NONEXISTENT', '#FF0000'), 0, 'Should return 0');
+	});
+
+	test('getCount returns 0 for unrecorded color under existing type', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		assertEquals(StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.NORMAL, '#999999'), 0, 'Should return 0 for unrecorded color');
+	});
+
+	// ── recordMatches with empty matches array ──
+
+	test('recordMatches with empty array does not crash', () => {
+		StatisticsTracker.reset(1);
+		const grid = new Grid(5, 5);
+		StatisticsTracker.recordMatches([], grid);
+		assertEquals(StatisticsTracker.getTotalCount(), 0, 'Total should be 0');
+	});
+
+	// ── multiple colors and types counting ──
+
+	test('Multiple types and colors tracked independently', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#0000FF');
+		
+		assertEquals(StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000'), 1);
+		assertEquals(StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00'), 1);
+		assertEquals(StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000'), 1);
+		assertEquals(StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#0000FF'), 1);
+		assertEquals(StatisticsTracker.getTotalCount(), 4);
+	});
 	
 	// Summary
 	const passed = results.filter(r => r.pass).length;

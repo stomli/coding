@@ -272,6 +272,92 @@ export function testBall() {
 			pass: painterBall.getPainterDirection() !== 'diagonal-nw',
 			error: null
 		});
+
+		// ── Additional edge case tests ──
+
+		// Test setColor with empty string
+		const emptyColorBall = new Ball(BALL_TYPES.NORMAL, '#AABBCC');
+		emptyColorBall.setColor('');
+		tests.push({
+			name: 'Ball - setColor rejects empty string',
+			pass: emptyColorBall.getColor() === '#AABBCC',
+			error: emptyColorBall.getColor() !== '#AABBCC' ? `Color should remain unchanged, got '${emptyColorBall.getColor()}'` : null
+		});
+
+		// Test normal ball is not exploding
+		const normalBall2 = new Ball(BALL_TYPES.NORMAL, '#FF0000');
+		tests.push({
+			name: 'Ball - normal ball is not exploding',
+			pass: normalBall2.isExploding() === false,
+			error: null
+		});
+
+		// Test normal ball is not painter
+		tests.push({
+			name: 'Ball - normal ball is not painter',
+			pass: normalBall2.isPainter() === false,
+			error: null
+		});
+
+		// Test exploding ball is not painter
+		tests.push({
+			name: 'Ball - exploding ball is not painter',
+			pass: explodingBall.isPainter() === false,
+			error: null
+		});
+
+		// Test exploding ball has no painter direction
+		tests.push({
+			name: 'Ball - exploding ball has no painter direction',
+			pass: explodingBall.getPainterDirection() === null,
+			error: null
+		});
+
+		// Test blocking ball has no painter direction
+		tests.push({
+			name: 'Ball - blocking ball has no painter direction',
+			pass: blockingBall.getPainterDirection() === null,
+			error: null
+		});
+
+		// Test all painter types are indeed painters
+		const allPainterTypes = [
+			BALL_TYPES.PAINTER_HORIZONTAL,
+			BALL_TYPES.PAINTER_VERTICAL,
+			BALL_TYPES.PAINTER_DIAGONAL_NE,
+			BALL_TYPES.PAINTER_DIAGONAL_NW
+		];
+		const allArePainters = allPainterTypes.every(t => new Ball(t, '#FFF').isPainter());
+		tests.push({
+			name: 'Ball - all painter types return isPainter() true',
+			pass: allArePainters,
+			error: null
+		});
+
+		// Test all painter types are matchable
+		const allPaintersMatchable = allPainterTypes.every(t => new Ball(t, '#FFF').isMatchable());
+		tests.push({
+			name: 'Ball - all painter types are matchable',
+			pass: allPaintersMatchable,
+			error: null
+		});
+
+		// Test all painter types have non-null direction
+		const allPaintersHaveDirection = allPainterTypes.every(t => new Ball(t, '#FFF').getPainterDirection() !== null);
+		tests.push({
+			name: 'Ball - all painter types have a direction',
+			pass: allPaintersHaveDirection,
+			error: null
+		});
+
+		// Test setColor with valid string updates
+		const validColorBall = new Ball(BALL_TYPES.NORMAL, '#000000');
+		validColorBall.setColor('red');
+		tests.push({
+			name: 'Ball - setColor with non-hex string still sets',
+			pass: validColorBall.getColor() === 'red',
+			error: null
+		});
 	}
 	catch (error) {
 		tests.push({
