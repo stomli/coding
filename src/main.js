@@ -15,6 +15,7 @@ import ParticleSystem from './modules/ParticleSystem.js';
 import WeatherBackground from './modules/WeatherBackground.js';
 import PlayerManager from './modules/PlayerManager.js';
 import AnalyticsManager from './modules/AnalyticsManager.js';
+import AdManager from './modules/AdManager.js';
 import { ANALYTICS_CONFIG } from './config/analytics.config.js';
 
 /**
@@ -42,6 +43,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 		
 		// Initialize the game engine
 		await GameEngine.initialize();
+		
+		// Initialize ad manager (non-intrusive, natural breaks only)
+		AdManager.initialize();
 		
 		// Initialize weather background
 		WeatherBackground.initialize();

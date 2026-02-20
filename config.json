@@ -220,5 +220,23 @@
 		"targetFPS": 60,
 		"maxCascadeDepth": 10,
 		"renderOptimization": true
+	},
+	"monetization": {
+		"ads": {
+			"enabled": true,
+			"provider": "adsense",
+			"adSenseId": "ca-pub-XXXXXXXXXX",
+			"slotIds": {
+				"banner": "XXXXXXXXXX",
+				"interstitial": "XXXXXXXXXX",
+				"sidebar": "XXXXXXXXXX"
+			},
+			"displayRules": {
+				"interstitialFrequency": 3,
+				"levelAdFrequency": 5,
+				"interstitialMinInterval": 300000,
+				"skipDelay": 5000
+			}
+		}
 	}
 }

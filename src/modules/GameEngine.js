@@ -1934,6 +1934,13 @@ class GameEngineClass {
 				}
 			}
 		}
+		
+		// Emit event for ad system and other listeners
+		if (reason === 'timeout') {
+			EventEmitter.emit(CONSTANTS.EVENTS.LEVEL_COMPLETE, { level: this.level, difficulty: this.difficulty });
+		} else {
+			EventEmitter.emit(CONSTANTS.EVENTS.GAME_OVER, { level: this.level, difficulty: this.difficulty, reason });
+		}
 	}
 	
 	/**

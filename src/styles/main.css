@@ -1648,3 +1648,81 @@ body::after {
 		padding: 2rem;
 	}
 }
+
+/* ============================================
+   Ad System Styles
+   ============================================ */
+
+/* Interstitial Overlay - shown at natural breaks only */
+.interstitial-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.92);
+	z-index: 10000;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.interstitial-label {
+	color: #888;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	margin-bottom: 0.75rem;
+}
+
+.interstitial-ad-container {
+	max-width: 90%;
+	max-height: 70%;
+	background: #222;
+	padding: 20px;
+	border-radius: 8px;
+	text-align: center;
+	min-width: 300px;
+	min-height: 250px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.skip-ad-button {
+	margin-top: 1.25rem;
+	padding: 0.75rem 1.5rem;
+	font-size: 1rem;
+	background: var(--accent-color, #4080FF);
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: bold;
+	transition: opacity 0.2s;
+}
+
+.skip-ad-button:disabled {
+	background: #555;
+	cursor: not-allowed;
+	opacity: 0.7;
+}
+
+.skip-ad-button:not(:disabled):hover {
+	opacity: 0.85;
+}
+
+/* Ad-Free Badge (shown in HUD when supporter) */
+.ad-free-badge {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background: linear-gradient(135deg, #FFD700, #FFA500);
+	color: #1a1a1a;
+	padding: 4px 10px;
+	border-radius: 20px;
+	font-size: 0.7rem;
+	font-weight: bold;
+	box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
