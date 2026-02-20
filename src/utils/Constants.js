@@ -154,7 +154,9 @@ const CONSTANTS = {
 		SOFT_DROP_END: 'softDropEndEvent',
 		HARD_DROP: 'hardDropEvent',
 		PAUSE: 'pauseEvent',
-		RESTART: 'restartEvent'
+		RESTART: 'restartEvent',
+		AD_INTERSTITIAL_REQUESTED: 'adInterstitialRequestedEvent',
+		AD_FREE_ACTIVATED: 'adFreeActivatedEvent'
 	},
 	
 	/**

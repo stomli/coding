@@ -28,6 +28,7 @@ import { runSpecialBallInteractionTests } from './test-special-ball-interactions
 import { runGravityOptimizationTests } from './test-gravity-optimization.js';
 import testMobileInteractions from './test-mobile-interactions.js';
 import { runConstantsTests } from './test-constants.js';
+import testAdManager from './test-ad-manager.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -109,6 +110,10 @@ export async function runAllTests() {
 	// Run Mobile Interactions tests
 	const mobileInteractionsResults = await runAsyncTestSuite(testMobileInteractions);
 	suites.push({ name: testMobileInteractions.name, tests: mobileInteractionsResults });
+
+	// Run AdManager tests
+	const adManagerResults = await runAsyncTestSuite(testAdManager);
+	suites.push({ name: testAdManager.name, tests: adManagerResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;
