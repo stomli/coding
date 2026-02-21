@@ -238,15 +238,12 @@
 				"skipDelay": 5000
 			}
 		},
-		"bmac": {
+		"lemonsqueezy": {
 			"enabled": true,
-			"username": "stomli",
-			"buttonText": "☕ Support",
-			"adFreePeriods": {
-				"3": 7,
-				"5": 30,
-				"10": 90
-			}
+			"storeUrl": "https://gusto4tech.lemonsqueezy.com/buy/your-product-id",
+			"storeId": 0,
+			"productId": 0,
+			"buttonText": "✨ Go Ad-Free"
 		}
 	}
 }

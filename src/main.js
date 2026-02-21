@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		// Initialize ad manager (non-intrusive, natural breaks only)
 		AdManager.initialize();
 		
-		// Initialize monetization (BMAC support button, token redemption)
+		// Initialize monetization (supporter button, license key activation)
 		MonetizationManager.initialize();
 		
 		// Initialize weather background
@@ -612,7 +612,7 @@ function setupSettingsControls() {
 		redeemBtn.addEventListener('click', () => {
 			AudioManager.playClick();
 			hideSettingsOverlay();
-			MonetizationManager.showRedeemDialog();
+			MonetizationManager.showActivateDialog();
 		});
 	}
 }

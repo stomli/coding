@@ -4,16 +4,16 @@
  * ============================================================================
  * Copyright (c) 2025 G. Scott Tomlin. All Rights Reserved.
  *
- * Manages Buy Me a Coffee integration and ad-free state:
- * - BMAC support button in UI
- * - Token redemption for ad-free periods
- * - Ad-free period management via localStorage
- * - Expiration warnings
+ * Manages Lemonsqueezy license key integration and ad-free state:
+ * - License key activation via Lemonsqueezy API
+ * - License key validation (periodic re-check)
+ * - Ad-free state management via localStorage
+ * - Purchase link to Lemonsqueezy store
  *
  * Constitution compliance:
- * - Donations are voluntary and optional
+ * - Purchases are voluntary and optional
  * - Never guilt-trip or manipulate
- * - Fair ad-free periods for contributions
+ * - Fair ad-free access for supporters
  * - No gameplay advantages for supporters
  *
  * @module MonetizationManager
@@ -24,13 +24,23 @@ import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
 
+/**
+ * Lemonsqueezy License API base URL
+ * @const {string}
+ */
+const LS_API_BASE = 'https://api.lemonsqueezy.com/v1/licenses';
+
 class MonetizationManagerClass {
 
 	constructor() {
 		/** @type {boolean} */
-		this.bmacEnabled = false;
+		this.enabled = false;
 		/** @type {string} */
-		this.bmacUsername = '';
+		this.storeUrl = '';
+		/** @type {number} */
+		this.storeId = 0;
+		/** @type {number} */
+		this.productId = 0;
 		/** @type {boolean} */
 		this.initialized = false;
 	}
@@ -40,236 +50,392 @@ class MonetizationManagerClass {
 	 * @returns {void}
 	 */
 	initialize() {
-		const bmacConfig = ConfigManager.get('monetization.bmac', null);
+		const lsConfig = ConfigManager.get('monetization.lemonsqueezy', null);
 
-		if (!bmacConfig || !bmacConfig.enabled) {
-			this.bmacEnabled = false;
+		if (!lsConfig || !lsConfig.enabled) {
+			this.enabled = false;
 			return;
 		}
 
-		this.bmacEnabled = true;
-		this.bmacUsername = bmacConfig.username || '';
+		this.enabled = true;
+		this.storeUrl = lsConfig.storeUrl || '';
+		this.storeId = lsConfig.storeId || 0;
+		this.productId = lsConfig.productId || 0;
 
-		this._addBMACButton();
-		this._checkAdFreeStatus();
+		this._addSupportButton();
+		this._checkLicenseStatus();
 		this.initialized = true;
 	}
 
 	/**
-	 * Add the floating BMAC support button to the page
+	 * Add the floating "Go Ad-Free" button to the page
 	 * @private
 	 * @returns {void}
 	 */
-	_addBMACButton() {
-		// Don't add duplicate buttons
-		if (document.querySelector('.bmac-button')) return;
+	_addSupportButton() {
+		if (document.querySelector('.supporter-button')) return;
 
-		const buttonText = ConfigManager.get('monetization.bmac.buttonText', '☕ Support');
+		// Don't show button if already ad-free
+		if (this.getAdFreeStatus()) return;
+
+		const buttonText = ConfigManager.get('monetization.lemonsqueezy.buttonText', '✨ Go Ad-Free');
 
 		const button = document.createElement('a');
-		button.href = `https://www.buymeacoffee.com/${this.bmacUsername}`;
+		button.href = this.storeUrl;
 		button.target = '_blank';
 		button.rel = 'noopener noreferrer';
-		button.className = 'bmac-button';
+		button.className = 'supporter-button';
 		button.textContent = buttonText;
 
 		document.body.appendChild(button);
 	}
 
 	/**
-	 * Check current ad-free status and warn if expiring soon
+	 * Check stored license status on startup; re-validate if needed
 	 * @private
 	 * @returns {void}
 	 */
-	_checkAdFreeStatus() {
+	_checkLicenseStatus() {
 		const status = this.getAdFreeStatus();
 		if (!status) return;
 
-		if (status.daysRemaining <= 3) {
-			this._showExpirationWarning(status.daysRemaining);
+		// Re-validate periodically (every 7 days)
+		const lastValidation = parseInt(localStorage.getItem('monetization_last_validation') || '0');
+		const daysSinceValidation = (Date.now() - lastValidation) / (1000 * 60 * 60 * 24);
+
+		if (daysSinceValidation >= 7) {
+			this.validateStoredLicense();
 		}
 	}
 
 	/**
-	 * Show a non-intrusive warning that ad-free is expiring
-	 * @param {number} daysRemaining
-	 * @private
+	 * Show the license key activation dialog
 	 * @returns {void}
 	 */
-	_showExpirationWarning(daysRemaining) {
-		console.log(`[BMAC] Ad-free expires in ${daysRemaining} day(s)`);
-	}
-
-	/**
-	 * Show the redeem dialog overlay
-	 * @returns {void}
-	 */
-	showRedeemDialog() {
-		// Don't create duplicate modals
-		if (document.querySelector('.bmac-modal')) return;
+	showActivateDialog() {
+		if (document.querySelector('.license-modal')) return;
 
 		const modal = document.createElement('div');
-		modal.className = 'bmac-modal';
+		modal.className = 'license-modal';
+
+		const purchaseUrl = this.storeUrl || '#';
 
 		modal.innerHTML = `
-			<div class="bmac-modal-content">
-				<h2>Redeem Support Code</h2>
-				<p>Thank you for supporting the game! Enter your code below to activate ad-free mode.</p>
-				<input type="text" id="bmac-token-input" class="bmac-token-input" placeholder="BMAC-XXX-XXXXX-XXXX" />
-				<div id="bmac-error" class="bmac-error"></div>
-				<div class="bmac-modal-actions">
-					<button id="bmac-redeem-btn" class="btn-primary">Redeem</button>
-					<button id="bmac-cancel-btn" class="btn-secondary">Cancel</button>
+			<div class="license-modal-content">
+				<h2>Activate Ad-Free Mode</h2>
+				<p>Enter the license key from your purchase to remove all ads.</p>
+				<p class="license-purchase-link">Don't have a key? <a href="${purchaseUrl}" target="_blank" rel="noopener noreferrer">Purchase here</a></p>
+				<input type="text" id="license-key-input" class="license-key-input" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+				<div id="license-error" class="license-error"></div>
+				<div id="license-loading" class="license-loading" style="display:none;">Validating...</div>
+				<div class="license-modal-actions">
+					<button id="license-activate-btn" class="btn-primary">Activate</button>
+					<button id="license-cancel-btn" class="btn-secondary">Cancel</button>
 				</div>
 			</div>
 		`;
 
 		document.body.appendChild(modal);
 
-		document.getElementById('bmac-redeem-btn').addEventListener('click', () => {
-			const token = document.getElementById('bmac-token-input').value.trim();
-			this.redeemToken(token);
+		document.getElementById('license-activate-btn').addEventListener('click', () => {
+			const key = document.getElementById('license-key-input').value.trim();
+			this.activateLicense(key);
 		});
 
-		document.getElementById('bmac-cancel-btn').addEventListener('click', () => {
+		document.getElementById('license-cancel-btn').addEventListener('click', () => {
 			if (modal.parentNode) {
 				modal.parentNode.removeChild(modal);
 			}
 		});
-	}
 
-	/**
-	 * Validate and redeem a BMAC support token
-	 * @param {string} token - Token string in format BMAC-[amount]-[timestamp]-[signature]
-	 * @returns {boolean} Whether redemption succeeded
-	 */
-	redeemToken(token) {
-		if (!token) {
-			this._showRedeemError('Please enter a token');
-			return false;
-		}
-
-		if (!token.startsWith('BMAC-')) {
-			this._showRedeemError('Invalid token format');
-			return false;
-		}
-
-		const parts = token.split('-');
-		if (parts.length !== 4) {
-			this._showRedeemError('Invalid token structure');
-			return false;
-		}
-
-		const amount = parseInt(parts[1]);
-		const timestamp = parseInt(parts[2]);
-
-		if (isNaN(amount) || amount < 1) {
-			this._showRedeemError('Invalid token amount');
-			return false;
-		}
-
-		if (isNaN(timestamp)) {
-			this._showRedeemError('Invalid token timestamp');
-			return false;
-		}
-
-		// Check token age (must be less than 1 year old)
-		const tokenAge = Date.now() - timestamp;
-		const oneYear = 365 * 24 * 60 * 60 * 1000;
-		if (tokenAge > oneYear || tokenAge < 0) {
-			this._showRedeemError('Token has expired');
-			return false;
-		}
-
-		// Check if token was already used
-		const usedTokens = JSON.parse(localStorage.getItem('monetization_used_tokens') || '[]');
-		if (usedTokens.includes(token)) {
-			this._showRedeemError('This token has already been redeemed');
-			return false;
-		}
-
-		// Calculate ad-free days based on amount
-		const days = this._calculateAdFreeDays(amount);
-
-		// Activate ad-free
-		this._activateAdFree(days, token);
-
-		return true;
-	}
-
-	/**
-	 * Calculate the number of ad-free days for a given donation amount
-	 * @param {number} amount - Donation amount
-	 * @returns {number} Number of ad-free days
-	 */
-	_calculateAdFreeDays(amount) {
-		const periods = ConfigManager.get('monetization.bmac.adFreePeriods', {});
-		const amounts = Object.keys(periods).map(Number).sort((a, b) => b - a);
-
-		for (const tierAmount of amounts) {
-			if (amount >= tierAmount) {
-				return periods[tierAmount];
+		// Allow Enter key to submit
+		document.getElementById('license-key-input').addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				const key = e.target.value.trim();
+				this.activateLicense(key);
 			}
-		}
-
-		// Default: 1 day per dollar
-		return Math.max(1, Math.floor(amount));
+		});
 	}
 
 	/**
-	 * Activate ad-free mode for a given number of days
-	 * @param {number} days - Number of ad-free days
-	 * @param {string} token - The redeemed token
-	 * @private
-	 * @returns {void}
+	 * Activate a license key via the Lemonsqueezy API
+	 * @param {string} licenseKey - The license key string
+	 * @returns {Promise<boolean>} Whether activation succeeded
 	 */
-	_activateAdFree(days, token) {
-		const now = Date.now();
-		const duration = days * 24 * 60 * 60 * 1000;
-		const expirationTime = now + duration;
+	async activateLicense(licenseKey) {
+		if (!licenseKey) {
+			this._showError('Please enter a license key');
+			return false;
+		}
 
-		// Store expiration
-		localStorage.setItem('monetization_ad_free_until', expirationTime.toString());
+		this._showLoading(true);
+		this._clearError();
 
-		// Mark token as used
-		const usedTokens = JSON.parse(localStorage.getItem('monetization_used_tokens') || '[]');
-		usedTokens.push(token);
-		localStorage.setItem('monetization_used_tokens', JSON.stringify(usedTokens));
+		try {
+			const response = await fetch(`${LS_API_BASE}/activate`, {
+				method: 'POST',
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: new URLSearchParams({
+					license_key: licenseKey,
+					instance_name: 'OrbFall-ChromaCrush'
+				})
+			});
 
-		// Emit event so AdManager can react
-		EventEmitter.emit(CONSTANTS.EVENTS.AD_FREE_ACTIVATED, { days, expirationTime });
+			const data = await response.json();
 
-		// Show confirmation
-		this._showConfirmation(days);
+			if (!data.activated) {
+				const errorMsg = data.error || 'Activation failed. Please check your license key.';
+				this._showError(errorMsg);
+				this._showLoading(false);
+				return false;
+			}
 
-		// Close modal
-		const modal = document.querySelector('.bmac-modal');
-		if (modal && modal.parentNode) {
-			modal.parentNode.removeChild(modal);
+			// Verify this key belongs to our product
+			if (this.storeId && data.meta && data.meta.store_id !== this.storeId) {
+				this._showError('This license key is not valid for this product.');
+				this._showLoading(false);
+				return false;
+			}
+
+			if (this.productId && data.meta && data.meta.product_id !== this.productId) {
+				this._showError('This license key is not valid for this product.');
+				this._showLoading(false);
+				return false;
+			}
+
+			// Store license data
+			this._storeLicense({
+				key: licenseKey,
+				instanceId: data.instance.id,
+				status: data.license_key.status,
+				expiresAt: data.license_key.expires_at,
+				customerName: data.meta.customer_name || '',
+				activatedAt: new Date().toISOString()
+			});
+
+			// Emit event so AdManager removes ads
+			EventEmitter.emit(CONSTANTS.EVENTS.AD_FREE_ACTIVATED, {
+				licenseKey,
+				expiresAt: data.license_key.expires_at
+			});
+
+			this._showLoading(false);
+			this._showConfirmation(data.license_key.expires_at);
+			this._closeModal();
+			this._removeSupportButton();
+
+			return true;
+		} catch (error) {
+			console.error('[Monetization] License activation failed:', error);
+			this._showError('Network error. Please check your connection and try again.');
+			this._showLoading(false);
+			return false;
 		}
 	}
 
 	/**
-	 * Show confirmation after successful redemption
-	 * @param {number} days - Number of ad-free days activated
+	 * Validate the stored license key with the Lemonsqueezy API
+	 * @returns {Promise<boolean>} Whether the license is still valid
+	 */
+	async validateStoredLicense() {
+		const stored = this._getStoredLicense();
+		if (!stored) return false;
+
+		try {
+			const response = await fetch(`${LS_API_BASE}/validate`, {
+				method: 'POST',
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/x-www-form-urlencoded'
+				},
+				body: new URLSearchParams({
+					license_key: stored.key,
+					instance_id: stored.instanceId
+				})
+			});
+
+			const data = await response.json();
+
+			localStorage.setItem('monetization_last_validation', Date.now().toString());
+
+			if (!data.valid) {
+				// License no longer valid — clear ad-free state
+				this._clearLicense();
+				return false;
+			}
+
+			// Update stored expiry if changed
+			if (data.license_key.expires_at !== stored.expiresAt) {
+				stored.expiresAt = data.license_key.expires_at;
+				stored.status = data.license_key.status;
+				localStorage.setItem('monetization_license', JSON.stringify(stored));
+			}
+
+			return true;
+		} catch (error) {
+			// Network error — don't revoke, just skip validation
+			console.warn('[Monetization] License validation network error:', error);
+			return true;
+		}
+	}
+
+	/**
+	 * Store license data in localStorage
+	 * @param {Object} licenseData
 	 * @private
 	 * @returns {void}
 	 */
-	_showConfirmation(days) {
-		const expirationDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-		const dateString = expirationDate.toLocaleDateString();
+	_storeLicense(licenseData) {
+		localStorage.setItem('monetization_license', JSON.stringify(licenseData));
+		localStorage.setItem('monetization_ad_free_until', 'license');
+		localStorage.setItem('monetization_last_validation', Date.now().toString());
+	}
 
-		// Create a non-blocking notification instead of alert
+	/**
+	 * Get stored license data
+	 * @private
+	 * @returns {Object|null}
+	 */
+	_getStoredLicense() {
+		const stored = localStorage.getItem('monetization_license');
+		if (!stored) return null;
+
+		try {
+			return JSON.parse(stored);
+		} catch (_e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Clear stored license and ad-free state
+	 * @private
+	 * @returns {void}
+	 */
+	_clearLicense() {
+		localStorage.removeItem('monetization_license');
+		localStorage.removeItem('monetization_ad_free_until');
+		localStorage.removeItem('monetization_last_validation');
+	}
+
+	/**
+	 * Get the current ad-free status
+	 * @returns {Object|null} Status object or null
+	 */
+	getAdFreeStatus() {
+		const adFreeFlag = localStorage.getItem('monetization_ad_free_until');
+		if (!adFreeFlag) return null;
+
+		// License-based ad-free (perpetual or until expiry)
+		if (adFreeFlag === 'license') {
+			const stored = this._getStoredLicense();
+			if (!stored) return null;
+
+			// Check expiry if set
+			if (stored.expiresAt) {
+				const expiresAt = new Date(stored.expiresAt).getTime();
+				if (Date.now() >= expiresAt) {
+					this._clearLicense();
+					return null;
+				}
+				return {
+					active: true,
+					type: 'license',
+					expiresAt: expiresAt,
+					daysRemaining: Math.ceil((expiresAt - Date.now()) / (1000 * 60 * 60 * 24))
+				};
+			}
+
+			// Perpetual license (no expiry)
+			return {
+				active: true,
+				type: 'license',
+				expiresAt: null,
+				daysRemaining: null
+			};
+		}
+
+		// Legacy timestamp-based ad-free (backward compat with old BMAC tokens)
+		const expirationTime = parseInt(adFreeFlag);
+		if (!isNaN(expirationTime) && Date.now() < expirationTime) {
+			return {
+				active: true,
+				type: 'legacy',
+				expiresAt: expirationTime,
+				daysRemaining: Math.ceil((expirationTime - Date.now()) / (1000 * 60 * 60 * 24))
+			};
+		}
+
+		// Expired
+		localStorage.removeItem('monetization_ad_free_until');
+		return null;
+	}
+
+	/**
+	 * Show error in the license dialog
+	 * @param {string} message
+	 * @private
+	 * @returns {void}
+	 */
+	_showError(message) {
+		const errorDiv = document.getElementById('license-error');
+		if (errorDiv) {
+			errorDiv.textContent = message;
+			errorDiv.style.display = 'block';
+		}
+	}
+
+	/**
+	 * Clear error in the license dialog
+	 * @private
+	 * @returns {void}
+	 */
+	_clearError() {
+		const errorDiv = document.getElementById('license-error');
+		if (errorDiv) {
+			errorDiv.textContent = '';
+			errorDiv.style.display = 'none';
+		}
+	}
+
+	/**
+	 * Show/hide loading state in the license dialog
+	 * @param {boolean} show
+	 * @private
+	 * @returns {void}
+	 */
+	_showLoading(show) {
+		const loadingDiv = document.getElementById('license-loading');
+		const activateBtn = document.getElementById('license-activate-btn');
+		if (loadingDiv) loadingDiv.style.display = show ? 'block' : 'none';
+		if (activateBtn) activateBtn.disabled = show;
+	}
+
+	/**
+	 * Show confirmation after successful activation
+	 * @param {string|null} expiresAt - ISO date string or null for perpetual
+	 * @private
+	 * @returns {void}
+	 */
+	_showConfirmation(expiresAt) {
 		const notification = document.createElement('div');
-		notification.className = 'bmac-notification';
+		notification.className = 'supporter-notification';
+
+		const expiryText = expiresAt
+			? `Ad-free until ${new Date(expiresAt).toLocaleDateString()}`
+			: 'Ad-free forever!';
+
 		notification.innerHTML = `
-			<p>✅ Thank you for your support!</p>
-			<p>Ads disabled until ${dateString} (${days} days)</p>
+			<p>✅ License activated!</p>
+			<p>${expiryText}</p>
 		`;
 		document.body.appendChild(notification);
 
 		setTimeout(() => {
-			notification.classList.add('bmac-notification-fade');
+			notification.classList.add('supporter-notification-fade');
 			setTimeout(() => {
 				if (notification.parentNode) {
 					notification.parentNode.removeChild(notification);
@@ -279,39 +445,27 @@ class MonetizationManagerClass {
 	}
 
 	/**
-	 * Show error message in the redeem dialog
-	 * @param {string} message
+	 * Close the license modal
 	 * @private
 	 * @returns {void}
 	 */
-	_showRedeemError(message) {
-		const errorDiv = document.getElementById('bmac-error');
-		if (errorDiv) {
-			errorDiv.textContent = message;
-			errorDiv.style.display = 'block';
+	_closeModal() {
+		const modal = document.querySelector('.license-modal');
+		if (modal && modal.parentNode) {
+			modal.parentNode.removeChild(modal);
 		}
 	}
 
 	/**
-	 * Get the current ad-free status
-	 * @returns {Object|null} Status object with active, expiresAt, daysRemaining, or null
+	 * Remove the support button (after activation)
+	 * @private
+	 * @returns {void}
 	 */
-	getAdFreeStatus() {
-		const adFreeUntil = localStorage.getItem('monetization_ad_free_until');
-		if (!adFreeUntil) return null;
-
-		const expirationTime = parseInt(adFreeUntil);
-		const now = Date.now();
-
-		if (now < expirationTime) {
-			return {
-				active: true,
-				expiresAt: expirationTime,
-				daysRemaining: Math.ceil((expirationTime - now) / (1000 * 60 * 60 * 24))
-			};
+	_removeSupportButton() {
+		const btn = document.querySelector('.supporter-button');
+		if (btn && btn.parentNode) {
+			btn.parentNode.removeChild(btn);
 		}
-
-		return null;
 	}
 }
 
