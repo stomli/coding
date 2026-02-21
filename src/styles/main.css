@@ -1728,11 +1728,11 @@ body::after {
 }
 
 /* ============================================
-   Buy Me a Coffee Styles
+   Supporter / License Key Styles
    ============================================ */
 
-/* Floating BMAC support button */
-.bmac-button {
+/* Floating "Go Ad-Free" button */
+.supporter-button {
 	position: fixed;
 	bottom: 20px;
 	right: 20px;
@@ -1748,13 +1748,13 @@ body::after {
 	transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.bmac-button:hover {
+.supporter-button:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 6px 16px rgba(251, 176, 52, 0.5);
 }
 
-/* BMAC Redeem Modal */
-.bmac-modal {
+/* License Activation Modal */
+.license-modal {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -1767,7 +1767,7 @@ body::after {
 	z-index: 9999;
 }
 
-.bmac-modal-content {
+.license-modal-content {
 	background: #2a2a2a;
 	padding: 2rem;
 	border-radius: 12px;
@@ -1776,18 +1776,23 @@ body::after {
 	color: #fff;
 }
 
-.bmac-modal-content h2 {
+.license-modal-content h2 {
 	margin-top: 0;
 	color: #FFDD00;
 }
 
-.bmac-modal-content p {
+.license-modal-content p {
 	color: #ccc;
 	line-height: 1.5;
 	margin-bottom: 1rem;
 }
 
-.bmac-token-input {
+.license-purchase-link a {
+	color: #60a0ff;
+	text-decoration: underline;
+}
+
+.license-key-input {
 	width: 100%;
 	padding: 12px;
 	border: 2px solid #4080FF;
@@ -1799,26 +1804,32 @@ body::after {
 	box-sizing: border-box;
 }
 
-.bmac-token-input:focus {
+.license-key-input:focus {
 	outline: none;
 	border-color: #60a0ff;
 }
 
-.bmac-modal-actions {
+.license-modal-actions {
 	display: flex;
 	gap: 10px;
 	margin-top: 1.25rem;
 }
 
-.bmac-error {
+.license-error {
 	display: none;
 	color: #ff4444;
 	margin-top: 0.5rem;
 	font-size: 0.85rem;
 }
 
-/* BMAC Success Notification */
-.bmac-notification {
+.license-loading {
+	color: #60a0ff;
+	margin-top: 0.5rem;
+	font-size: 0.85rem;
+}
+
+/* Supporter Success Notification */
+.supporter-notification {
 	position: fixed;
 	top: 20px;
 	left: 50%;
@@ -1833,10 +1844,10 @@ body::after {
 	transition: opacity 0.5s;
 }
 
-.bmac-notification p {
+.supporter-notification p {
 	margin: 0.25rem 0;
 }
 
-.bmac-notification-fade {
+.supporter-notification-fade {
 	opacity: 0;
 }
