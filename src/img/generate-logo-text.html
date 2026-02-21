@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Generate Logo Text</title>
+<style>
+	body { margin: 0; background: #333; display: flex; flex-direction: column; align-items: center; padding: 40px; gap: 20px; }
+	.preview-label { color: #aaa; font-family: sans-serif; }
+	canvas { border: 1px solid #555; }
+</style>
+</head>
+<body>
+	<div class="preview-label">Preview (250×150)</div>
+	<canvas id="logoCanvas" width="250" height="150"></canvas>
+	<button onclick="downloadImage()" style="padding: 10px 24px; font-size: 16px; cursor: pointer;">Download PNG</button>
+	<div class="preview-label" id="status"></div>
+
+<script>
+const canvas = document.getElementById('logoCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawLogo() {
+	// Clear with transparent background
+	ctx.clearRect(0, 0, 250, 150);
+
+	// Dark background matching logo
+	ctx.fillStyle = '#1a1a2e';
+	ctx.fillRect(0, 0, 250, 150);
+
+	// === ORB•FALL ===
+	const orbFallY = 62;
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+
+	// Gold/yellow gradient for ORB•FALL
+	ctx.font = 'bold 46px "Arial Black", "Impact", sans-serif';
+	const goldGrad = ctx.createLinearGradient(0, orbFallY - 24, 0, orbFallY + 20);
+	goldGrad.addColorStop(0, '#FFE066');
+	goldGrad.addColorStop(0.5, '#FFB833');
+	goldGrad.addColorStop(1, '#E89420');
+
+	// Dark outline/stroke
+	ctx.strokeStyle = '#1a1a3a';
+	ctx.lineWidth = 5;
+	ctx.lineJoin = 'round';
+	ctx.strokeText('ORB•FALL', 125, orbFallY);
+
+	// Fill with gradient
+	ctx.fillStyle = goldGrad;
+	ctx.fillText('ORB•FALL', 125, orbFallY);
+
+	// === Blue line separator ===
+	const lineY = orbFallY + 22;
+	const lineGrad = ctx.createLinearGradient(30, 0, 220, 0);
+	lineGrad.addColorStop(0, '#4488FF');
+	lineGrad.addColorStop(1, '#66BBFF');
+	ctx.strokeStyle = lineGrad;
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.moveTo(30, lineY);
+	ctx.lineTo(220, lineY);
+	ctx.stroke();
+
+	// === ChromaCrush ===
+	const chromaY = lineY + 30;
+	ctx.font = 'bold 34px "Arial Black", "Impact", sans-serif';
+
+	// Blue-to-pink gradient for ChromaCrush
+	const chromaGrad = ctx.createLinearGradient(30, chromaY - 14, 220, chromaY + 14);
+	chromaGrad.addColorStop(0, '#4488FF');
+	chromaGrad.addColorStop(0.35, '#6666EE');
+	chromaGrad.addColorStop(0.65, '#CC44AA');
+	chromaGrad.addColorStop(1, '#FF6699');
+
+	// Dark outline
+	ctx.strokeStyle = '#1a1a3a';
+	ctx.lineWidth = 4;
+	ctx.lineJoin = 'round';
+	ctx.strokeText('ChromaCrush', 125, chromaY);
+
+	// Fill with gradient
+	ctx.fillStyle = chromaGrad;
+	ctx.fillText('ChromaCrush', 125, chromaY);
+}
+
+function downloadImage() {
+	const link = document.createElement('a');
+	link.download = 'logo-text-250x150.png';
+	link.href = canvas.toDataURL('image/png');
+	link.click();
+	document.getElementById('status').textContent = 'Downloaded!';
+}
+
+drawLogo();
+</script>
+</body>
+</html>
