@@ -29,6 +29,7 @@ import { runGravityOptimizationTests } from './test-gravity-optimization.js';
 import testMobileInteractions from './test-mobile-interactions.js';
 import { runConstantsTests } from './test-constants.js';
 import testAdManager from './test-ad-manager.js';
+import testMonetizationManager from './test-monetization-manager.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -114,6 +115,10 @@ export async function runAllTests() {
 	// Run AdManager tests
 	const adManagerResults = await runAsyncTestSuite(testAdManager);
 	suites.push({ name: testAdManager.name, tests: adManagerResults });
+
+	// Run MonetizationManager tests
+	const monetizationManagerResults = await runAsyncTestSuite(testMonetizationManager);
+	suites.push({ name: testMonetizationManager.name, tests: monetizationManagerResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

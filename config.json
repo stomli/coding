@@ -237,6 +237,16 @@
 				"interstitialMinInterval": 300000,
 				"skipDelay": 5000
 			}
+		},
+		"bmac": {
+			"enabled": true,
+			"username": "stomli",
+			"buttonText": "☕ Support",
+			"adFreePeriods": {
+				"3": 7,
+				"5": 30,
+				"10": 90
+			}
 		}
 	}
 }
