@@ -358,6 +358,82 @@ class Renderer {
 	ctx.stroke();
 }
 
+	/**
+	 * Render match highlight paths
+	 * @param {Array<Object>} highlights - Match highlight data
+	 * @returns {void}
+	 */
+	renderMatchHighlights(highlights) {
+		if (!highlights || highlights.length === 0) {
+			return;
+		}
+		
+		const now = performance.now();
+		
+		for (const highlight of highlights) {
+			const age = now - highlight.createdAt;
+			if (age < 0 || age > highlight.duration) {
+				continue;
+			}
+			
+			const progress = age / highlight.duration;
+			const alpha = 1 - progress;
+			const color = highlight.color || '#FFFFFF';
+			const positions = highlight.positions || [];
+			if (positions.length === 0) {
+				continue;
+			}
+			
+			this.ctx.save();
+			this.ctx.strokeStyle = this._toRgba(color, alpha);
+			this.ctx.lineWidth = 2;
+			
+			this.ctx.beginPath();
+			positions.forEach((pos, index) => {
+				const x = pos.col * this.cellSize + this.offsetX;
+				const y = pos.row * this.cellSize + this.offsetY;
+				if (index === 0) {
+					this.ctx.moveTo(x, y);
+				} else {
+					this.ctx.lineTo(x, y);
+				}
+			});
+			this.ctx.stroke();
+			
+			// Highlight origin cell on cascade chains
+			if (highlight.cascadeLevel > 1) {
+				const origin = positions[0];
+				const x = origin.col * this.cellSize + this.offsetX;
+				const y = origin.row * this.cellSize + this.offsetY;
+				const radius = this.cellSize * 0.45;
+				this.ctx.lineWidth = 3;
+				this.ctx.beginPath();
+				this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+				this.ctx.stroke();
+			}
+			
+			this.ctx.restore();
+		}
+	}
+	
+	/**
+	 * Convert a hex color to rgba with alpha
+	 * @param {String} color - Hex color (e.g., "#FF0000")
+	 * @param {Number} alpha - Alpha value (0-1)
+	 * @returns {String} RGBA color string
+	 * @private
+	 */
+	_toRgba(color, alpha) {
+		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+		if (!result) {
+			return color;
+		}
+		const r = parseInt(result[1], 16);
+		const g = parseInt(result[2], 16);
+		const b = parseInt(result[3], 16);
+		return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+	}
+
 /**
  * Render all active animations
  * @returns {void}

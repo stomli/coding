@@ -174,6 +174,29 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 4. Remove balls and update grid
 5. Begin gravity animation
 
+### 4.5 Feedback & RNG Controls (Required)
+
+#### 4.5.1 Cascade Cause-and-Effect Feedback
+- When a match is detected, visually trace the matched path for 150-250ms using thin highlight lines or arrows.
+- On cascade chains, briefly highlight the origin cells for each cascade level to reduce outcome opacity.
+- These hints must not block input or delay gameplay; they are purely visual overlays.
+
+#### 4.5.2 Special Interval & Next-Special Indicator
+- Support a deterministic special interval system: guarantee a special ball every N pieces (configurable).
+- Show a "next special" indicator in the HUD that reveals the upcoming special type once the interval is within 1-2 pieces.
+- The interval length must scale with difficulty and/or level (longer intervals at higher difficulty).
+- If interval system is disabled, fall back to standard random spawn rates.
+
+#### 4.5.3 Bag System for Piece Shapes (Optional for Specials)
+- Use a piece bag that contains one of each shape; shuffle, then deal until empty before refilling.
+- Bag size must match the active shape set (including Single Ball if enabled).
+- Optionally apply a smaller bag or weighted bag for special ball types to avoid long droughts/clusters.
+
+#### 4.5.4 Special Spawn Smoothing (Pity Timer)
+- Add a pity timer for exploding balls: if no explosions appear within X pieces, force an exploding ball in the next piece.
+- Pity timer thresholds must be configurable per difficulty.
+- Pity timer should not override the special interval system; it should supplement random mode only.
+
 ---
 
 ## 5. Scoring System
@@ -303,6 +326,18 @@ As level numbers increase (within same difficulty):
 - Drop speed increases (configurable increment)
 - Blocking ball spawn rate increases
 - More colors unlock at specific levels (3, 7, 11, 15, 19)
+
+### 6.4 Feature Unlock Schedule (Recommended)
+The following progression reduces early cognitive load and introduces counters before threats. All thresholds are configurable via `config.json`.
+
+- **Levels 1-2:** 3 colors, no special balls.
+- **Levels 3-4:** Introduce horizontal painters only.
+- **Levels 5-6:** Add vertical painters.
+- **Levels 7-8:** Add diagonal painters
+- **Levels 9-10:** Introduce bombs at low spawn rate to establish the counter.
+- **Levels 11+:** Introduceng blocki balls; slightly increase bomb rate so blockers are consistently answerable.
+
+**Color Cap Guidance:** Keep a max of 3-4 colors through roughly Level 12, then ramp to 5-6 once specials are understood. Reserve 7-8 colors for higher difficulties.
 
 ---
 
@@ -772,6 +807,8 @@ All game parameters should be configurable via JSON:
 
 ## 15. Monetization Strategy
 
+**Architecture Note:** Monetization is 100% client-side; no backend is required for basic operation (optional validation endpoint for token checks).
+
 ### 15.1 Advertising Integration
 
 #### 15.1.1 Ad Placement
@@ -824,6 +861,7 @@ All game parameters should be configurable via JSON:
   - Hash-based verification using HMAC-SHA256
   - Token format: `BMAC-[amount]-[timestamp]-[signature]`
   - Generated server-side (simple API endpoint or manual generation)
+  - Optional validation endpoint for stricter verification when available
   - Single-use tokens to prevent sharing
 
 **Token Redemption Flow:**
@@ -856,8 +894,15 @@ All monetization settings configurable via `config.json`:
       "enabled": true,
       "provider": "adsense",
       "adSenseId": "ca-pub-XXXXXXXXXX",
+      "slotIds": {
+        "banner": "XXXXXXXXXX",
+        "mobileBanner": "XXXXXXXXXX",
+        "interstitial": "XXXXXXXXXX",
+        "sidebar": "XXXXXXXXXX"
+      },
       "displayRules": {
         "interstitialFrequency": 3,
+        "levelAdFrequency": 5,
         "interstitialMinInterval": 300000,
         "skipDelay": 5000
       }
@@ -867,6 +912,7 @@ All monetization settings configurable via `config.json`:
       "username": "yourusername",
       "buttonText": "☕ Support",
       "tokenValidation": true,
+      "validationEndpoint": "",
       "adFreePeriods": {
         "3": 7,
         "5": 30,

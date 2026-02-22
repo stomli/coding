@@ -73,6 +73,9 @@ class GameEngineClass {
 		// Floating text manager
 		this.floatingTextManager = new FloatingTextManager();
 		
+		// Match highlight overlays for cascade feedback
+		this.matchHighlights = [];
+		
 		// Guard to prevent concurrent cascade processing
 		this.isHandlingMatches = false;
 	}
@@ -708,6 +711,10 @@ class GameEngineClass {
 				// No piece to render
 			}
 			
+			// Render match highlights (non-blocking overlay)
+			this._pruneMatchHighlights();
+			this.renderer.renderMatchHighlights(this.matchHighlights);
+			
 			// Render next piece preview (skip if debug mode is waiting for selection)
 			const hasNextPiece = this.nextPiece !== null;
 			const previewCanvas = document.getElementById('previewCanvas');
@@ -991,6 +998,7 @@ class GameEngineClass {
 			}
 			
 	cascadeCount++;
+		this._queueMatchHighlights(matches, cascadeCount);
 	
 	
 	// DEBUG: Wait for user to advance step
@@ -1313,6 +1321,44 @@ class GameEngineClass {
 		
 		// Release the guard
 		this.isHandlingMatches = false;
+	}
+	
+	/**
+	 * Store match highlights for brief cascade feedback
+	 * @param {Array<Object>} matches - Array of match objects
+	 * @param {Number} cascadeLevel - Current cascade level
+	 * @returns {void}
+	 * @private
+	 */
+	_queueMatchHighlights(matches, cascadeLevel) {
+		const duration = ConfigManager.get('animations.matchHighlightDuration', 200);
+		const now = performance.now();
+		
+		matches.forEach(match => {
+			this.matchHighlights.push({
+				positions: match.positions,
+				color: match.color,
+				cascadeLevel: cascadeLevel,
+				createdAt: now,
+				duration: duration
+			});
+		});
+	}
+	
+	/**
+	 * Remove expired match highlights
+	 * @returns {void}
+	 * @private
+	 */
+	_pruneMatchHighlights() {
+		if (this.matchHighlights.length === 0) {
+			return;
+		}
+		
+		const now = performance.now();
+		this.matchHighlights = this.matchHighlights.filter(highlight => {
+			return now - highlight.createdAt <= highlight.duration;
+		});
 	}
 	
 	/**

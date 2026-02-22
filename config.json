@@ -111,6 +111,7 @@
 	},
 	"animations": {
 		"matchDetectionDelay": 0,
+		"matchHighlightDuration": 200,
 		"clearAnimationDuration": 100,
 		"dropAnimationSpeed": 20,
 		"cascadeCheckDelay": 0,
