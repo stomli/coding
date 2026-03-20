@@ -183,14 +183,31 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 
 #### 4.5.2 Special Interval & Next-Special Indicator
 - Support a deterministic special interval system: guarantee a special ball every N pieces (configurable).
-- Show a "next special" indicator in the HUD that reveals the upcoming special type once the interval is within 1-2 pieces.
+- Show a "next special" indicator in the HUD that:
+  - Always shows a countdown: "Special in N" pieces.
+  - Reveals the special type within the reveal window (default 2 pieces).
+  - Displays an icon that matches the upcoming special type.
+  - Uses the exact color that will appear in the upcoming special.
 - The interval length must scale with difficulty and/or level (longer intervals at higher difficulty).
+- When interval mode is enabled, random special spawns are disabled (interval-only behavior).
+- Blocking balls continue to use their own spawn rules and are unaffected by the interval.
 - If interval system is disabled, fall back to standard random spawn rates.
 
 #### 4.5.3 Bag System for Piece Shapes (Optional for Specials)
-- Use a piece bag that contains one of each shape; shuffle, then deal until empty before refilling.
-- Bag size must match the active shape set (including Single Ball if enabled).
-- Optionally apply a smaller bag or weighted bag for special ball types to avoid long droughts/clusters.
+- Use a piece bag that contains one of each active shape; shuffle, then deal until empty before refilling.
+- Bag size must match the active shape set (include Single Ball only if enabled).
+- Bag logic applies to shapes only; color selection remains independent.
+- The bag must prevent immediate repeats beyond what the shuffle allows (no external repeats until the bag refills).
+- Debug mode can bypass bag order for testing.
+- Optional specials bag:
+  - Use a smaller bag or weighted pool for special ball types to avoid long droughts/clusters.
+  - If enabled, special bag is independent of the shape bag.
+  - Special bag applies only to random special spawns (it does not affect interval specials).
+  - Special bag is ignored when interval-only mode is enabled because random specials are disabled.
+- Configuration should allow:
+  - Enable/disable shape bag.
+  - Define active shapes list.
+  - Enable/disable special bag and set weights (if used).
 
 #### 4.5.4 Special Spawn Smoothing (Pity Timer)
 - Add a pity timer for exploding balls: if no explosions appear within X pieces, force an exploding ball in the next piece.

@@ -33,6 +33,10 @@ class PieceFactoryClass {
 		this.specialPiecesUntilNext = null;
 		this.nextIntervalSpecialType = null;
 		this.nextIntervalSpecialColor = null;
+		// Shape bag tracking
+		this.shapeBag = [];
+		// Special bag tracking
+		this.specialBag = [];
 	}
 	
 	/**
@@ -45,6 +49,8 @@ class PieceFactoryClass {
 		this.specialPiecesUntilNext = null;
 		this.nextIntervalSpecialType = null;
 		this.nextIntervalSpecialColor = null;
+		this.shapeBag = [];
+		this.specialBag = [];
 	}
 	
 	/**
@@ -125,11 +131,24 @@ class PieceFactoryClass {
 	generateSpecialBall(difficulty) {
 		// Get available colors for random selection
 		const availableColors = this.getAvailableColors(this.currentLevel || 1);
+		const intervalEnabled = ConfigManager.get('specialInterval.enabled', false);
+		const specialBagEnabled = ConfigManager.get('specialBag.enabled', false);
 		
 		// Check blocking ball first (difficulty-dependent)
 		if (this.shouldSpawnBlockingBall(difficulty)) {
 			const color = ConfigManager.get('colors.special.blocking', '#808080');
 			return new Ball(CONSTANTS.BALL_TYPES.BLOCKING, color);
+		}
+		
+		// Use special bag if enabled and interval mode is off
+		if (specialBagEnabled && !intervalEnabled) {
+			const shouldSpawn = this._shouldSpawnAnySpecialBall();
+			if (!shouldSpawn) {
+				return null;
+			}
+			const specialType = this._drawFromSpecialBag();
+			const color = availableColors[randomInt(0, availableColors.length - 1)];
+			return new Ball(specialType, color);
 		}
 		
 		// Check other special types
@@ -157,6 +176,96 @@ class PieceFactoryClass {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Decide if any special should spawn when using the special bag
+	 * @returns {Boolean} True if a special should spawn
+	 * @private
+	 */
+	_shouldSpawnAnySpecialBall() {
+		const explicitRate = ConfigManager.get('specialBag.overallSpawnRate', null);
+		if (typeof explicitRate === 'number') {
+			return randomFloat(0, 1) < explicitRate;
+		}
+		
+		const rates = [
+			this._getSpecialSpawnRate('exploding'),
+			this._getSpecialSpawnRate('painterHorizontal'),
+			this._getSpecialSpawnRate('painterVertical'),
+			this._getSpecialSpawnRate('painterDiagonal'),
+			this._getSpecialSpawnRate('painterDiagonal')
+		];
+		const noneProbability = rates.reduce((acc, rate) => acc * (1 - rate), 1);
+		const combinedRate = 1 - noneProbability;
+		return randomFloat(0, 1) < combinedRate;
+	}
+	
+	/**
+	 * Get spawn rate for a special type key
+	 * @param {String} specialType - Config key for special type
+	 * @returns {Number} Spawn rate (0-1)
+	 * @private
+	 */
+	_getSpecialSpawnRate(specialType) {
+		let spawnRate = ConfigManager.get(`specialBalls.${specialType}.spawnRate`, 0);
+		if (this.gameMode === 'RISING_TIDE' && specialType === 'exploding') {
+			spawnRate = spawnRate * 3;
+		}
+		return spawnRate;
+	}
+	
+	/**
+	 * Draw the next special type from the bag, refilling when empty
+	 * @returns {String} Ball type
+	 * @private
+	 */
+	_drawFromSpecialBag() {
+		if (this.specialBag.length === 0) {
+			this._refillSpecialBag();
+		}
+		return this.specialBag.pop();
+	}
+	
+	/**
+	 * Refill the special bag with a weighted pool
+	 * @returns {void}
+	 * @private
+	 */
+	_refillSpecialBag() {
+		const pool = this._getSpecialBagPool();
+		for (let i = pool.length - 1; i > 0; i--) {
+			const j = randomInt(0, i);
+			[pool[i], pool[j]] = [pool[j], pool[i]];
+		}
+		this.specialBag = pool;
+	}
+	
+	/**
+	 * Build weighted special bag pool
+	 * @returns {Array<String>} Ball type constants
+	 * @private
+	 */
+	_getSpecialBagPool() {
+		const weights = ConfigManager.get('specialBag.weights', {});
+		const entries = [
+			{ key: 'exploding', type: CONSTANTS.BALL_TYPES.EXPLODING },
+			{ key: 'painterHorizontal', type: CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL },
+			{ key: 'painterVertical', type: CONSTANTS.BALL_TYPES.PAINTER_VERTICAL },
+			{ key: 'painterDiagonalNE', type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE },
+			{ key: 'painterDiagonalNW', type: CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW }
+		];
+		const pool = [];
+		for (const entry of entries) {
+			const weight = Math.max(0, Math.floor(weights[entry.key] ?? 1));
+			for (let i = 0; i < weight; i++) {
+				pool.push(entry.type);
+			}
+		}
+		if (pool.length === 0) {
+			pool.push(CONSTANTS.BALL_TYPES.EXPLODING);
+		}
+		return pool;
 	}
 	
 	/**
@@ -214,18 +323,23 @@ class PieceFactoryClass {
 			shapeType = debugShape || DebugMode.getShape();
 			console.log('🔧 Debug: Forcing shape:', shapeType);
 		} else {
-			// Only select from standard Tetris pieces, exclude SINGLE
-			const pieceTypes = [
-				CONSTANTS.PIECE_TYPES.I,
-				CONSTANTS.PIECE_TYPES.O,
-				CONSTANTS.PIECE_TYPES.T,
-				CONSTANTS.PIECE_TYPES.L,
-				CONSTANTS.PIECE_TYPES.J,
-				CONSTANTS.PIECE_TYPES.S,
-				CONSTANTS.PIECE_TYPES.Z
-			];
-			const randomIndex = randomInt(0, pieceTypes.length - 1);
-			shapeType = pieceTypes[randomIndex];
+			const bagEnabled = ConfigManager.get('pieceBag.enabled', false);
+			if (bagEnabled) {
+				shapeType = this._drawFromShapeBag();
+			} else {
+				// Only select from standard Tetris pieces, exclude SINGLE
+				const pieceTypes = [
+					CONSTANTS.PIECE_TYPES.I,
+					CONSTANTS.PIECE_TYPES.O,
+					CONSTANTS.PIECE_TYPES.T,
+					CONSTANTS.PIECE_TYPES.L,
+					CONSTANTS.PIECE_TYPES.J,
+					CONSTANTS.PIECE_TYPES.S,
+					CONSTANTS.PIECE_TYPES.Z
+				];
+				const randomIndex = randomInt(0, pieceTypes.length - 1);
+				shapeType = pieceTypes[randomIndex];
+			}
 		}
 		
 		// Get shape definition
@@ -345,6 +459,58 @@ class PieceFactoryClass {
 		}
 		
 		return new Piece(shapeType, balls);
+	}
+	
+	/**
+	 * Draw the next shape from the bag, refilling when empty
+	 * @returns {String} Shape type
+	 * @private
+	 */
+	_drawFromShapeBag() {
+		if (this.shapeBag.length === 0) {
+			this._refillShapeBag();
+		}
+		return this.shapeBag.pop();
+	}
+	
+	/**
+	 * Refill the shape bag with a shuffled pool
+	 * @returns {void}
+	 * @private
+	 */
+	_refillShapeBag() {
+		const pool = this._getShapePool();
+		for (let i = pool.length - 1; i > 0; i--) {
+			const j = randomInt(0, i);
+			[pool[i], pool[j]] = [pool[j], pool[i]];
+		}
+		this.shapeBag = pool;
+	}
+	
+	/**
+	 * Get the active shape pool for the bag
+	 * @returns {Array<String>} Shape types
+	 * @private
+	 */
+	_getShapePool() {
+		const includeSingle = ConfigManager.get('pieceBag.includeSingle', false);
+		const configured = ConfigManager.get('pieceBag.shapes', null);
+		const defaultShapes = [
+			CONSTANTS.PIECE_TYPES.I,
+			CONSTANTS.PIECE_TYPES.O,
+			CONSTANTS.PIECE_TYPES.T,
+			CONSTANTS.PIECE_TYPES.L,
+			CONSTANTS.PIECE_TYPES.J,
+			CONSTANTS.PIECE_TYPES.S,
+			CONSTANTS.PIECE_TYPES.Z
+		];
+		let shapes = Array.isArray(configured) && configured.length > 0
+			? configured
+			: defaultShapes;
+		if (includeSingle && !shapes.includes(CONSTANTS.PIECE_TYPES.SINGLE)) {
+			shapes = [...shapes, CONSTANTS.PIECE_TYPES.SINGLE];
+		}
+		return shapes;
 	}
 	
 	/**

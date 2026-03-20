@@ -81,6 +81,17 @@
 			"PAINTER_DIAGONAL_NW"
 		]
 	},
+	"specialBag": {
+		"enabled": false,
+		"overallSpawnRate": null,
+		"weights": {
+			"exploding": 1,
+			"painterHorizontal": 1,
+			"painterVertical": 1,
+			"painterDiagonalNE": 1,
+			"painterDiagonalNW": 1
+		}
+	},
 	"scoring": {
 		"basePointsPerBall": 1,
 		"pointDoublingThreshold": 5,
@@ -223,6 +234,11 @@
 		"Single": [
 			[1]
 		]
+	},
+	"pieceBag": {
+		"enabled": true,
+		"includeSingle": false,
+		"shapes": ["I", "O", "T", "L", "J", "S", "Z"]
 	},
 	"rendering": {
 		"ballRadius": 20,
