@@ -12,6 +12,14 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 	<title>Orb•Fall: ChromaCrush</title>
 	<link rel="stylesheet" href="src/styles/main.css">
+
+	<!-- PWA -->
+	<link rel="manifest" href="/manifest.json">
+	<meta name="theme-color" content="#4080FF">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="apple-mobile-web-app-title" content="Orb•Fall">
+	<link rel="apple-touch-icon" href="/src/img/Logotrans.png">
 	
 	<!-- Mixpanel Analytics -->
 	<script type="text/javascript">
@@ -204,12 +212,27 @@
 				</div>
 			</div>
 		</div>
-		
-		<!-- Pause Overlay -->
-		<div id="pauseOverlay" class="overlay hidden">
-			<div class="overlay-content">
-				<h2>Paused</h2>
-				<div class="overlay-actions">
+
+		<!-- Offline indicator: shown only when device has no network connection -->
+		<div id="offlineIndicator" class="offline-indicator hidden">📵 Offline</div>
+
+		<!-- PWA update notification: shown when a new service worker version is ready -->
+		<div id="pwaUpdateBanner" class="pwa-update-banner hidden">
+			<span>A new version is available!</span>
+			<button id="pwaUpdateButton" class="pwa-update-btn">Reload</button>
+			<button id="pwaUpdateDismiss" class="pwa-update-dismiss">✕</button>
+		</div>
+
+		<!-- PWA install toast: shown when browser install prompt is available -->
+		<div id="pwaInstallToast" class="pwa-install-toast hidden">
+			<div class="pwa-install-toast-icon">📲</div>
+			<div class="pwa-install-toast-body">
+				<strong>Install Orb•Fall</strong>
+				<span>Add to your home screen for the best experience!</span>
+			</div>
+			<button id="pwaInstallToastAccept" class="pwa-install-toast-btn">Install</button>
+			<button id="pwaInstallToastDismiss" class="pwa-install-toast-dismiss" aria-label="Dismiss">✕</button>
+		</div>
 					<button id="resumeButton" class="btn-primary">Resume</button>
 					<button id="restartFromPauseButton" class="btn-secondary">Restart</button>
 					<button id="menuFromPauseButton" class="btn-secondary">Main Menu</button>
@@ -314,7 +337,12 @@
 						</label>
 						<button id="redeemCodeButton" class="btn-secondary">Activate License Key</button>
 					</div>
-				</div>
+				<div class="setting-item" id="pwaInstallSetting" style="display:none;">
+					<label>
+						<span class="setting-icon">📲</span> Install App:
+					</label>
+					<button id="installAppButton" class="btn-secondary">Install App</button>
+				</div>				</div>
 				<div class="overlay-actions">
 				<button id="closeSettingsButton" class="btn-primary">Close</button>
 			</div>

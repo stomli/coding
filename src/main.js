@@ -17,6 +17,7 @@ import PlayerManager from './modules/PlayerManager.js';
 import AnalyticsManager from './modules/AnalyticsManager.js';
 import AdManager from './modules/AdManager.js';
 import MonetizationManager from './modules/MonetizationManager.js';
+import PWAManager from './modules/PWAManager.js';
 import { ANALYTICS_CONFIG } from './config/analytics.config.js';
 
 /**
@@ -50,7 +51,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 		
 		// Initialize monetization (supporter button, license key activation)
 		MonetizationManager.initialize();
-		
+
+		// Initialize PWA (service worker, install prompt, offline detection)
+		PWAManager.initialize();
+
 		// Initialize weather background
 		WeatherBackground.initialize();
 		

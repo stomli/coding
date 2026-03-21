@@ -1,0 +1,29 @@
+{
+	"name": "Orb•Fall: ChromaCrush",
+	"short_name": "Orb•Fall",
+	"description": "Match colored orbs in this Tetris-inspired puzzle game with special power orbs.",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#0f0f1e",
+	"theme_color": "#4080FF",
+	"orientation": "any",
+	"icons": [
+		{
+			"src": "/src/img/Logotrans.png",
+			"sizes": "any",
+			"type": "image/png",
+			"purpose": "any"
+		}
+	],
+	"categories": ["games", "entertainment"],
+	"shortcuts": [
+		{
+			"name": "New Game",
+			"short_name": "New",
+			"description": "Start a new game",
+			"url": "/?action=new",
+			"icons": [{ "src": "/src/img/Logotrans.png", "sizes": "any" }]
+		}
+	]
+}
