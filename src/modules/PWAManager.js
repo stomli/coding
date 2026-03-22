@@ -31,6 +31,18 @@ class PWAManagerClass {
 		this.swRegistration = null;
 		/** @type {boolean} */
 		this.initialized = false;
+
+		// Register as early as possible — beforeinstallprompt can fire before
+		// initialize() is called from DOMContentLoaded
+		window.addEventListener('beforeinstallprompt', (e) => {
+			e.preventDefault();
+			this.deferredPrompt = e;
+			// Only show UI after initialize() has wired the DOM
+			if (this.initialized) {
+				this._showInstallButton();
+				this._showInstallToast();
+			}
+		});
 	}
 
 	/**
@@ -41,13 +53,11 @@ class PWAManagerClass {
 		// Register the service worker
 		this._registerServiceWorker();
 
-		// Capture install prompt before the browser discards it
-		window.addEventListener('beforeinstallprompt', (e) => {
-			e.preventDefault();
-			this.deferredPrompt = e;
+		// If beforeinstallprompt already fired before initialize() ran, show UI now
+		if (this.deferredPrompt) {
 			this._showInstallButton();
 			this._showInstallToast();
-		});
+		}
 
 		// Track successful installation
 		window.addEventListener('appinstalled', () => {
