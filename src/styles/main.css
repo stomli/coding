@@ -596,6 +596,23 @@ body::after {
 	margin-bottom: 1rem;
 }
 
+.menu-legal {
+	text-align: center;
+	margin-top: 0.25rem;
+}
+
+.menu-legal-link {
+	color: rgba(255, 255, 255, 0.55);
+	font-size: 0.75rem;
+	text-decoration: none;
+	transition: color 0.2s;
+}
+
+.menu-legal-link:hover {
+	color: rgba(255, 255, 255, 0.9);
+	text-decoration: underline;
+}
+
 /* High Scores */
 .high-scores {
 	margin-top: 1rem;

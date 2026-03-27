@@ -12,7 +12,7 @@
  * ============================================================================
  */
 
-const CACHE_VERSION = 'orbfall-v1.0.4';
+const CACHE_VERSION = 'orbfall-v1.0.5';
 const CACHE_NAME = CACHE_VERSION;
 
 /**
@@ -23,6 +23,7 @@ const CORE_ASSETS = [
 	'/',
 	'/index.html',
 	'/guide.html',
+	'/privacy.html',
 	'/config.json',
 	'/manifest.json',
 	'/ads.txt',
@@ -31,6 +32,7 @@ const CORE_ASSETS = [
 	'/src/styles/main.css',
 	'/src/styles/shared-components.css',
 	'/src/styles/shared-variables.css',
+	'/src/styles/static-pages.css',
 
 	// Main entry
 	'/src/main.js',
