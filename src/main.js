@@ -404,6 +404,29 @@ function setupScoreListener() {
 			}
 		}
 	});
+	
+	// Goal progress display
+	const goalBar = document.getElementById('goalBar');
+	const goalItems = document.getElementById('goalItems');
+	
+	EventEmitter.on(CONSTANTS.EVENTS.GOAL_UPDATE, (data) => {
+		if (!goalBar || !goalItems || !data.goals) return;
+		
+		if (data.goals.length === 0) {
+			goalBar.classList.add('hidden');
+			return;
+		}
+		
+		goalBar.classList.remove('hidden');
+		goalItems.innerHTML = '';
+		
+		data.goals.forEach(g => {
+			const item = document.createElement('div');
+			item.className = 'goal-item' + (g.completed ? ' completed' : '');
+			item.innerHTML = `<span class="goal-label">${g.label}</span> <span class="goal-progress">${g.progress}/${g.target}</span>`;
+			goalItems.appendChild(item);
+		});
+	});
 }
 
 /**

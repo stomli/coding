@@ -282,7 +282,23 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 - **Reset Conditions:** Streak resets on: `ScoreManager.initialize()`, `ScoreManager.reset()`, or no-match piece lock.
 - **Configurable:** `scoring.streakBonus` and `scoring.streakCap` in `config.json`.
 
-### 5.5 Score Display (Implemented)
+### 5.5 Per-Level Goals (Implemented)
+- **GoalManager:** Singleton module that selects optional bonus goals per level
+  - Picks N goals (configurable, default 2) from a pool of goal types
+  - **Goal Types:**
+    - `clearBalls` — Clear N orbs total (scales with level/difficulty)
+    - `cascade` — Achieve an N-x cascade (tracks best cascade, not cumulative)
+    - `useSpecials` — Clear N special (non-normal) orbs
+  - Goals are optional — completing them awards bonus points but is not required
+  - Listens to `BALLS_CLEARED` and `CASCADE_COMPLETE` events for progress
+  - Emits `GOAL_UPDATE` events with progress, completion, and `justCompleted` flags
+- **HUD Display:** Goal progress bar shown below HUD during gameplay
+- **Floating Text:** Gold "⭐ GOAL COMPLETE!" shown when a goal is completed
+- **Bonus:** Configurable points per completed goal (default 25), added to score at level end
+- **Scaling:** Targets use formula `base + (level-1) × perLevel + (difficulty-1) × perDifficulty`, with optional max cap
+- **Config:** `goals.enabled`, `goals.bonusPoints`, `goals.goalsPerLevel`, `goals.types.*` in `config.json`
+
+### 5.6 Score Display (Implemented)
 - **Score Manager:** Singleton module tracking score via event system
   - Listens for `BALLS_CLEARED` events to accumulate ball counts per cascade level
   - Tracks `ballsPerLevel` array to support progressive cascade scoring
@@ -859,17 +875,17 @@ All game parameters should be configurable via JSON:
 - Grid breach handling per mode (success in ZEN, failure in others)
 
 ✅ **Quality Assurance (Continuous)**
-- 310+ unit tests across 15 test modules
+- 320+ unit tests across 16 test modules
 - Comprehensive test coverage:
   - **Core Utilities:** Helpers (15 tests), EventEmitter (18 tests)
   - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (88 tests)
-  - **Factories & Managers:** PieceFactory (26 tests), ScoreManager (35 tests), ConfigManager (12 tests), FloatingText (11 tests)
+  - **Factories & Managers:** PieceFactory (26 tests), ScoreManager (35 tests), ConfigManager (12 tests), FloatingText (11 tests), GoalManager (10 tests)
   - **Game Engine:** GameEngine (22 tests including Zen save/load)
 ---
 
-**Document Version:** 2.3  
+**Document Version:** 2.4  
 **Last Updated:** March 2026  
-**Status:** Living Document - Updated through Phase 9.5 + Phase 10 Gameplay Improvements + Zen Pause/Persist
+**Status:** Living Document - Updated through Phase 10 Gameplay + Per-Level Goals
 
 ### 14.2 Pending Features (Phase 10 - Documentation & Deployment)
 ⏳ **Documentation**

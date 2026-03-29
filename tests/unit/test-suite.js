@@ -30,6 +30,7 @@ import testMobileInteractions from './test-mobile-interactions.js';
 import { runConstantsTests } from './test-constants.js';
 import testAdManager from './test-ad-manager.js';
 import testMonetizationManager from './test-monetization-manager.js';
+import testGoalManager from './test-goal-manager.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -119,6 +120,10 @@ export async function runAllTests() {
 	// Run MonetizationManager tests
 	const monetizationManagerResults = await runAsyncTestSuite(testMonetizationManager);
 	suites.push({ name: testMonetizationManager.name, tests: monetizationManagerResults });
+
+	// Run GoalManager tests
+	const goalManagerResults = await runAsyncTestSuite(testGoalManager);
+	suites.push({ name: testGoalManager.name, tests: goalManagerResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

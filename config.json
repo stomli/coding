@@ -129,6 +129,33 @@
 		"streakBonus": 2,
 		"streakCap": 10
 	},
+	"goals": {
+		"enabled": true,
+		"bonusPoints": 25,
+		"types": {
+			"clearBalls": {
+				"label": "Clear {n} orbs",
+				"base": 30,
+				"perLevel": 5,
+				"perDifficulty": 5
+			},
+			"cascade": {
+				"label": "Achieve a {n}x cascade",
+				"base": 2,
+				"perLevel": 0.1,
+				"perDifficulty": 0.2,
+				"max": 6
+			},
+			"useSpecials": {
+				"label": "Clear {n} special orbs",
+				"base": 2,
+				"perLevel": 0.5,
+				"perDifficulty": 0.5,
+				"max": 15
+			}
+		},
+		"goalsPerLevel": 2
+	},
 	"difficulty": {
 		"difficulty1": {
 			"name": "Easy",

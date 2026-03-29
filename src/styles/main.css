@@ -832,6 +832,49 @@ body::after {
 	color: #00ff88;
 }
 
+/* Goal progress bar */
+.goal-bar {
+	display: flex;
+	justify-content: center;
+	padding: 0.2rem 0.5rem;
+	background: rgba(30, 30, 50, 0.85);
+	border-bottom: 1px solid #333;
+}
+
+.goal-items {
+	display: flex;
+	gap: 1.5rem;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.goal-item {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.75rem;
+	color: #aaa;
+	white-space: nowrap;
+}
+
+.goal-item.completed {
+	color: #FFD700;
+}
+
+.goal-item.completed .goal-label::after {
+	content: ' ✓';
+}
+
+.goal-progress {
+	font-weight: bold;
+	color: #e0e0e0;
+	font-size: 0.75rem;
+}
+
+.goal-item.completed .goal-progress {
+	color: #FFD700;
+}
+
 .hud-input {
 	font-size: 1.5rem;
 	font-weight: bold;

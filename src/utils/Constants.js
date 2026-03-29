@@ -160,7 +160,8 @@ const CONSTANTS = {
 		PWA_INSTALLED: 'pwaInstalledEvent',
 		PWA_ONLINE: 'pwaOnlineEvent',
 		PWA_OFFLINE: 'pwaOfflineEvent',
-		PWA_UPDATE_AVAILABLE: 'pwaUpdateAvailableEvent'
+		PWA_UPDATE_AVAILABLE: 'pwaUpdateAvailableEvent',
+		GOAL_UPDATE: 'goalUpdateEvent'
 	},
 	
 	/**

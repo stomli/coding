@@ -31,6 +31,7 @@ import AudioManager from './AudioManager.js';
 import StatisticsTracker from './StatisticsTracker.js';
 import PlayerManager from './PlayerManager.js';
 import AnalyticsManager from './AnalyticsManager.js';
+import GoalManager from './GoalManager.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -331,6 +332,17 @@ class GameEngineClass {
 				this.floatingTextManager.add(`${data.matchStreak}x STREAK!`, centerX, topY, 1500, '#00ff88');
 			}
 		});
+		
+		// Goal completion floating text
+		EventEmitter.on(CONSTANTS.EVENTS.GOAL_UPDATE, (data) => {
+			if (!data.goals) return;
+			const justDone = data.goals.filter(g => g.justCompleted);
+			if (justDone.length > 0) {
+				const centerX = this.renderer.offsetX + (this.grid.cols * this.renderer.cellSize) / 2;
+				const topY = this.renderer.offsetY + 60;
+				this.floatingTextManager.add('⭐ GOAL COMPLETE!', centerX, topY, 2000, '#FFD700');
+			}
+		});
 	}
 	
 	/**
@@ -621,6 +633,9 @@ class GameEngineClass {
 		
 		// Initialize ScoreManager
 		ScoreManager.initialize(this.difficulty, this.level);
+		
+		// Initialize GoalManager (optional per-level goals)
+		GoalManager.initialize(this.difficulty, this.level);
 		
 		// Set drop speed based on difficulty
 		this.dropInterval = Math.max(200, 1000 - (difficulty * 150));
@@ -1838,6 +1853,9 @@ class GameEngineClass {
 		ScoreManager.score = state.score;
 		ScoreManager.matchStreak = state.matchStreak || 0;
 		
+		// Initialize goals (fresh — goal progress not persisted in Zen saves)
+		GoalManager.initialize(this.difficulty, this.level);
+		
 		// Restore PieceFactory counters
 		PieceFactory.piecesDropped = state.piecesDropped || 0;
 		PieceFactory.piecesSinceLastExplosive = state.piecesSinceLastExplosive || 0;
@@ -2140,6 +2158,13 @@ class GameEngineClass {
 			// Get current stats
 			const currentScore = ScoreManager.getScore();
 			
+			// Add goal bonus to score
+			const goalBonus = GoalManager.getCompletedBonus();
+			if (goalBonus > 0) {
+				ScoreManager.addPoints(goalBonus);
+			}
+			const finalScore = ScoreManager.getScore();
+			
 			// Get best stats from player profile for this mode+difficulty+level
 			const levelBestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level, this.gameMode);
 			const overallBestScore = PlayerManager.getHighScore(); // Best score across ALL levels
@@ -2149,12 +2174,12 @@ class GameEngineClass {
 			const bestScoreEl = document.getElementById('completeBestScore');
 			const highScoreMsg = document.getElementById('levelCompleteHighScoreMessage');
 			
-			if (thisScoreEl) thisScoreEl.textContent = currentScore.toLocaleString();
+			if (thisScoreEl) thisScoreEl.textContent = finalScore.toLocaleString();
 			if (bestScoreEl) bestScoreEl.textContent = levelBestScore > 0 ? levelBestScore.toLocaleString() : '-';
 			
 		// Update player stats with difficulty, level, and mode
 		PlayerManager.updateStats({
-			score: currentScore,
+			score: finalScore,
 			time: timeSurvived,
 			difficulty: this.difficulty,
 			mode: this.gameMode,
@@ -2167,13 +2192,13 @@ class GameEngineClass {
 			AnalyticsManager.trackLevelComplete(
 				this.difficulty,
 				this.level,
-				currentScore,
+				finalScore,
 				timeSurvived,
 				this.gameMode,
 				{
 					balls_cleared: totalBalls,
 					special_balls_used: (ballStats[CONSTANTS.BALL_TYPES.BOMB]?.total || 0) + (ballStats[CONSTANTS.BALL_TYPES.PAINTER]?.total || 0),
-					is_new_best: levelBestScore === 0 || currentScore > levelBestScore
+					is_new_best: levelBestScore === 0 || finalScore > levelBestScore
 				}
 			);
 			AnalyticsManager.updatePlayerProfile(PlayerManager.getCurrentPlayerData().stats);
@@ -2181,7 +2206,7 @@ class GameEngineClass {
 			AnalyticsManager.trackLevelFailed(
 				this.difficulty,
 				this.level,
-				currentScore,
+				finalScore,
 				timeSurvived,
 				reason,
 				this.gameMode,
@@ -2191,10 +2216,10 @@ class GameEngineClass {
 			);
 		}			// Show high score message if new best for this level
 			if (highScoreMsg) {
-				if (levelBestScore === 0 || currentScore > levelBestScore) {
+				if (levelBestScore === 0 || finalScore > levelBestScore) {
 					highScoreMsg.textContent = '🎉 New Level Best Score!';
 					highScoreMsg.style.display = 'block';
-				} else if (currentScore > overallBestScore) {
+				} else if (finalScore > overallBestScore) {
 					highScoreMsg.textContent = '🎉 New Personal Best!';
 					highScoreMsg.style.display = 'block';
 				} else {
