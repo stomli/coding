@@ -84,6 +84,7 @@
 			</div>
 				
 			<div class="menu-actions">
+				<button id="continueButton" class="btn-primary hidden">Continue Zen Game</button>
 				<button id="startButton" class="btn-primary">Start Game</button>
 				<button id="settingsButton" class="btn-secondary">Settings</button>
 				<a href="guide.html" class="btn-secondary" style="display: inline-block; text-decoration: none; text-align: center;">How to Play</a>
@@ -249,8 +250,15 @@
 			<button id="pwaInstallToastAccept" class="pwa-install-toast-btn">Install</button>
 			<button id="pwaInstallToastDismiss" class="pwa-install-toast-dismiss" aria-label="Dismiss">✕</button>
 		</div>
+
+		<!-- Pause Overlay -->
+		<div id="pauseOverlay" class="overlay hidden">
+			<div class="overlay-content">
+				<h2>Paused</h2>
+				<div class="overlay-actions">
 					<button id="resumeButton" class="btn-primary">Resume</button>
 					<button id="restartFromPauseButton" class="btn-secondary">Restart</button>
+					<button id="saveExitButton" class="btn-secondary hidden">Save &amp; Exit</button>
 					<button id="menuFromPauseButton" class="btn-secondary">Main Menu</button>
 				</div>
 			</div>

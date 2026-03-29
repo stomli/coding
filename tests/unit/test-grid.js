@@ -1122,6 +1122,68 @@ export function testGrid() {
 			pass: blockerGrid.countBlockingBalls() === 2,
 			error: null
 		});
+
+		// ── serialize / deserialize ──
+
+		const serGrid = new Grid(5, 5);
+		serGrid.setBallAt(0, 0, new Ball(BALL_TYPES.NORMAL, '#FF0000'));
+		serGrid.setBallAt(1, 2, new Ball(BALL_TYPES.EXPLODING, '#00FF00'));
+		serGrid.setBallAt(4, 4, new Ball(BALL_TYPES.BLOCKING, '#808080'));
+		
+		const serialized = serGrid.serialize();
+		
+		tests.push({
+			name: 'Grid - serialize returns correct dimensions',
+			pass: serialized.length === 5 && serialized[0].length === 5,
+			error: null
+		});
+		
+		tests.push({
+			name: 'Grid - serialize captures ball data',
+			pass: serialized[0][0] !== null 
+				&& serialized[0][0].type === BALL_TYPES.NORMAL 
+				&& serialized[0][0].color === '#FF0000',
+			error: null
+		});
+		
+		tests.push({
+			name: 'Grid - serialize null for empty cells',
+			pass: serialized[0][1] === null && serialized[3][3] === null,
+			error: null
+		});
+		
+		const restoreGrid = new Grid(5, 5);
+		restoreGrid.deserialize(serialized);
+		
+		tests.push({
+			name: 'Grid - deserialize restores normal ball',
+			pass: restoreGrid.getBallAt(0, 0) !== null
+				&& restoreGrid.getBallAt(0, 0).getType() === BALL_TYPES.NORMAL
+				&& restoreGrid.getBallAt(0, 0).getColor() === '#FF0000',
+			error: null
+		});
+		
+		tests.push({
+			name: 'Grid - deserialize restores exploding ball',
+			pass: restoreGrid.getBallAt(1, 2) !== null
+				&& restoreGrid.getBallAt(1, 2).getType() === BALL_TYPES.EXPLODING,
+			error: null
+		});
+		
+		tests.push({
+			name: 'Grid - deserialize keeps empty cells null',
+			pass: restoreGrid.getBallAt(2, 2) === null,
+			error: null
+		});
+		
+		tests.push({
+			name: 'Grid - deserialize roundtrip preserves all 3 balls',
+			pass: restoreGrid.getBallAt(0, 0) !== null
+				&& restoreGrid.getBallAt(1, 2) !== null
+				&& restoreGrid.getBallAt(4, 4) !== null
+				&& restoreGrid.getBallAt(4, 4).getType() === BALL_TYPES.BLOCKING,
+			error: null
+		});
 	}
 	catch (error) {
 		tests.push({

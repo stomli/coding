@@ -195,7 +195,8 @@ const CONSTANTS = {
 	STORAGE_KEYS: {
 		HIGH_SCORES: 'ballDropGame_highScores',
 		UNLOCKED_LEVELS: 'ballDropGame_unlockedLevels',
-		SETTINGS: 'ballDropGame_settings'
+		SETTINGS: 'ballDropGame_settings',
+		ZEN_SAVE_PREFIX: 'orbfall_zen_'
 	}
 	
 };

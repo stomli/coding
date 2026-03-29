@@ -10,6 +10,10 @@
         "/^python -m http\\.server 8765 2>&1 &$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^node -e \"const fs=require\\('fs'\\); const code=fs\\.readFileSync\\('c:/Users/stoml/OneDrive/Personal/coding/src/modules/GameEngine\\.js','utf8'\\); new Function\\(code\\.replace\\(/\\^import \\.\\*/gm,''\\)\\.replace\\(/\\^export \\.\\*/gm,''\\)\\); console\\.log\\('GameEngine\\.js parse: OK'\\)\" 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

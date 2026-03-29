@@ -404,4 +404,68 @@ testSuite.tests.push({
 	}
 });
 
+// ── Zen Save / Load ──
+
+testSuite.tests.push({
+	name: 'zen-save - hasZenSave returns false when no save exists',
+	async run() {
+		// Clear any leftover save
+		GameEngine.clearZenState();
+		if (GameEngine.hasZenSave()) {
+			throw new Error('hasZenSave should return false when no save exists');
+		}
+	}
+});
+
+testSuite.tests.push({
+	name: 'zen-save - saveZenState only saves in ZEN mode',
+	async run() {
+		GameEngine.clearZenState();
+		GameEngine.gameMode = 'CLASSIC';
+		GameEngine.saveZenState();
+		if (GameEngine.hasZenSave()) {
+			throw new Error('saveZenState should not save in CLASSIC mode');
+		}
+	}
+});
+
+testSuite.tests.push({
+	name: 'zen-save - saveZenState creates save in ZEN mode',
+	async run() {
+		await ConfigManager.loadConfig();
+		GameEngine.gameMode = 'ZEN';
+		GameEngine.difficulty = 2;
+		GameEngine.level = 3;
+		GameEngine.saveZenState();
+		if (!GameEngine.hasZenSave()) {
+			throw new Error('hasZenSave should return true after save');
+		}
+		GameEngine.clearZenState();
+	}
+});
+
+testSuite.tests.push({
+	name: 'zen-save - clearZenState removes save',
+	async run() {
+		GameEngine.gameMode = 'ZEN';
+		GameEngine.difficulty = 1;
+		GameEngine.level = 1;
+		GameEngine.saveZenState();
+		GameEngine.clearZenState();
+		if (GameEngine.hasZenSave()) {
+			throw new Error('hasZenSave should return false after clear');
+		}
+	}
+});
+
+testSuite.tests.push({
+	name: 'zen-save - _serializePiece returns null for null input',
+	async run() {
+		const result = GameEngine._serializePiece(null);
+		if (result !== null) {
+			throw new Error('_serializePiece(null) should return null');
+		}
+	}
+});
+
 export default testSuite;

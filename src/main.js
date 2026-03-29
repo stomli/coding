@@ -101,6 +101,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 		// Show the main menu
 		showScreen('menuScreen');
+
+		// Auto-pause when tab loses focus
+		setupVisibilityHandlers();
 	}
 	catch (error) {
 		console.error('Failed to initialize game:', error);
@@ -109,12 +112,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
+ * Set up visibility change and beforeunload handlers for auto-pause
+ */
+function setupVisibilityHandlers() {
+	// Auto-pause when tab/app loses visibility
+	document.addEventListener('visibilitychange', () => {
+		if (document.hidden && GameEngine.state === CONSTANTS.GAME_STATES.PLAYING) {
+			GameEngine.pause();
+		}
+	});
+
+	// Pause before page unload (supports save in Zen mode)
+	window.addEventListener('beforeunload', () => {
+		if (GameEngine.state === CONSTANTS.GAME_STATES.PLAYING) {
+			GameEngine.saveZenState();
+			GameEngine.pause();
+		}
+	});
+}
+
+/**
  * Set up event listeners for menu buttons
  */
 let selectedMode = 'CLASSIC'; // Default game mode
 
 function setupMenuListeners() {
 	const startBtn = document.getElementById('startButton');
+	const continueBtn = document.getElementById('continueButton');
 	const settingsBtn = document.getElementById('settingsButton');
 	const difficultyButtons = document.querySelectorAll('.difficulty-btn');
 	const modeButtons = document.querySelectorAll('.mode-btn');
@@ -167,6 +191,20 @@ function setupMenuListeners() {
 		});
 	}
 
+	// Continue saved Zen game
+	if (continueBtn) {
+		continueBtn.addEventListener('click', async () => {
+			AudioManager.initialize();
+			await AudioManager.resume();
+			AudioManager.playClick();
+			await AudioManager.startMusic();
+			
+			showScreen('gameScreen');
+			AnalyticsManager.track('Zen Game Resumed');
+			GameEngine.loadZenState();
+		});
+	}
+
 	// Settings (Phase 9 - Settings UI)
 	if (settingsBtn) {
 		settingsBtn.addEventListener('click', () => {
@@ -180,6 +218,19 @@ function setupMenuListeners() {
 	
 	// Set up game over / pause / level complete screen buttons
 	setupGameScreenListeners();
+	
+	// Initial check for Continue button visibility
+	updateContinueButton();
+}
+
+/**
+ * Show or hide the "Continue Zen Game" button based on save state
+ */
+function updateContinueButton() {
+	const continueBtn = document.getElementById('continueButton');
+	if (continueBtn) {
+		continueBtn.classList.toggle('hidden', !GameEngine.hasZenSave());
+	}
 }
 
 /**
@@ -187,7 +238,12 @@ function setupMenuListeners() {
  * @param {string} screenId - The ID of the screen to show
  */
 function showScreen(screenId) {
-	const screens = ['menuScreen', 'gameScreen', 'pauseScreen', 'gameOverScreen', 'levelCompleteScreen'];
+	const screens = ['menuScreen', 'gameScreen', 'gameOverScreen', 'levelCompleteScreen'];
+
+	// Update continue button when showing menu
+	if (screenId === 'menuScreen') {
+		updateContinueButton();
+	}
 
 	screens.forEach(id => {
 		const screen = document.getElementById(id);
@@ -208,6 +264,8 @@ function showScreen(screenId) {
 function setupGameScreenListeners() {
 	// Pause screen buttons
 	const resumeBtn = document.getElementById('resumeButton');
+	const restartFromPauseBtn = document.getElementById('restartFromPauseButton');
+	const saveExitBtn = document.getElementById('saveExitButton');
 	const menuFromPauseBtn = document.getElementById('menuFromPauseButton');
 	
 	if (resumeBtn) {
@@ -217,10 +275,34 @@ function setupGameScreenListeners() {
 		});
 	}
 	
+	if (restartFromPauseBtn) {
+		restartFromPauseBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			const overlay = document.getElementById('pauseOverlay');
+			if (overlay) overlay.classList.add('hidden');
+			showScreen('gameScreen');
+			GameEngine.start(selectedDifficulty, selectedLevel, selectedMode);
+		});
+	}
+	
+	if (saveExitBtn) {
+		saveExitBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			GameEngine.saveAndExit();
+			AudioManager.stopMusic();
+			const overlay = document.getElementById('pauseOverlay');
+			if (overlay) overlay.classList.add('hidden');
+			showScreen('menuScreen');
+			populateLevelGrid();
+		});
+	}
+	
 	if (menuFromPauseBtn) {
 		menuFromPauseBtn.addEventListener('click', () => {
 			AudioManager.playClick();
 			AudioManager.stopMusic();
+			const overlay = document.getElementById('pauseOverlay');
+			if (overlay) overlay.classList.add('hidden');
 			showScreen('menuScreen');
 			populateLevelGrid(); // Refresh level grid in case new levels unlocked
 		});
@@ -774,6 +856,8 @@ function setupPlayerManagement() {
 		AudioManager.setMute(settings.isMuted);			updateHighScoreDisplay();
 			// Refresh level grid to show player's unlocked levels
 			populateLevelGrid();
+			// Refresh continue button for new player's save
+			updateContinueButton();
 		}
 	});
 	

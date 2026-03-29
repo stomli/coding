@@ -578,6 +578,9 @@ class GameEngineClass {
 		this.gameMode = mode || 'CLASSIC';
 		this.modeConfig = CONSTANTS.GAME_MODE_CONFIG[this.gameMode];
 		
+		// Clear any existing Zen save — starting fresh
+		this.clearZenState();
+		
 		// Set game mode in PieceFactory for mode-specific spawn rates
 		PieceFactory.setGameMode(this.gameMode);
 		
@@ -1649,10 +1652,19 @@ class GameEngineClass {
 			}
 			
 			// Show pause overlay
-			const pauseScreen = document.getElementById('pauseScreen');
-			if (pauseScreen) {
-				pauseScreen.classList.remove('hidden');
+			const pauseOverlay = document.getElementById('pauseOverlay');
+			if (pauseOverlay) {
+				pauseOverlay.classList.remove('hidden');
 			}
+			
+			// Show Save & Exit button only in Zen mode
+			const saveExitBtn = document.getElementById('saveExitButton');
+			if (saveExitBtn) {
+				saveExitBtn.classList.toggle('hidden', this.gameMode !== 'ZEN');
+			}
+			
+			// Auto-save Zen state on every pause
+			this.saveZenState();
 		}
 	}
 	
@@ -1670,9 +1682,9 @@ class GameEngineClass {
 			LevelManager.startTimer();
 			
 			// Hide pause overlay
-			const pauseScreen = document.getElementById('pauseScreen');
-			if (pauseScreen) {
-				pauseScreen.classList.add('hidden');
+			const pauseOverlay = document.getElementById('pauseOverlay');
+			if (pauseOverlay) {
+				pauseOverlay.classList.add('hidden');
 			}
 			
 			// Reset timing
@@ -1688,6 +1700,9 @@ class GameEngineClass {
 	 * @returns {void}
 	 */
 	restart() {
+		// Clear Zen save — deliberate restart
+		this.clearZenState();
+		
 		// Cancel current game loop
 		if (this.animationFrameId) {
 			cancelAnimationFrame(this.animationFrameId);
@@ -1696,6 +1711,203 @@ class GameEngineClass {
 		
 		// Restart with same difficulty, level, and mode
 		this.start(this.difficulty || 1, this.level || 1, this.gameMode || 'CLASSIC');
+	}
+	
+	// ---- Zen Mode Save / Load ----
+	
+	/**
+	 * Get the localStorage key for the current player's Zen save
+	 * @returns {string}
+	 * @private
+	 */
+	_zenSaveKey() {
+		const player = PlayerManager.getCurrentPlayerData();
+		return `${CONSTANTS.STORAGE_KEYS.ZEN_SAVE_PREFIX}${player.name}`;
+	}
+	
+	/**
+	 * Serialize a Piece into a plain object
+	 * @param {Piece|null} piece
+	 * @returns {Object|null}
+	 * @private
+	 */
+	_serializePiece(piece) {
+		if (!piece) return null;
+		return {
+			shapeType: piece.getType(),
+			shape: piece.getShape(),
+			balls: piece.getBalls().map(b => ({ type: b.getType(), color: b.getColor() })),
+			position: piece.getPosition()
+		};
+	}
+	
+	/**
+	 * Reconstruct a Piece from serialized data
+	 * @param {Object|null} data
+	 * @returns {Piece|null}
+	 * @private
+	 */
+	_deserializePiece(data) {
+		if (!data) return null;
+		const balls = data.balls.map(b => new Ball(b.type, b.color));
+		const piece = new Piece(data.shapeType, data.shape, balls);
+		piece.setPosition(data.position.x, data.position.y);
+		return piece;
+	}
+	
+	/**
+	 * Save current Zen game state to localStorage
+	 */
+	saveZenState() {
+		if (this.gameMode !== 'ZEN') return;
+		
+		const state = {
+			version: 1,
+			difficulty: this.difficulty,
+			level: this.level,
+			grid: this.grid.serialize(),
+			currentPiece: this._serializePiece(this.currentPiece),
+			nextPiece: this._serializePiece(this.nextPiece),
+			score: ScoreManager.score,
+			matchStreak: ScoreManager.matchStreak,
+			piecesDropped: PieceFactory.piecesDropped,
+			piecesSinceLastExplosive: PieceFactory.piecesSinceLastExplosive,
+			dropInterval: this.dropInterval,
+			savedAt: Date.now()
+		};
+		
+		try {
+			localStorage.setItem(this._zenSaveKey(), JSON.stringify(state));
+		} catch (e) {
+			console.warn('GameEngine: Failed to save Zen state', e);
+		}
+	}
+	
+	/**
+	 * Check if a Zen save exists for the current player
+	 * @returns {boolean}
+	 */
+	hasZenSave() {
+		try {
+			return localStorage.getItem(this._zenSaveKey()) !== null;
+		} catch (e) {
+			return false;
+		}
+	}
+	
+	/**
+	 * Load and resume a saved Zen game
+	 * @returns {boolean} True if load succeeded
+	 */
+	loadZenState() {
+		let raw;
+		try {
+			raw = localStorage.getItem(this._zenSaveKey());
+		} catch (e) {
+			return false;
+		}
+		if (!raw) return false;
+		
+		let state;
+		try {
+			state = JSON.parse(raw);
+		} catch (e) {
+			this.clearZenState();
+			return false;
+		}
+		
+		// Restore engine state
+		this.difficulty = state.difficulty;
+		this.level = state.level;
+		this.gameMode = 'ZEN';
+		this.modeConfig = CONSTANTS.GAME_MODE_CONFIG['ZEN'];
+		
+		PieceFactory.setGameMode('ZEN');
+		LevelManager.setLevel(this.level);
+		LevelManager.stopTimer();
+		
+		// Clear and restore grid
+		this.grid.deserialize(state.grid);
+		
+		// Restore pieces
+		this.currentPiece = this._deserializePiece(state.currentPiece);
+		this.nextPiece = this._deserializePiece(state.nextPiece);
+		
+		// Restore score
+		ScoreManager.initialize(this.difficulty, this.level, 'ZEN');
+		ScoreManager.score = state.score;
+		ScoreManager.matchStreak = state.matchStreak || 0;
+		
+		// Restore PieceFactory counters
+		PieceFactory.piecesDropped = state.piecesDropped || 0;
+		PieceFactory.piecesSinceLastExplosive = state.piecesSinceLastExplosive || 0;
+		
+		// Restore drop speed
+		this.dropInterval = state.dropInterval || Math.max(200, 1000 - (this.difficulty * 150));
+		this.basedropInterval = this.dropInterval;
+		
+		// Reset timers
+		this.dropTimer = 0;
+		this.lockTimer = 0;
+		this.isLocking = false;
+		this.lastUpdateTime = performance.now();
+		
+		// Update HUD
+		const modeDisplay = document.getElementById('modeDisplay');
+		if (modeDisplay) modeDisplay.textContent = 'Zen';
+		const difficultyDisplay = document.getElementById('difficultyDisplay');
+		if (difficultyDisplay) difficultyDisplay.textContent = this.difficulty;
+		const levelDisplay = document.getElementById('levelDisplay');
+		if (levelDisplay) levelDisplay.textContent = this.level;
+		const timerElement = document.querySelector('.hud-item.timer');
+		if (timerElement) timerElement.style.display = 'none';
+		
+		this._updateAvailableColorsDisplay();
+		
+		// Emit score to update HUD
+		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level, 'ZEN') || 0;
+		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, {
+			score: ScoreManager.score,
+			bestScore: bestScore,
+			points: 0,
+			matchStreak: ScoreManager.matchStreak
+		});
+		
+		// Clear the save now that we've loaded it
+		this.clearZenState();
+		
+		// Start playing
+		this.state = CONSTANTS.GAME_STATES.PLAYING;
+		StatisticsTracker.reset(this.level);
+		this.render();
+		this._gameLoop();
+		
+		return true;
+	}
+	
+	/**
+	 * Clear saved Zen state for current player
+	 */
+	clearZenState() {
+		try {
+			localStorage.removeItem(this._zenSaveKey());
+		} catch (e) {
+			// Ignore
+		}
+	}
+	
+	/**
+	 * Save current Zen game and return to menu
+	 */
+	saveAndExit() {
+		this.saveZenState();
+		
+		// Cancel game loop
+		if (this.animationFrameId) {
+			cancelAnimationFrame(this.animationFrameId);
+			this.animationFrameId = null;
+		}
+		this.state = CONSTANTS.GAME_STATES.MENU;
 	}
 	
 	/**
@@ -1842,6 +2054,9 @@ class GameEngineClass {
 	 */
 	_levelComplete(reason = 'timeout') {
 		this.state = CONSTANTS.GAME_STATES.LEVEL_COMPLETE;
+		
+		// Clear Zen save — game ended naturally
+		this.clearZenState();
 		
 		// Stop level timer
 		const timeSurvived = LevelManager.levelTimer;

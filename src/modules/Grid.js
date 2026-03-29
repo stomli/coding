@@ -613,6 +613,39 @@ class Grid {
 	}
 	
 	/**
+	 * Serialize grid state to a plain object for saving
+	 * @returns {Array<Array<Object|null>>} 2D array of {type, color} or null
+	 */
+	serialize() {
+		const data = [];
+		for (let row = 0; row < this.rows; row++) {
+			const rowData = [];
+			for (let col = 0; col < this.cols; col++) {
+				const ball = this.grid[row][col];
+				rowData.push(ball ? { type: ball.getType(), color: ball.getColor() } : null);
+			}
+			data.push(rowData);
+		}
+		return data;
+	}
+	
+	/**
+	 * Restore grid state from serialized data
+	 * @param {Array<Array<Object|null>>} data - Serialized grid from serialize()
+	 */
+	deserialize(data) {
+		this.clear();
+		for (let row = 0; row < data.length && row < this.rows; row++) {
+			for (let col = 0; col < data[row].length && col < this.cols; col++) {
+				const cell = data[row][col];
+				if (cell) {
+					this.grid[row][col] = new Ball(cell.type, cell.color);
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Get the raw grid array
 	 * @returns {Array<Array<Ball|null>>} 2D grid array
 	 */

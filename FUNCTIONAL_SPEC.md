@@ -322,6 +322,7 @@ Four distinct game modes offer different play styles:
 - Timer display hidden from HUD
 - Focus on strategy and perfect clears
 - Ideal for relaxed, thoughtful gameplay
+- **Save & Resume:** Game state auto-saves on pause and tab switch; "Continue Zen Game" button appears on menu when a save exists (per-player, `localStorage`). Save cleared on level complete, game over, or deliberate restart.
 
 **GAUNTLET Mode**
 - Timed gameplay with pre-filled challenge
@@ -505,6 +506,7 @@ injected and random spawns return `null`.
 │                                             │
 │         [   ▶️  RESUME   ]                   │
 │         [   🔄 RESTART   ]                   │
+│         [  💾 SAVE & EXIT ] (Zen only)       │
 │         [   🏠 MENU      ]                   │
 │                                             │
 │                                             │
@@ -823,7 +825,8 @@ All game parameters should be configurable via JSON:
 ✅ **UI Screens & Menus (Phase 8)**
 - Main menu with difficulty/level selection
 - HUD with score, level, difficulty, timer display
-- Pause overlay (Resume/Restart/Menu options)
+- Pause overlay (Resume/Restart/Save & Exit/Menu options)
+- Auto-pause on tab switch (`visibilitychange`) and before page unload
 - Game over screen with score display
 - Level complete screen with progression
 - Settings panel (audio controls, visual options)
@@ -837,6 +840,7 @@ All game parameters should be configurable via JSON:
 - Settings persistence (audio volumes, visual preferences)
 - StatisticsTracker for match/clear/cascade analytics
 - Legacy data migration (auto-converts old format to CLASSIC mode)
+- **Zen Game Save/Resume:** Auto-saves grid, pieces, score, streak, and factory state on pause/tab switch; per-player `localStorage` key (`orbfall_zen_<player>`); "Continue Zen Game" button on main menu; cleared on level end, game over, or restart
 
 ✅ **Game Modes System (Phase 9.5)**
 - Four distinct game modes with unique mechanics:
@@ -855,16 +859,17 @@ All game parameters should be configurable via JSON:
 - Grid breach handling per mode (success in ZEN, failure in others)
 
 ✅ **Quality Assurance (Continuous)**
-- 296+ unit tests across 15 test modules
+- 310+ unit tests across 15 test modules
 - Comprehensive test coverage:
   - **Core Utilities:** Helpers (15 tests), EventEmitter (18 tests)
-  - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (81 tests)
+  - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (88 tests)
   - **Factories & Managers:** PieceFactory (26 tests), ScoreManager (35 tests), ConfigManager (12 tests), FloatingText (11 tests)
+  - **Game Engine:** GameEngine (22 tests including Zen save/load)
 ---
 
-**Document Version:** 2.2  
+**Document Version:** 2.3  
 **Last Updated:** March 2026  
-**Status:** Living Document - Updated through Phase 9.5 + Phase 10 Gameplay Improvements
+**Status:** Living Document - Updated through Phase 9.5 + Phase 10 Gameplay Improvements + Zen Pause/Persist
 
 ### 14.2 Pending Features (Phase 10 - Documentation & Deployment)
 ⏳ **Documentation**
