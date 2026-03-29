@@ -1344,6 +1344,55 @@ body::after {
 	margin: 1.5rem 0;
 }
 
+/* Recap Stats Grid */
+.recap-stats {
+	margin: 1rem 0 1.5rem;
+	padding: 1rem;
+	background-color: rgba(255, 255, 255, 0.05);
+	border-radius: 5px;
+	border: 1px solid #444444;
+}
+
+.recap-stats h3 {
+	margin: 0 0 0.75rem 0;
+	font-size: 1rem;
+	color: #00ff88;
+	text-align: center;
+}
+
+.recap-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.6rem;
+}
+
+.recap-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 0.5rem 0.25rem;
+	background-color: rgba(255, 255, 255, 0.04);
+	border-radius: 5px;
+}
+
+.recap-icon {
+	font-size: 1.3rem;
+	margin-bottom: 0.15rem;
+}
+
+.recap-value {
+	font-size: 1.2rem;
+	font-weight: bold;
+	color: #ffffff;
+}
+
+.recap-label {
+	font-size: 0.65rem;
+	color: #999999;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
 .level-complete-match-stats {
 	margin: 1rem 0;
 	padding: 1rem;

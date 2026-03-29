@@ -10,6 +10,7 @@
 
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
+import { EventEmitter } from '../utils/EventEmitter.js';
 import PieceFactory from './PieceFactory.js';
 
 /**
@@ -22,6 +23,11 @@ class StatisticsTrackerClass {
 		this.boardElement = null;
 		this.currentLevel = 1;
 		this.availableColors = [];
+
+		// Recap tracking
+		this.largestCascade = 0;
+		this.longestStreak = 0;
+		this._listenersActive = false;
 		
 		// Initialize stats for all types and colors
 		this.reset(1);
@@ -35,6 +41,7 @@ class StatisticsTrackerClass {
 		if (this.boardElement) {
 			this.renderBoard();
 		}
+		this._setupListeners();
 	}
 
 	/**
@@ -50,9 +57,68 @@ class StatisticsTrackerClass {
 		// Completely clear stats object to remove any dynamically added keys
 		this.stats = {};
 
+		// Reset recap tracking
+		this.largestCascade = 0;
+		this.longestStreak = 0;
+
 		if (this.boardElement) {
 			this.renderBoard();
 		}
+	}
+
+	/**
+	 * Set up event listeners for cascade and streak tracking
+	 * @private
+	 */
+	_setupListeners() {
+		if (this._listenersActive) return;
+		this._listenersActive = true;
+
+		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, (data) => {
+			if (data.cascadeCount > this.largestCascade) {
+				this.largestCascade = data.cascadeCount;
+			}
+		});
+
+		EventEmitter.on(CONSTANTS.EVENTS.SCORE_UPDATE, (data) => {
+			if (data.matchStreak !== undefined && data.matchStreak > this.longestStreak) {
+				this.longestStreak = data.matchStreak;
+			}
+		});
+	}
+
+	/**
+	 * Get a summary of all run stats for the recap overlay
+	 * @param {Number} timeSurvived - Time survived in seconds
+	 * @returns {Object} Recap data
+	 */
+	getRecapData(timeSurvived) {
+		const totalBalls = this.getTotalMatches();
+
+		// Count specials from existing stats (everything non-NORMAL, non-BLOCKING)
+		let specialsUsed = 0;
+		const specialTypes = [
+			CONSTANTS.BALL_TYPES.EXPLODING,
+			CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL,
+			CONSTANTS.BALL_TYPES.PAINTER_VERTICAL,
+			CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE,
+			CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW
+		];
+		for (const type of specialTypes) {
+			if (this.stats[type]) {
+				for (const count of Object.values(this.stats[type])) {
+					specialsUsed += count;
+				}
+			}
+		}
+
+		return {
+			totalBalls,
+			specialsUsed,
+			largestCascade: this.largestCascade,
+			longestStreak: this.longestStreak,
+			timeSurvived: timeSurvived || 0
+		};
 	}
 
 	/**

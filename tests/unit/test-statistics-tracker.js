@@ -4,6 +4,7 @@
 
 import StatisticsTracker from '../../src/modules/StatisticsTracker.js';
 import { CONSTANTS } from '../../src/utils/Constants.js';
+import { EventEmitter } from '../../src/utils/EventEmitter.js';
 import Grid from '../../src/modules/Grid.js';
 import Ball from '../../src/modules/Ball.js';
 
@@ -573,7 +574,84 @@ export function runStatisticsTrackerTests() {
 		assertEquals(StatisticsTracker.getCount(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#0000FF'), 1);
 		assertEquals(StatisticsTracker.getTotalCount(), 4);
 	});
-	
+
+	// ── Recap: largestCascade tracking ──
+
+	test('largestCascade resets to 0 on reset()', () => {
+		StatisticsTracker.largestCascade = 5;
+		StatisticsTracker.reset(1);
+		assertEquals(StatisticsTracker.largestCascade, 0, 'largestCascade should reset to 0');
+	});
+
+	test('largestCascade updates via CASCADE_COMPLETE event', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker._setupListeners();
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 3 });
+		assertEquals(StatisticsTracker.largestCascade, 3, 'Should track cascade of 3');
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 5 });
+		assertEquals(StatisticsTracker.largestCascade, 5, 'Should update to larger cascade');
+		EventEmitter.emit(CONSTANTS.EVENTS.CASCADE_COMPLETE, { cascadeCount: 2 });
+		assertEquals(StatisticsTracker.largestCascade, 5, 'Should not decrease for smaller cascade');
+	});
+
+	// ── Recap: longestStreak tracking ──
+
+	test('longestStreak resets to 0 on reset()', () => {
+		StatisticsTracker.longestStreak = 8;
+		StatisticsTracker.reset(1);
+		assertEquals(StatisticsTracker.longestStreak, 0, 'longestStreak should reset to 0');
+	});
+
+	test('longestStreak updates via SCORE_UPDATE event', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker._setupListeners();
+		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { score: 100, matchStreak: 4 });
+		assertEquals(StatisticsTracker.longestStreak, 4, 'Should track streak of 4');
+		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { score: 200, matchStreak: 7 });
+		assertEquals(StatisticsTracker.longestStreak, 7, 'Should update to longer streak');
+		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, { score: 300, matchStreak: 1 });
+		assertEquals(StatisticsTracker.longestStreak, 7, 'Should not decrease for shorter streak');
+	});
+
+	// ── Recap: getRecapData ──
+
+	test('getRecapData returns correct totalBalls', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, 'red');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, 'blue');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.EXPLODING, 'red');
+		const recap = StatisticsTracker.getRecapData(60);
+		assertEquals(recap.totalBalls, 3, 'totalBalls should be 3');
+	});
+
+	test('getRecapData counts specials correctly', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, 'red');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.NORMAL, 'red');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.EXPLODING, 'red');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, 'blue');
+		StatisticsTracker.recordMatch(CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, 'blue');
+		const recap = StatisticsTracker.getRecapData(0);
+		assertEquals(recap.specialsUsed, 3, 'specialsUsed should count exploding + painters');
+		assertEquals(recap.totalBalls, 5, 'totalBalls should include all types');
+	});
+
+	test('getRecapData includes cascade and streak', () => {
+		StatisticsTracker.reset(1);
+		StatisticsTracker.largestCascade = 4;
+		StatisticsTracker.longestStreak = 6;
+		const recap = StatisticsTracker.getRecapData(90);
+		assertEquals(recap.largestCascade, 4, 'Should pass through largestCascade');
+		assertEquals(recap.longestStreak, 6, 'Should pass through longestStreak');
+		assertEquals(recap.timeSurvived, 90, 'Should pass through timeSurvived');
+	});
+
+	test('getRecapData defaults time to 0', () => {
+		StatisticsTracker.reset(1);
+		const recap = StatisticsTracker.getRecapData();
+		assertEquals(recap.timeSurvived, 0, 'timeSurvived should default to 0');
+	});
+
 	// Summary
 	const passed = results.filter(r => r.pass).length;
 	const failed = results.filter(r => !r.pass).length;

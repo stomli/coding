@@ -298,7 +298,17 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 - **Scaling:** Targets use formula `base + (level-1) × perLevel + (difficulty-1) × perDifficulty`, with optional max cap
 - **Config:** `goals.enabled`, `goals.bonusPoints`, `goals.goalsPerLevel`, `goals.types.*` in `config.json`
 
-### 5.6 Score Display (Implemented)
+### 5.6 Rich Post-Run Recap (Implemented)
+- **StatisticsTracker enhancements:** Tracks `largestCascade` and `longestStreak` via event listeners (`CASCADE_COMPLETE`, `SCORE_UPDATE`), reset per level
+  - `getRecapData(timeSurvived)` returns all recap stats: `totalBalls`, `specialsUsed`, `largestCascade`, `longestStreak`, `timeSurvived`
+  - Specials count derived from existing stats (non-NORMAL, non-BLOCKING types)
+- **Recap overlay:** Six stat tiles shown in a 3-column grid between score and match statistics:
+  - ⏱️ Time, 🔮 Balls Cleared, 💥 Best Cascade, 🔥 Best Streak, ✨ Specials Used, ⭐ Goals (shown only when goals are active)
+- **Goal bonus visibility:** Goals tile shows `completed/total (+bonus)` when bonus is earned
+- **Sequential animation:** Each stat tile fades in with upward slide at 150ms intervals
+- **Existing displays preserved:** Score, best score, high score message, and match stats grid remain unchanged
+
+### 5.7 Score Display (Implemented)
 - **Score Manager:** Singleton module tracking score via event system
   - Listens for `BALLS_CLEARED` events to accumulate ball counts per cascade level
   - Tracks `ballsPerLevel` array to support progressive cascade scoring
@@ -875,7 +885,7 @@ All game parameters should be configurable via JSON:
 - Grid breach handling per mode (success in ZEN, failure in others)
 
 ✅ **Quality Assurance (Continuous)**
-- 320+ unit tests across 16 test modules
+- 330+ unit tests across 16 test modules
 - Comprehensive test coverage:
   - **Core Utilities:** Helpers (15 tests), EventEmitter (18 tests)
   - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (88 tests)
@@ -883,9 +893,9 @@ All game parameters should be configurable via JSON:
   - **Game Engine:** GameEngine (22 tests including Zen save/load)
 ---
 
-**Document Version:** 2.4  
+**Document Version:** 2.5  
 **Last Updated:** March 2026  
-**Status:** Living Document - Updated through Phase 10 Gameplay + Per-Level Goals
+**Status:** Living Document - Updated through Phase 10 Gameplay + Rich Post-Run Recap
 
 ### 14.2 Pending Features (Phase 10 - Documentation & Deployment)
 ⏳ **Documentation**

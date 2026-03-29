@@ -305,6 +305,41 @@
 					</div>
 					<p id="levelCompleteHighScoreMessage" class="new-high-score hidden">🎉 NEW BEST SCORE! 🎉</p>
 				</div>
+				<div class="recap-stats hidden" id="recapStats">
+					<h3>Run Recap</h3>
+					<div class="recap-grid">
+						<div class="recap-item" data-recap="time">
+							<span class="recap-icon">⏱️</span>
+							<span id="recapTime" class="recap-value">0:00</span>
+							<span class="recap-label">Time</span>
+						</div>
+						<div class="recap-item" data-recap="balls">
+							<span class="recap-icon">🔮</span>
+							<span id="recapBalls" class="recap-value">0</span>
+							<span class="recap-label">Balls Cleared</span>
+						</div>
+						<div class="recap-item" data-recap="cascade">
+							<span class="recap-icon">💥</span>
+							<span id="recapCascade" class="recap-value">0</span>
+							<span class="recap-label">Best Cascade</span>
+						</div>
+						<div class="recap-item" data-recap="streak">
+							<span class="recap-icon">🔥</span>
+							<span id="recapStreak" class="recap-value">0</span>
+							<span class="recap-label">Best Streak</span>
+						</div>
+						<div class="recap-item" data-recap="specials">
+							<span class="recap-icon">✨</span>
+							<span id="recapSpecials" class="recap-value">0</span>
+							<span class="recap-label">Specials Used</span>
+						</div>
+						<div class="recap-item hidden" data-recap="goals" id="recapGoalItem">
+							<span class="recap-icon">⭐</span>
+							<span id="recapGoals" class="recap-value">0/0</span>
+							<span class="recap-label">Goals</span>
+						</div>
+					</div>
+				</div>
 				<div class="level-complete-match-stats">
 					<h3>Match Statistics</h3>
 					<div id="levelCompleteStatsBoard" class="stats-board">

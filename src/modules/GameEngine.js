@@ -2228,7 +2228,12 @@ class GameEngineClass {
 		}
 		
 		// Render match statistics to the overlay
-		StatisticsTracker.renderToElement('levelCompleteStatsBoard');			// Show/hide next level button
+		StatisticsTracker.renderToElement('levelCompleteStatsBoard');
+
+		// Populate recap stats
+		this._populateRecap(timeSurvived, goalBonus);
+
+			// Show/hide next level button
 			const nextLevelBtn = document.getElementById('nextLevelButton');
 			if (nextLevelBtn) {
 				// Only show next level button if completed successfully (timeout) and not last level
@@ -2248,6 +2253,66 @@ class GameEngineClass {
 		}
 	}
 	
+	/**
+	 * Populate the recap stats section of the level complete overlay
+	 * @param {Number} timeSurvived - Seconds survived
+	 * @param {Number} goalBonus - Bonus points from goals
+	 * @private
+	 */
+	_populateRecap(timeSurvived, goalBonus) {
+		const container = document.getElementById('recapStats');
+		if (!container) return;
+
+		const recap = StatisticsTracker.getRecapData(timeSurvived);
+
+		// Format time as m:ss
+		const mins = Math.floor(recap.timeSurvived / 60);
+		const secs = Math.floor(recap.timeSurvived % 60);
+		const timeStr = `${mins}:${String(secs).padStart(2, '0')}`;
+
+		// Populate values
+		const setEl = (id, text) => {
+			const el = document.getElementById(id);
+			if (el) el.textContent = text;
+		};
+		setEl('recapTime', timeStr);
+		setEl('recapBalls', recap.totalBalls.toLocaleString());
+		setEl('recapCascade', recap.largestCascade > 0 ? `${recap.largestCascade}x` : '-');
+		setEl('recapStreak', recap.longestStreak > 0 ? `${recap.longestStreak}x` : '-');
+		setEl('recapSpecials', recap.specialsUsed.toLocaleString());
+
+		// Goal info
+		const goalItem = document.getElementById('recapGoalItem');
+		if (goalItem) {
+			const goals = GoalManager.getGoals();
+			if (goals && goals.length > 0) {
+				const completed = goals.filter(g => g.completed).length;
+				setEl('recapGoals', `${completed}/${goals.length}`);
+				if (goalBonus > 0) {
+					setEl('recapGoals', `${completed}/${goals.length} (+${goalBonus})`);
+				}
+				goalItem.classList.remove('hidden');
+			} else {
+				goalItem.classList.add('hidden');
+			}
+		}
+
+		// Show the recap section
+		container.classList.remove('hidden');
+
+		// Animate items appearing sequentially
+		const items = container.querySelectorAll('.recap-item:not(.hidden)');
+		items.forEach((item, i) => {
+			item.style.opacity = '0';
+			item.style.transform = 'translateY(10px)';
+			setTimeout(() => {
+				item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+				item.style.opacity = '1';
+				item.style.transform = 'translateY(0)';
+			}, 150 * i);
+		});
+	}
+
 	/**
 	 * Update available colors display
 	 * @private
