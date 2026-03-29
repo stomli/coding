@@ -122,10 +122,13 @@ function setupVisibilityHandlers() {
 		}
 	});
 
-	// Pause before page unload (supports save in Zen mode)
+	// Persist Zen state on any page unload, regardless of current game state.
+	// saveZenState() is a no-op when the game mode is not ZEN, so this is safe
+	// to call unconditionally. The explicit PLAYING check below still handles
+	// pausing the loop so the animation frame is cancelled cleanly.
 	window.addEventListener('beforeunload', () => {
+		GameEngine.saveZenState();
 		if (GameEngine.state === CONSTANTS.GAME_STATES.PLAYING) {
-			GameEngine.saveZenState();
 			GameEngine.pause();
 		}
 	});

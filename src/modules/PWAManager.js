@@ -273,7 +273,10 @@ class PWAManagerClass {
 
 		if (reloadBtn) {
 			reloadBtn.addEventListener('click', () => {
-				// Reload so the new service worker takes control
+				// Give the game a chance to persist any in-progress Zen save before
+				// the page is torn down. EventEmitter calls are synchronous and
+				// localStorage.setItem is synchronous, so no delay is needed.
+				EventEmitter.emit(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD);
 				window.location.reload();
 			});
 		}

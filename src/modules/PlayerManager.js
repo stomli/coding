@@ -131,31 +131,32 @@ class PlayerManagerClass {
 				}
 			}
 			
-			// NEW MIGRATION: Fill in missing completed levels
-			// If a player has completed level 5, they should have checkmarks on 1-4 too
+			// MIGRATION: Fill in missing completed levels for legacy 2-part keys only
+			// If a player has completed level 5, they should have checkmarks on 1-4 too.
+			// Only process legacy "difficulty-level" format (2 numeric parts) — skip modern
+			// "mode-difficulty-level" (3-part) keys to avoid NaN pollution in the index.
 			if (player.levelProgress.completedLevels) {
 				const completedByDifficulty = {};
 				
-				// Group completed levels by difficulty
+				// Group completed levels by difficulty — legacy keys only
 				player.levelProgress.completedLevels.forEach(key => {
-					const [diff, lvl] = key.split('-').map(Number);
+					const parts = key.split('-');
+					if (parts.length !== 2) return; // Skip modern 3-part keys
+					const diff = Number(parts[0]);
+					const lvl  = Number(parts[1]);
+					if (isNaN(diff) || isNaN(lvl)) return; // Skip any malformed keys
 					if (!completedByDifficulty[diff]) {
 						completedByDifficulty[diff] = [];
 					}
 					completedByDifficulty[diff].push(lvl);
 				});
 				
-				console.log('Migration: completedByDifficulty', completedByDifficulty);
-				
-				// For each difficulty, if a higher level is completed, mark all lower levels as completed
+				// For each difficulty, if a higher level is completed, mark all lower levels too
 				Object.keys(completedByDifficulty).forEach(diff => {
 					const levels = completedByDifficulty[diff];
 					const maxLevel = Math.max(...levels);
 					
-					console.log(`Migration: Difficulty ${diff}, maxLevel ${maxLevel}, existing levels:`, levels);
-					console.log(`Migration: Current completedLevels:`, player.levelProgress.completedLevels);
-					
-				// Mark all levels from 1 to maxLevel as completed
+				// Mark all levels from 1 to maxLevel as completed (legacy format)
 				for (let i = 1; i <= maxLevel; i++) {
 					const key = `${diff}-${i}`;
 					if (!player.levelProgress.completedLevels.includes(key)) {

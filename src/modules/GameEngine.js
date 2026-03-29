@@ -314,6 +314,9 @@ class GameEngineClass {
 		// Restart
 		EventEmitter.on(CONSTANTS.EVENTS.RESTART, () => this.restart());
 		
+		// PWA update banner "Reload" clicked — persist Zen save before the page tears down
+		EventEmitter.on(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD, () => this.saveZenState());
+		
 		// Cascade complete - show bonus floating text
 		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, (data) => {
 			if (data.cascadeCount > 1) {
@@ -998,6 +1001,10 @@ class GameEngineClass {
 		
 		// Check for matches and handle cascades
 		await this._handleMatching();
+		
+		// Auto-save Zen state after each piece settles.  saveZenState() is a no-op
+		// for non-Zen modes, so calling it unconditionally here is safe.
+		this.saveZenState();
 		
 		// Blocker flood failsafe: if too many blockers, force explosive on next interval
 		this._checkBlockerFailsafe();
