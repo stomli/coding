@@ -40,32 +40,29 @@
 		<div id="menuScreen" class="screen">
 			<div class="menu-container">
 				<img src="src/img/Logotrans.png" alt="Orb Fall Logo" class="game-logo">
-				
-			<!-- Player Selection -->
-			<div class="player-selection">
-				<h2>Player</h2>
-				<div class="player-controls">
-						<select id="playerSelect" class="player-select">
-							<!-- Options populated by JavaScript -->
-						</select>
-						<button id="addPlayerButton" class="btn-icon" title="Add New Player">➕</button>
-						<button id="deletePlayerButton" class="btn-icon" title="Delete Player">🗑️</button>
-					</div>
+
+			<!-- Player Bar -->
+			<div class="player-bar">
+				<span class="player-bar-label">Playing as:</span>
+				<select id="playerSelect" class="player-select">
+					<!-- Options populated by JavaScript -->
+				</select>
+				<button id="addPlayerButton" class="btn-icon" title="Add New Player">➕</button>
+				<button id="deletePlayerButton" class="btn-icon" title="Delete Player">🗑️</button>
+			</div>
+
+			<!-- Game Setup -->
+			<div class="game-setup">
+				<h2>Game Setup</h2>
+				<label class="setup-label">Difficulty</label>
+				<div class="difficulty-buttons">
+					<button class="difficulty-btn" data-difficulty="1">Easy</button>
+					<button class="difficulty-btn" data-difficulty="2">Medium</button>
+					<button class="difficulty-btn" data-difficulty="3">Hard</button>
+					<button class="difficulty-btn" data-difficulty="4">Expert</button>
+					<button class="difficulty-btn" data-difficulty="5">Master</button>
 				</div>
-				
-				<div class="difficulty-selector">
-					<h2>Select Difficulty</h2>
-					<div class="difficulty-buttons">
-						<button class="difficulty-btn" data-difficulty="1">Easy</button>
-						<button class="difficulty-btn" data-difficulty="2">Medium</button>
-						<button class="difficulty-btn" data-difficulty="3">Hard</button>
-						<button class="difficulty-btn" data-difficulty="4">Expert</button>
-						<button class="difficulty-btn" data-difficulty="5">Master</button>
-					</div>
-				</div>
-				
-			<div class="mode-selector">
-				<h2>Select Game Mode</h2>
+				<label class="setup-label">Mode</label>
 				<div class="mode-buttons">
 					<button class="mode-btn selected" data-mode="CLASSIC" title="Clear orbs before time runs out">Classic</button>
 					<button class="mode-btn" data-mode="ZEN" title="Untimed - focus on combos">Zen</button>
