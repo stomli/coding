@@ -380,7 +380,7 @@ body::after {
 }
 
 .player-bar-label {
-	color: #888888;
+	color: #bbbbbb;
 	font-size: 0.85rem;
 }
 
@@ -460,6 +460,9 @@ body::after {
 /* Game Setup */
 .game-setup {
 	margin-bottom: 0.5rem;
+	max-width: 500px;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .setup-label {
@@ -467,7 +470,7 @@ body::after {
 	font-size: 0.75rem;
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
-	color: #888888;
+	color: #bbbbbb;
 	margin: 0.25rem 0 0.15rem;
 }
 
@@ -480,8 +483,8 @@ body::after {
 }
 
 .mode-btn {
-	padding: 0.5rem 1rem;
-	font-size: 0.9rem;
+	padding: 0.4rem 0.9rem;
+	font-size: 0.85rem;
 	border: 2px solid #444444;
 	background: linear-gradient(135deg, #2a2a3e, #1f1f32);
 	color: #ffffff;
@@ -513,67 +516,36 @@ body::after {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	gap: 0.4rem;
+	gap: 0.5rem;
 	width: 100%;
-	max-width: 540px;
-	margin: 0 auto 0.75rem;
-	max-height: 160px;
-	overflow-y: auto;
-	padding: 0.5rem;
-	background: linear-gradient(135deg, #2a2a3e, #1f1f32);
-	border-radius: 5px;
-	border: 1px solid #444;
+	margin: 0 auto 0.5rem;
 }
 
 .level-btn {
-	width: 42px;
-	height: 42px;
-	flex-shrink: 0;
-	padding: 0;
-	font-size: 0.8rem;
+	padding: 0.4rem 0;
+	font-size: 0.85rem;
+	width: 3.2rem;
+	text-align: center;
 	border: 2px solid #444444;
-	background-color: #3a3a4e;
-	color: #888888;
-	cursor: not-allowed;
+	background: linear-gradient(135deg, #2a2a3e, #1f1f32);
+	color: #ffffff;
+	cursor: pointer;
 	transition: all 0.3s ease;
 	border-radius: 5px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 }
 
 .level-btn.locked {
-	background-color: #2a2a2e;
 	color: #555555;
 	cursor: not-allowed;
 	border-color: #333333;
 	opacity: 0.5;
-}
-
-.level-btn.unlocked {
-	background-color: #2a2a3e;
-	color: #ffffff;
-	cursor: pointer;
-	border-color: #666666;
-}
-
-.level-btn:not(.locked) {
-	background: linear-gradient(135deg, #2a2a3e, #1f1f32);
-	color: #ffffff;
-	cursor: pointer;
-	border-color: #666666;
+	background: linear-gradient(135deg, #2a2a2e, #1a1a28);
 }
 
 .level-btn:not(.locked):hover {
 	background: linear-gradient(135deg, #3a3a4e, #2f2f42);
 	border-color: #00ff88;
 	box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
-	transform: scale(1.05);
-}
-
-.level-btn.unlocked:hover {
-	background-color: #3a3a4e;
-	border-color: #00ff88;
 }
 
 .level-btn.selected {
@@ -581,23 +553,26 @@ body::after {
 	color: #1a1a2e;
 	border-color: #00ff88;
 	box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
-	transform: scale(1.1);
 }
 
 .level-btn.completed {
-	background: linear-gradient(135deg, #4a4a6e, #3a3a5e);
 	border-color: #00ff88;
-	position: relative;
 }
 
-.level-btn.completed::after {
-	content: '✓';
-	position: absolute;
-	top: 2px;
-	right: 4px;
-	font-size: 0.7rem;
+.level-btn .level-check {
 	color: #00ff88;
-	font-weight: bold;
+	margin-left: 0.25rem;
+	font-size: 0.75rem;
+}
+
+.level-btn.selected .level-check {
+	color: #1a1a2e;
+}
+
+.level-btn .level-lock {
+	color: #555555;
+	margin-left: 0.2rem;
+	font-size: 0.7rem;
 }
 
 /* Menu Actions */
@@ -1438,8 +1413,8 @@ body::after {
    ============================================ */
 .btn-primary,
 .btn-secondary {
-	padding: 1rem 2rem;
-	font-size: 1.1rem;
+	padding: 0.5rem 1.2rem;
+	font-size: 0.95rem;
 	border: none;
 	cursor: pointer;
 	border-radius: 5px;
@@ -1481,24 +1456,6 @@ body::after {
 /* ============================================
    Scrollbar Styling
    ============================================ */
-.level-grid::-webkit-scrollbar {
-	width: 8px;
-}
-
-.level-grid::-webkit-scrollbar-track {
-	background: #1a1a2e;
-	border-radius: 5px;
-}
-
-.level-grid::-webkit-scrollbar-thumb {
-	background: #00ff88;
-	border-radius: 5px;
-}
-
-.level-grid::-webkit-scrollbar-thumb:hover {
-	background: #00dd77;
-}
-
 /* ============================================
    Player Management Forms
    ============================================ */
@@ -1628,15 +1585,7 @@ body::after {
 	}
 	
 	.level-grid {
-		gap: 0.3rem;
-		max-height: 140px;
-		padding: 0.5rem;
-	}
-	
-	.level-btn {
-		width: 40px;
-		height: 40px;
-		font-size: 0.75rem;
+		gap: 0.4rem;
 	}
 	
 	.btn-primary,

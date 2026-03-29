@@ -344,20 +344,23 @@ function populateLevelGrid() {
 	for (let level = 1; level <= maxLevel; level++) {
 		const btn = document.createElement('button');
 		btn.className = 'level-btn';
-		btn.textContent = level;
 		btn.dataset.level = level;
 		
 		// Check if level is unlocked
 		const isUnlocked = unlockedLevels.includes(level);
+		const isCompleted = isUnlocked && PlayerManager.isLevelCompleted(selectedDifficulty, level, selectedMode);
+		
+		// Build pill content: number + indicator
+		let content = String(level);
 		if (!isUnlocked) {
 			btn.classList.add('locked');
 			btn.disabled = true;
-		} else {
-			// Check if this mode+difficulty+level has been completed
-			if (PlayerManager.isLevelCompleted(selectedDifficulty, level, selectedMode)) {
-				btn.classList.add('completed');
-			}
+			content += '<span class="level-lock">🔒</span>';
+		} else if (isCompleted) {
+			btn.classList.add('completed');
+			content += '<span class="level-check">✓</span>';
 		}
+		btn.innerHTML = content;
 		
 		// Highlight if this is the currently selected level
 		if (level === selectedLevel) {
