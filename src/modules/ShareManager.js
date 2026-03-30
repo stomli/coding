@@ -53,6 +53,12 @@ class ShareManagerClass {
 		}
 
 		text += ' Can you beat it?';
+
+		// Append game link
+		if (typeof window !== 'undefined' && window.location) {
+			text += `\n${window.location.origin}${window.location.pathname}`;
+		}
+
 		return text;
 	}
 

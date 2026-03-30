@@ -102,6 +102,21 @@ testSuite.tests.push({
 	}
 });
 
+testSuite.tests.push({
+	name: 'buildShareText - includes game URL',
+	async run() {
+		const text = ShareManager.buildShareText({
+			score: 100, level: 1, difficulty: 1, mode: 'CLASSIC'
+		});
+		// In a browser environment, window.location.origin should be present
+		if (typeof window !== 'undefined' && window.location) {
+			if (!text.includes(window.location.origin)) {
+				throw new Error('Should include game URL');
+			}
+		}
+	}
+});
+
 // ── canNativeShare ──
 
 testSuite.tests.push({
