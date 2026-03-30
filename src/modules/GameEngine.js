@@ -34,6 +34,7 @@ import AnalyticsManager from './AnalyticsManager.js';
 import GoalManager from './GoalManager.js';
 import HintManager from './HintManager.js';
 import MissionManager from './MissionManager.js';
+import PuzzleManager from './PuzzleManager.js';
 
 /**
  * Game engine class managing core game state and loop
@@ -650,15 +651,27 @@ class GameEngineClass {
 		// Reset PieceFactory
 		PieceFactory.reset();
 		
+		// PUZZLE mode: seed the RNG for deterministic piece sequences
+		if (this.gameMode === 'PUZZLE') {
+			const seed = PuzzleManager.getSeed(this.level, this.difficulty);
+			PieceFactory.setSeed(seed);
+			PuzzleManager.initialize(this.level, this.difficulty);
+		} else {
+			PuzzleManager.reset();
+		}
+		
 		// Initialize ScoreManager
 		ScoreManager.initialize(this.difficulty, this.level, this.gameMode);
 		
-		// Initialize GoalManager (optional per-level goals) — skip for MISSION mode
-		if (this.gameMode !== 'MISSION') {
-			GoalManager.initialize(this.difficulty, this.level);
-		} else {
+		// Initialize GoalManager (optional per-level goals) — skip for MISSION/PUZZLE modes
+		if (this.gameMode === 'MISSION') {
 			GoalManager.reset();
 			MissionManager.initialize(this.difficulty, this.level);
+		} else if (this.gameMode === 'PUZZLE') {
+			GoalManager.reset();
+			MissionManager.reset();
+		} else {
+			GoalManager.initialize(this.difficulty, this.level);
 		}
 		
 		// Initialize HintManager for this difficulty
@@ -697,7 +710,8 @@ class GameEngineClass {
 				'ZEN': 'Zen',
 				'GAUNTLET': 'Gauntlet',
 				'RISING_TIDE': 'Rising Tide',
-				'MISSION': 'Mission'
+				'MISSION': 'Mission',
+				'PUZZLE': 'Puzzle'
 			};
 			modeDisplay.textContent = modeNames[this.gameMode] || this.gameMode;
 		}
@@ -938,18 +952,20 @@ class GameEngineClass {
 			// Piece exists, continue
 		}
 		
-		// Update drop timer
-		this.dropTimer += deltaTime;
-		
-		// Check if it's time to drop
-		const shouldDrop = this.dropTimer >= this.dropInterval;
-		
-		if (shouldDrop) {
-			this.dropTimer = 0;
-			this._dropPiece();
-		}
-		else {
-			// Not time to drop yet
+		// Update drop timer (skip auto-drop in PUZZLE mode — player controls drops)
+		if (this.gameMode !== 'PUZZLE') {
+			this.dropTimer += deltaTime;
+			
+			// Check if it's time to drop
+			const shouldDrop = this.dropTimer >= this.dropInterval;
+			
+			if (shouldDrop) {
+				this.dropTimer = 0;
+				this._dropPiece();
+			}
+			else {
+				// Not time to drop yet
+			}
 		}
 		
 		// Update lock timer if piece is at bottom
@@ -1026,6 +1042,16 @@ class GameEngineClass {
 		
 		// Check for matches and handle cascades
 		await this._handleMatching();
+		
+		// PUZZLE mode: count the placed piece and end game when limit reached
+		if (this.gameMode === 'PUZZLE' && PuzzleManager.active) {
+			const hasMore = PuzzleManager.recordPiece();
+			if (!hasMore) {
+				// All pieces used — level complete (success)
+				this._levelComplete('timeout');
+				return;
+			}
+		}
 		
 		// Auto-save Zen state after each piece settles.  saveZenState() is a no-op
 		// for non-Zen modes, so calling it unconditionally here is safe.
@@ -2191,6 +2217,10 @@ class GameEngineClass {
 						reasonText.textContent = '🧘 Grid Filled - Zen Achieved!';
 					} else if (this.gameMode === 'MISSION') {
 						reasonText.textContent = `🎯 Missions: ${MissionManager.getGoalsCompleted()}/${MissionManager.getTotalGoals()} Complete!`;
+					} else if (this.gameMode === 'PUZZLE') {
+						const stars = PuzzleManager.getStars(ScoreManager.getScore(), this.level, this.difficulty);
+						const starStr = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+						reasonText.textContent = `🧩 All Pieces Placed! ${starStr}`;
 					} else {
 						reasonText.textContent = '⏱️ Time Survived!';
 					}
@@ -2200,6 +2230,10 @@ class GameEngineClass {
 				if (reasonText) {
 					if (this.gameMode === 'MISSION') {
 						reasonText.textContent = `⚠️ Grid Breached — ${MissionManager.getGoalsCompleted()}/${MissionManager.getTotalGoals()} Missions`;
+					} else if (this.gameMode === 'PUZZLE') {
+						const stars = PuzzleManager.getStars(ScoreManager.getScore(), this.level, this.difficulty);
+						const starStr = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+						reasonText.textContent = `⚠️ Grid Breached! ${starStr}`;
 					} else {
 						reasonText.textContent = '⚠️ Grid Breached!';
 					}
@@ -2219,6 +2253,9 @@ class GameEngineClass {
 				}
 				goalBonus = missionScore;
 				MissionManager.reset();
+			} else if (this.gameMode === 'PUZZLE') {
+				// No bonus — score stands as-is; store stars via PlayerManager
+				PuzzleManager.reset();
 			} else {
 				goalBonus = GoalManager.getCompletedBonus();
 				if (goalBonus > 0) {

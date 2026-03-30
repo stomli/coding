@@ -79,7 +79,8 @@ const CONSTANTS = {
 		ZEN: 'ZEN',              // Untimed, play until grid fills
 		GAUNTLET: 'GAUNTLET',    // Pre-filled rows at start
 		RISING_TIDE: 'RISING_TIDE', // Blocking rows rise from bottom
-		MISSION: 'MISSION'        // Sequential micro-goal chain
+		MISSION: 'MISSION',       // Sequential micro-goal chain
+		PUZZLE: 'PUZZLE'          // Seeded deterministic puzzle, no auto-drop
 	},
 	
 	/**
@@ -122,6 +123,14 @@ const CONSTANTS = {
 			timed: true,
 			preFillRows: 0,
 			risingBlocks: false
+		},
+		PUZZLE: {
+			name: 'Puzzle',
+			description: 'Seeded puzzle — same pieces every time. No timer, no auto-drop. Chase the high score!',
+			timed: false,
+			preFillRows: 0,
+			risingBlocks: false,
+			pieceLimit: true
 		}
 	},
 	
@@ -172,7 +181,8 @@ const CONSTANTS = {
 		PWA_BEFORE_RELOAD: 'pwaBeforeReloadEvent',
 		GOAL_UPDATE: 'goalUpdateEvent',
 		HINT_SHOWN: 'hintShownEvent',
-		MISSION_GOAL_UPDATE: 'missionGoalUpdateEvent'
+		MISSION_GOAL_UPDATE: 'missionGoalUpdateEvent',
+		PUZZLE_PIECES_UPDATE: 'puzzlePiecesUpdateEvent'
 	},
 	
 	/**

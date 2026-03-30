@@ -12,7 +12,7 @@
  * ============================================================================
  */
 
-const CACHE_VERSION = 'orbfall-v1.0.22';
+const CACHE_VERSION = 'orbfall-v1.0.23';
 const CACHE_NAME = CACHE_VERSION;
 
 /**
@@ -56,6 +56,7 @@ const CORE_ASSETS = [
 	'/src/modules/Piece.js',
 	'/src/modules/PieceFactory.js',
 	'/src/modules/PlayerManager.js',
+	'/src/modules/PuzzleManager.js',
 	'/src/modules/PWAManager.js',
 	'/src/modules/Renderer.js',
 	'/src/modules/ScoreManager.js',

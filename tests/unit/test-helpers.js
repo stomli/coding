@@ -13,7 +13,8 @@ import {
 	deepClone,
 	formatNumber,
 	formatTime,
-	iterateShapeCells
+	iterateShapeCells,
+	SeededRandom
 } from '../../src/utils/Helpers.js';
 
 /**
@@ -535,6 +536,74 @@ export function testHelpers() {
 			const clone = deepClone(orig);
 			clone.arr[1].x = 99;
 			return orig.arr[1].x === 2;
+		})(),
+		error: null
+	});
+
+	// ── SeededRandom ──
+
+	tests.push({
+		name: 'SeededRandom - same seed produces same sequence',
+		pass: (() => {
+			const a = new SeededRandom(42);
+			const b = new SeededRandom(42);
+			for (let i = 0; i < 50; i++) {
+				if (a.next() !== b.next()) return false;
+			}
+			return true;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'SeededRandom - different seeds produce different sequences',
+		pass: (() => {
+			const a = new SeededRandom(1);
+			const b = new SeededRandom(2);
+			let same = 0;
+			for (let i = 0; i < 20; i++) {
+				if (a.next() === b.next()) same++;
+			}
+			return same < 20; // extremely unlikely to be all identical
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'SeededRandom - next() returns values in [0, 1)',
+		pass: (() => {
+			const rng = new SeededRandom(99);
+			for (let i = 0; i < 200; i++) {
+				const v = rng.next();
+				if (v < 0 || v >= 1) return false;
+			}
+			return true;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'SeededRandom - nextInt(min, max) stays in range',
+		pass: (() => {
+			const rng = new SeededRandom(7);
+			for (let i = 0; i < 200; i++) {
+				const v = rng.nextInt(3, 8);
+				if (v < 3 || v > 8 || v !== Math.floor(v)) return false;
+			}
+			return true;
+		})(),
+		error: null
+	});
+
+	tests.push({
+		name: 'SeededRandom - nextFloat(min, max) stays in range',
+		pass: (() => {
+			const rng = new SeededRandom(123);
+			for (let i = 0; i < 200; i++) {
+				const v = rng.nextFloat(5.0, 10.0);
+				if (v < 5.0 || v >= 10.0) return false;
+			}
+			return true;
 		})(),
 		error: null
 	});

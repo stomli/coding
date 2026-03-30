@@ -77,6 +77,7 @@
 					<button class="mode-btn" data-mode="GAUNTLET" title="Start with pre-filled rows">Gauntlet</button>
 					<button class="mode-btn" data-mode="RISING_TIDE" title="Blocks rise from bottom">Rising Tide</button>
 					<button class="mode-btn" data-mode="MISSION" title="Complete sequential micro-goals">Mission</button>
+					<button class="mode-btn" data-mode="PUZZLE" title="Seeded puzzle — same pieces every time">Puzzle</button>
 				</div>
 				<label class="setup-label">Level</label>
 				<div id="levelGrid" class="level-grid">
@@ -157,6 +158,11 @@
 			<span class="mission-banner-label">🎯 Mission:</span>
 			<span id="missionObjective" class="mission-objective"></span>
 			<span id="missionProgress" class="mission-progress"></span>
+		</div>
+		<!-- Puzzle Mode Pieces Remaining Banner -->
+		<div id="puzzleBanner" class="puzzle-banner hidden">
+			<span class="puzzle-banner-label">🧩 Pieces Left:</span>
+			<span id="puzzlePiecesLeft" class="puzzle-pieces-left"></span>
 		</div>
 		<!-- Game Board Container -->
 		<div class="game-container">

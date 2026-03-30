@@ -196,6 +196,16 @@
 			"Cascades earn more points at each level"
 		]
 	},
+	"puzzle": {
+		"pieceLimit": 1000,
+		"starThresholds": {
+			"baseScore": 200,
+			"perLevel": 30,
+			"bronze": 0.30,
+			"silver": 0.60,
+			"gold": 1.00
+		}
+	},
 	"difficulty": {
 		"difficulty1": {
 			"name": "Easy",

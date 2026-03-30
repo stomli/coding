@@ -19,6 +19,7 @@ import AdManager from './modules/AdManager.js';
 import MonetizationManager from './modules/MonetizationManager.js';
 import PWAManager from './modules/PWAManager.js';
 import HintManager from './modules/HintManager.js';
+import PuzzleManager from './modules/PuzzleManager.js';
 import { ANALYTICS_CONFIG } from './config/analytics.config.js';
 
 /**
@@ -188,6 +189,11 @@ function setupMenuListeners() {
 			await AudioManager.startMusic();
 			
 			showScreen('gameScreen');
+		// Hide mode-specific banners (will be shown by their respective events)
+		const mb = document.getElementById('missionBanner');
+		const pb = document.getElementById('puzzleBanner');
+		if (mb) mb.classList.add('hidden');
+		if (pb) pb.classList.add('hidden');
 		// Start with selected difficulty, level, and mode
 		const playerName = PlayerManager.getCurrentPlayerData().name;
 		AnalyticsManager.trackLevelStart(selectedDifficulty, selectedLevel, selectedMode);
@@ -455,6 +461,16 @@ function setupScoreListener() {
 			if (missionProgress) missionProgress.textContent = `${data.current.progress}/${data.current.target}`;
 		}
 	});
+
+	// Puzzle mode: pieces remaining HUD
+	const puzzleBanner = document.getElementById('puzzleBanner');
+	const puzzlePiecesLeft = document.getElementById('puzzlePiecesLeft');
+
+	EventEmitter.on(CONSTANTS.EVENTS.PUZZLE_PIECES_UPDATE, (data) => {
+		if (!puzzleBanner) return;
+		puzzleBanner.classList.remove('hidden');
+		if (puzzlePiecesLeft) puzzlePiecesLeft.textContent = `${data.piecesRemaining} / ${data.pieceLimit}`;
+	});
 }
 
 /**
@@ -500,6 +516,19 @@ function populateLevelGrid() {
 			btn.classList.add('locked');
 			btn.disabled = true;
 			content += '<span class="level-lock">🔒</span>';
+		} else if (selectedMode === 'PUZZLE') {
+			// PUZZLE mode: show star rating
+			const stars = PlayerManager.getLevelStars(
+				selectedDifficulty, level,
+				(score, lvl, diff) => PuzzleManager.getStars(score, lvl, diff)
+			);
+			if (stars > 0) {
+				btn.classList.add('completed');
+			}
+			const starStr = '<span class="level-stars">'
+				+ '★'.repeat(stars) + '<span class="star-empty">' + '☆'.repeat(3 - stars) + '</span>'
+				+ '</span>';
+			content += starStr;
 		} else if (isCompleted) {
 			btn.classList.add('completed');
 			content += '<span class="level-check">✓</span>';

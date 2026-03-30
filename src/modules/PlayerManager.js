@@ -183,7 +183,9 @@ class PlayerManagerClass {
 					"CLASSIC": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
 					"ZEN": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
 					"GAUNTLET": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
-					"RISING_TIDE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] }
+					"RISING_TIDE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+					"MISSION": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+					"PUZZLE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] }
 				};
 			}
 			
@@ -285,6 +287,12 @@ class PlayerManagerClass {
 						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
 					},
 					"RISING_TIDE": {
+						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
+					},
+					"MISSION": {
+						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
+					},
+					"PUZZLE": {
 						"1": [1], "2": [1], "3": [1], "4": [1], "5": [1]
 					}
 				},
@@ -406,7 +414,9 @@ class PlayerManagerClass {
 				"CLASSIC": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
 				"ZEN": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
 				"GAUNTLET": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
-				"RISING_TIDE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] }
+				"RISING_TIDE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+				"MISSION": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] },
+				"PUZZLE": { "1": [1], "2": [1], "3": [1], "4": [1], "5": [1] }
 			};
 		}
 		
@@ -549,6 +559,20 @@ class PlayerManagerClass {
 		// Fall back to legacy key for backward compatibility
 		const legacyKey = `${difficulty}-${level}`;
 		return player.levelProgress.levelScores[legacyKey] || 0;
+	}
+
+	/**
+	 * Get highest star rating earned for a PUZZLE mode level.
+	 * Reads the best score and computes stars dynamically via the threshold formula.
+	 * @param {Number} difficulty
+	 * @param {Number} level
+	 * @param {Function} getStarsFn - (score, level, difficulty) => 0-3
+	 * @returns {Number} 0-3
+	 */
+	getLevelStars(difficulty, level, getStarsFn) {
+		const best = this.getLevelBestScore(difficulty, level, 'PUZZLE');
+		if (best <= 0) return 0;
+		return getStarsFn(best, level, difficulty);
 	}
 
 	/**

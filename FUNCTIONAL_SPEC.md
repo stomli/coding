@@ -340,6 +340,22 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
 - **Config:** `mission.pointsPerGoal`, `mission.timeBonusMultiplier`, `mission.goalChain[]` with 8 escalating micro-goals
 - **Bug fix:** ScoreManager now receives `gameMode` parameter from GameEngine.start() (was defaulting to CLASSIC)
 
+### 5.8.1 Puzzle Mode (Implemented)
+- **PuzzleManager:** Singleton module managing PUZZLE mode state
+  - Deterministic seed computed from `level × 10000 + difficulty`
+  - Piece limit (default 1000) — game ends when all pieces placed or grid breaches
+  - Star thresholds (bronze/silver/gold) computed per level+difficulty from config formula
+  - `getStars(score, level, difficulty)` returns 0-3 stars
+  - Emits `PUZZLE_PIECES_UPDATE` event with pieces remaining/limit
+- **SeededRandom (Helpers.js):** Mulberry32 PRNG — `next()`, `nextInt(min, max)`, `nextFloat(min, max)`
+- **PieceFactory seeded RNG:** `setSeed(seed)` / `clearSeed()` methods; all internal random calls routed through `_randomInt()` / `_randomFloat()` wrappers that delegate to seeded PRNG when set
+- **PUZZLE game mode:** Added to `CONSTANTS.GAME_MODES` and `GAME_MODE_CONFIG` (untimed, no auto-drop, no rising blocks, pieceLimit)
+- **No auto-drop:** In PUZZLE mode, the game loop skips the drop timer; player must use soft-drop or hard-drop controls manually
+- **Menu UI:** "Puzzle" button added to mode selector
+- **HUD:** Puzzle banner (`#puzzleBanner`) shows pieces remaining / total
+- **Level selector stars:** In PUZZLE mode, each level button shows ★★★/★★☆/★☆☆/☆☆☆ based on player's best score vs thresholds (gold=par)
+- **Config:** `puzzle.pieceLimit`, `puzzle.starThresholds` (`baseScore`, `perLevel`, `bronze`, `silver`, `gold` fractions)
+
 ### 5.9 Score Display (Implemented)
 - **Score Manager:** Singleton module tracking score via event system
   - Listens for `BALLS_CLEARED` events to accumulate ball counts per cascade level
@@ -405,6 +421,15 @@ Four distinct game modes offer different play styles:
 - Completing a goal immediately reveals the next
 - Score = goalsCompleted × pointsPerGoal + remainingTime × timeBonusMultiplier
 - Tests adaptability across different play styles
+
+**PUZZLE Mode**
+- Untimed, no auto-drop — player controls every move
+- Deterministic piece sequence seeded by level + difficulty
+- Same pieces every time for a given level/difficulty — a true puzzle
+- 1000-piece limit (configurable) — game ends when all pieces placed or grid breaches
+- Star scoring: bronze (30% of par), silver (60% of par), gold (100% of par)
+- Level selector shows ★★★ star rating for each level
+- Tests strategic placement and score maximization
 
 **Mode-Specific Progression:**
 - Each mode tracks progression independently
@@ -925,17 +950,17 @@ All game parameters should be configurable via JSON:
 - Grid breach handling per mode (success in ZEN, failure in others)
 
 ✅ **Quality Assurance (Continuous)**
-- 370+ unit tests across 18 test modules
+- 390+ unit tests across 19 test modules
 - Comprehensive test coverage:
-  - **Core Utilities:** Helpers (15 tests), EventEmitter (18 tests)
+  - **Core Utilities:** Helpers (20 tests), EventEmitter (18 tests)
   - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (88 tests)
-  - **Factories & Managers:** PieceFactory (26 tests), ScoreManager (35 tests), ConfigManager (12 tests), FloatingText (11 tests), GoalManager (10 tests), MissionManager (16 tests)
+  - **Factories & Managers:** PieceFactory (26 tests), ScoreManager (35 tests), ConfigManager (12 tests), FloatingText (11 tests), GoalManager (10 tests), MissionManager (16 tests), PuzzleManager (15 tests)
   - **Game Engine:** GameEngine (22 tests including Zen save/load)
 ---
 
-**Document Version:** 2.7  
+**Document Version:** 2.8  
 **Last Updated:** March 2026  
-**Status:** Living Document - Updated through Phase 10 Gameplay + Mission Mode
+**Status:** Living Document - Updated through Phase 10 Gameplay + Mission Mode + Puzzle Mode
 
 ### 14.2 Pending Features (Phase 10 - Documentation & Deployment)
 ⏳ **Documentation**

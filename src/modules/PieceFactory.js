@@ -12,7 +12,7 @@ import Ball from './Ball.js';
 import Piece from './Piece.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
-import { randomInt, randomFloat } from '../utils/Helpers.js';
+import { randomInt, randomFloat, SeededRandom } from '../utils/Helpers.js';
 import { DebugMode } from '../utils/DebugMode.js';
 
 /**
@@ -41,6 +41,44 @@ class PieceFactoryClass {
 		this.piecesSinceLastExplosive = 0;
 		// Blocker failsafe: force explosive on next interval
 		this.forceExplosiveNext = false;
+		// Seeded RNG for PUZZLE mode (null = use Math.random)
+		this._rng = null;
+	}
+
+	/**
+	 * Set a deterministic seed for PUZZLE mode.
+	 * All subsequent random calls will use this seed.
+	 * @param {Number} seed - Integer seed
+	 */
+	setSeed(seed) {
+		this._rng = new SeededRandom(seed);
+	}
+
+	/**
+	 * Clear the seeded RNG (revert to Math.random).
+	 */
+	clearSeed() {
+		this._rng = null;
+	}
+
+	/**
+	 * Internal random int — delegates to seeded RNG when set.
+	 * @param {Number} min
+	 * @param {Number} max
+	 * @returns {Number}
+	 */
+	_randomInt(min, max) {
+		return this._rng ? this._rng.nextInt(min, max) : randomInt(min, max);
+	}
+
+	/**
+	 * Internal random float — delegates to seeded RNG when set.
+	 * @param {Number} min
+	 * @param {Number} max
+	 * @returns {Number}
+	 */
+	_randomFloat(min, max) {
+		return this._rng ? this._rng.nextFloat(min, max) : randomFloat(min, max);
 	}
 	
 	/**
@@ -57,6 +95,7 @@ class PieceFactoryClass {
 		this.specialBag = [];
 		this.piecesSinceLastExplosive = 0;
 		this.forceExplosiveNext = false;
+		this._rng = null;
 	}
 	
 	/**
@@ -140,7 +179,7 @@ class PieceFactoryClass {
 			spawnRate = spawnRate * 3; // Triple the exploding ball spawn rate
 		}
 		
-		return randomFloat(0, 1) < spawnRate;
+		return this._randomFloat(0, 1) < spawnRate;
 	}
 	
 	/**
@@ -163,7 +202,7 @@ class PieceFactoryClass {
 			return false;
 		}
 		
-		return randomFloat(0, 1) < spawnRate;
+		return this._randomFloat(0, 1) < spawnRate;
 	}
 	
 	/**
@@ -198,7 +237,7 @@ class PieceFactoryClass {
 			}
 			const specialType = this._drawFromSpecialBag();
 			if (!specialType) return null; // bag empty (no types unlocked at this level)
-			const color = availableColors[randomInt(0, availableColors.length - 1)];
+			const color = availableColors[this._randomInt(0, availableColors.length - 1)];
 			return new Ball(specialType, color);
 		}
 
@@ -213,7 +252,7 @@ class PieceFactoryClass {
 
 		// Shuffle to randomize priority
 		for (let i = specialTypes.length - 1; i > 0; i--) {
-			const j = randomInt(0, i);
+			const j = this._randomInt(0, i);
 			[specialTypes[i], specialTypes[j]] = [specialTypes[j], specialTypes[i]];
 		}
 		
@@ -221,7 +260,7 @@ class PieceFactoryClass {
 		for (const special of specialTypes) {
 			if (this.shouldSpawnSpecialBall(special.config)) {
 				// Use random color from available colors
-				const color = availableColors[randomInt(0, availableColors.length - 1)];
+				const color = availableColors[this._randomInt(0, availableColors.length - 1)];
 				return new Ball(special.type, color);
 			}
 		}
@@ -237,7 +276,7 @@ class PieceFactoryClass {
 	_shouldSpawnAnySpecialBall() {
 		const explicitRate = ConfigManager.get('specialBag.overallSpawnRate', null);
 		if (typeof explicitRate === 'number') {
-			return randomFloat(0, 1) < explicitRate;
+			return this._randomFloat(0, 1) < explicitRate;
 		}
 		
 		const rates = [
@@ -249,7 +288,7 @@ class PieceFactoryClass {
 		];
 		const noneProbability = rates.reduce((acc, rate) => acc * (1 - rate), 1);
 		const combinedRate = 1 - noneProbability;
-		return randomFloat(0, 1) < combinedRate;
+		return this._randomFloat(0, 1) < combinedRate;
 	}
 	
 	/**
@@ -287,7 +326,7 @@ class PieceFactoryClass {
 	_refillSpecialBag() {
 		const pool = this._getSpecialBagPool();
 		for (let i = pool.length - 1; i > 0; i--) {
-			const j = randomInt(0, i);
+			const j = this._randomInt(0, i);
 			[pool[i], pool[j]] = [pool[j], pool[i]];
 		}
 		this.specialBag = pool;
@@ -402,7 +441,7 @@ class PieceFactoryClass {
 					CONSTANTS.PIECE_TYPES.S,
 					CONSTANTS.PIECE_TYPES.Z
 				];
-				const randomIndex = randomInt(0, pieceTypes.length - 1);
+				const randomIndex = this._randomInt(0, pieceTypes.length - 1);
 				shapeType = pieceTypes[randomIndex];
 			}
 		}
@@ -504,11 +543,11 @@ class PieceFactoryClass {
 						specialBallCount++;
 					} else {
 						// Generate normal ball with random color
-						ballColor = availableColors[randomInt(0, availableColors.length - 1)];
+						ballColor = availableColors[this._randomInt(0, availableColors.length - 1)];
 					}
 				} else {
 					// Already at limit, must be normal ball
-					ballColor = availableColors[randomInt(0, availableColors.length - 1)];
+					ballColor = availableColors[this._randomInt(0, availableColors.length - 1)];
 				}
 			}
 			
@@ -554,7 +593,7 @@ class PieceFactoryClass {
 	_refillShapeBag() {
 		const pool = this._getShapePool();
 		for (let i = pool.length - 1; i > 0; i--) {
-			const j = randomInt(0, i);
+			const j = this._randomInt(0, i);
 			[pool[i], pool[j]] = [pool[j], pool[i]];
 		}
 		this.shapeBag = pool;
@@ -722,7 +761,7 @@ class PieceFactoryClass {
 		if (pool.length === 0) {
 			return null; // nothing unlocked at this level yet
 		}
-		return pool[randomInt(0, pool.length - 1)];
+		return pool[this._randomInt(0, pool.length - 1)];
 	}
 	
 	/**
@@ -737,7 +776,7 @@ class PieceFactoryClass {
 			return ConfigManager.get('colors.special.blocking', '#808080');
 		}
 		const availableColors = this.getAvailableColors(level);
-		return availableColors[randomInt(0, availableColors.length - 1)];
+		return availableColors[this._randomInt(0, availableColors.length - 1)];
 	}
 	
 	/**
@@ -770,7 +809,7 @@ class PieceFactoryClass {
 			return;
 		}
 		
-		const targetIndex = normalIndices[randomInt(0, normalIndices.length - 1)];
+		const targetIndex = normalIndices[this._randomInt(0, normalIndices.length - 1)];
 		const color = forcedColor || this._getIntervalSpecialColor(forcedType, availableColors);
 		balls[targetIndex] = new Ball(forcedType, color);
 	}
@@ -786,7 +825,7 @@ class PieceFactoryClass {
 		if (ballType === CONSTANTS.BALL_TYPES.BLOCKING) {
 			return ConfigManager.get('colors.special.blocking', '#808080');
 		}
-		return availableColors[randomInt(0, availableColors.length - 1)];
+		return availableColors[this._randomInt(0, availableColors.length - 1)];
 	}
 	
 	/**
@@ -831,7 +870,7 @@ class PieceFactoryClass {
 			case CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW:
 				return ConfigManager.get('colors.special.painterD', '#FFFF00');
 			default:
-				return availableColors[randomInt(0, availableColors.length - 1)];
+				return availableColors[this._randomInt(0, availableColors.length - 1)];
 		}
 	}
 	
