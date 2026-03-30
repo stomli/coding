@@ -145,7 +145,18 @@ const CONSTANTS = {
 		J: 'J',
 		S: 'S',
 		Z: 'Z',
-		SINGLE: 'SINGLE'
+		SINGLE: 'SINGLE',
+		V: 'V',
+		LINE3: 'Line3',
+		PLUS: 'Plus',
+		U: 'U',
+		P: 'P',
+		Y: 'Y',
+		LONG_S: 'LongS',
+		LONG_Z: 'LongZ',
+		LONG_L: 'LongL',
+		LONG_J: 'LongJ',
+		RING: 'Ring'
 	},
 	
 	/**

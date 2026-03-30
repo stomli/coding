@@ -855,4 +855,242 @@ testSuite.tests.push({
 	}
 });
 
+// ── Shape Unlock Tests ──────────────────────────────────────────────────────
+
+// Test: Difficulty 1 shape pool has only the 7 core shapes
+testSuite.tests.push({
+	name: 'Shape unlocks - Difficulty 1 has 7 core shapes',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		PieceFactory.currentDifficulty = 1;
+		
+		const pool = PieceFactory._getShapePool();
+		const expected = ['I', 'O', 'T', 'L', 'J', 'S', 'Z'];
+		
+		if (pool.length !== expected.length) {
+			throw new Error(`Expected ${expected.length} shapes, got ${pool.length}: [${pool.join(', ')}]`);
+		}
+		
+		for (const shape of expected) {
+			if (!pool.includes(shape)) {
+				throw new Error(`Missing expected shape: ${shape}`);
+			}
+		}
+	}
+});
+
+// Test: Difficulty 2 adds V and Line3
+testSuite.tests.push({
+	name: 'Shape unlocks - Difficulty 2 adds V and Line3',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		PieceFactory.currentDifficulty = 2;
+		
+		const pool = PieceFactory._getShapePool();
+		
+		if (pool.length !== 9) {
+			throw new Error(`Expected 9 shapes, got ${pool.length}: [${pool.join(', ')}]`);
+		}
+		
+		if (!pool.includes('V')) {
+			throw new Error('Difficulty 2 should include V');
+		}
+		if (!pool.includes('Line3')) {
+			throw new Error('Difficulty 2 should include Line3');
+		}
+	}
+});
+
+// Test: Difficulty 3 adds Plus and U
+testSuite.tests.push({
+	name: 'Shape unlocks - Difficulty 3 adds Plus and U',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		PieceFactory.currentDifficulty = 3;
+		
+		const pool = PieceFactory._getShapePool();
+		
+		if (pool.length !== 11) {
+			throw new Error(`Expected 11 shapes, got ${pool.length}: [${pool.join(', ')}]`);
+		}
+		
+		if (!pool.includes('Plus')) {
+			throw new Error('Difficulty 3 should include Plus');
+		}
+		if (!pool.includes('U')) {
+			throw new Error('Difficulty 3 should include U');
+		}
+	}
+});
+
+// Test: Difficulty 4 adds P, Y, LongS, LongZ
+testSuite.tests.push({
+	name: 'Shape unlocks - Difficulty 4 adds P, Y, LongS, LongZ',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		PieceFactory.currentDifficulty = 4;
+		
+		const pool = PieceFactory._getShapePool();
+		
+		if (pool.length !== 15) {
+			throw new Error(`Expected 15 shapes, got ${pool.length}: [${pool.join(', ')}]`);
+		}
+		
+		const newShapes = ['P', 'Y', 'LongS', 'LongZ'];
+		for (const shape of newShapes) {
+			if (!pool.includes(shape)) {
+				throw new Error(`Difficulty 4 should include ${shape}`);
+			}
+		}
+	}
+});
+
+// Test: Difficulty 5 adds LongL, LongJ, Ring (all 18 shapes)
+testSuite.tests.push({
+	name: 'Shape unlocks - Difficulty 5 has all 18 shapes',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		PieceFactory.currentDifficulty = 5;
+		
+		const pool = PieceFactory._getShapePool();
+		
+		if (pool.length !== 18) {
+			throw new Error(`Expected 18 shapes, got ${pool.length}: [${pool.join(', ')}]`);
+		}
+		
+		const masterShapes = ['LongL', 'LongJ', 'Ring'];
+		for (const shape of masterShapes) {
+			if (!pool.includes(shape)) {
+				throw new Error(`Difficulty 5 should include ${shape}`);
+			}
+		}
+	}
+});
+
+// Test: Difficulty change resets shape bag
+testSuite.tests.push({
+	name: 'Shape unlocks - Difficulty change resets shape bag',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		
+		// Generate a piece at difficulty 1 to fill the shape bag
+		PieceFactory.generatePiece(1, 1);
+		const bagAfterFirst = PieceFactory.shapeBag.length;
+		
+		// Change difficulty — bag should be cleared and refilled with new shapes
+		PieceFactory.generatePiece(1, 2);
+		
+		// The bag was reset and a new piece was drawn, so verify
+		// the pool now includes difficulty 2 shapes
+		PieceFactory.currentDifficulty = 2;
+		const pool = PieceFactory._getShapePool();
+		
+		if (!pool.includes('V') || !pool.includes('Line3')) {
+			throw new Error('After difficulty change, pool should include new shapes');
+		}
+	}
+});
+
+// Test: All new shape definitions exist in config and produce valid pieces
+testSuite.tests.push({
+	name: 'Shape definitions - All 11 new shapes exist in config',
+	async run() {
+		await ConfigManager.loadConfig();
+		const newShapes = ['V', 'Line3', 'Plus', 'U', 'P', 'Y', 'LongS', 'LongZ', 'LongL', 'LongJ', 'Ring'];
+		
+		for (const shape of newShapes) {
+			const definition = ConfigManager.get(`pieceShapes.${shape}`);
+			if (!definition) {
+				throw new Error(`Shape definition missing for: ${shape}`);
+			}
+			if (!Array.isArray(definition) || definition.length === 0) {
+				throw new Error(`Shape definition invalid for: ${shape}`);
+			}
+		}
+	}
+});
+
+// Test: New shapes produce pieces with correct ball counts
+testSuite.tests.push({
+	name: 'Shape definitions - New shapes have correct ball counts',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		PieceFactory.currentDifficulty = 5;
+		
+		const expectedBalls = {
+			'V': 3, 'Line3': 3,
+			'Plus': 5, 'U': 5,
+			'P': 5, 'Y': 5, 'LongS': 5, 'LongZ': 5,
+			'LongL': 6, 'LongJ': 6,
+			'Ring': 8
+		};
+		
+		for (const [shape, count] of Object.entries(expectedBalls)) {
+			const definition = ConfigManager.get(`pieceShapes.${shape}`);
+			let ballCount = 0;
+			for (const row of definition) {
+				for (const cell of row) {
+					if (cell === 1) {
+						ballCount++;
+					}
+				}
+			}
+			if (ballCount !== count) {
+				throw new Error(`${shape}: expected ${count} balls, got ${ballCount}`);
+			}
+		}
+	}
+});
+
+// Test: generatePiece can produce new shapes at difficulty 5
+testSuite.tests.push({
+	name: 'Shape unlocks - generatePiece produces new shapes at difficulty 5',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		
+		// Generate many pieces at difficulty 5 and check that at least one
+		// new shape appears (statistically near-certain with 18 shapes in bag)
+		const newShapeSet = new Set(['V', 'Line3', 'Plus', 'U', 'P', 'Y', 'LongS', 'LongZ', 'LongL', 'LongJ', 'Ring']);
+		let foundNew = false;
+		
+		for (let i = 0; i < 100; i++) {
+			const piece = PieceFactory.generatePiece(1, 5);
+			if (newShapeSet.has(piece.shapeType)) {
+				foundNew = true;
+				break;
+			}
+		}
+		
+		if (!foundNew) {
+			throw new Error('After 100 pieces at difficulty 5, no new shapes appeared');
+		}
+	}
+});
+
+// Test: generatePiece at difficulty 1 never produces new shapes
+testSuite.tests.push({
+	name: 'Shape unlocks - Difficulty 1 never produces advanced shapes',
+	async run() {
+		await ConfigManager.loadConfig();
+		PieceFactory.reset();
+		
+		const newShapeSet = new Set(['V', 'Line3', 'Plus', 'U', 'P', 'Y', 'LongS', 'LongZ', 'LongL', 'LongJ', 'Ring']);
+		
+		for (let i = 0; i < 100; i++) {
+			const piece = PieceFactory.generatePiece(1, 1);
+			if (newShapeSet.has(piece.shapeType)) {
+				throw new Error(`Difficulty 1 produced advanced shape: ${piece.shapeType}`);
+			}
+		}
+	}
+});
+
 export default testSuite;

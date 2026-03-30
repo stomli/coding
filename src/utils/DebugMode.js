@@ -517,7 +517,7 @@ class DebugModeClass {
 		html += '<div style="margin-bottom: 15px;">';
 		html += '<strong>1. Select Shape:</strong><br>';
 		html += '<div style="display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap;">';
-		const shapes = ['I', 'O', 'T', 'S', 'Z', 'L', 'J'];
+		const shapes = ['I', 'O', 'T', 'S', 'Z', 'L', 'J', 'V', 'Line3', 'Plus', 'U', 'P', 'Y', 'LongS', 'LongZ', 'LongL', 'LongJ', 'Ring'];
 		shapes.forEach(shape => {
 			const isSelected = this.selectedShape === shape;
 			const bgColor = isSelected ? '#00ff88' : '#2a2a3e';
