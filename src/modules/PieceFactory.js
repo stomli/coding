@@ -483,7 +483,7 @@ class PieceFactoryClass {
 		if (this._checkPityTimer(level)) {
 			forceIntervalSpecial = true;
 			forcedSpecialType = CONSTANTS.BALL_TYPES.EXPLODING;
-			forcedSpecialColor = ConfigManager.get('colors.special.exploding', '#FFD700');
+			forcedSpecialColor = this._pickIntervalSpecialColor(level, CONSTANTS.BALL_TYPES.EXPLODING);
 		}
 		
 		// Choose piece shape (allow debug override)
