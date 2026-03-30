@@ -26,6 +26,7 @@ class ScoreManagerClass {
 		this.mode = 'CLASSIC';
 		this.currentCascadeData = null;
 		this.matchStreak = 0;
+		this.diagonalScoreMultiplier = 1.0;
 		this.isInitialized = false;
 		
 		// Bind methods for event listener removal
@@ -73,6 +74,14 @@ class ScoreManagerClass {
 	}
 	
 	/**
+	 * Set the diagonal score multiplier for the current mode+difficulty.
+	 * @param {Number} multiplier - e.g. 1.0 (no bonus) or 1.5 (50% extra)
+	 */
+	setDiagonalMultiplier(multiplier) {
+		this.diagonalScoreMultiplier = multiplier || 1.0;
+	}
+	
+	/**
 	 * Handle balls cleared event
 	 * @param {Object} data - Event data with count and matches
 	 * @private
@@ -91,6 +100,7 @@ class ScoreManagerClass {
 		if (!this.currentCascadeData) {
 			this.currentCascadeData = {
 				ballsPerLevel: [], // Track balls cleared at each cascade level
+				diagonalBallsPerLevel: [], // Track diagonal-match balls per cascade level
 				currentLevel: 0 // Track which cascade level we're on
 			};
 		}
@@ -98,8 +108,9 @@ class ScoreManagerClass {
 		// Each BALLS_CLEARED event represents a new cascade level
 		const level = this.currentCascadeData.ballsPerLevel.length;
 		this.currentCascadeData.ballsPerLevel.push(data.count);
+		this.currentCascadeData.diagonalBallsPerLevel.push(data.diagonalCount || 0);
 		
-		console.log(`⚽ BALLS_CLEARED: ${data.count} balls at level ${level + 1}, ballsPerLevel=`, this.currentCascadeData.ballsPerLevel);
+		console.log(`⚽ BALLS_CLEARED: ${data.count} balls (${data.diagonalCount || 0} diagonal) at level ${level + 1}, ballsPerLevel=`, this.currentCascadeData.ballsPerLevel);
 	}
 	
 	/**
@@ -126,6 +137,7 @@ class ScoreManagerClass {
 			console.warn('⚠️ CASCADE_COMPLETE but no currentCascadeData! Initializing with empty data.');
 			this.currentCascadeData = {
 				ballsPerLevel: [],
+				diagonalBallsPerLevel: [],
 				currentLevel: 0
 			};
 		}
@@ -133,12 +145,13 @@ class ScoreManagerClass {
 		// Use cascade count from GameEngine (actual cascade iterations)
 		const cascadeCount = data.cascadeCount;
 		
-		console.log(`📊 BallsPerLevel:`, this.currentCascadeData.ballsPerLevel);
+		console.log(`📊 BallsPerLevel:`, this.currentCascadeData.ballsPerLevel, 'DiagonalPerLevel:', this.currentCascadeData.diagonalBallsPerLevel);
 		
 		// Calculate score using progressive multipliers per level
 		const points = this._calculateCascadeScore(
 			this.currentCascadeData.ballsPerLevel,
-			cascadeCount
+			cascadeCount,
+			this.currentCascadeData.diagonalBallsPerLevel
 		);
 		
 		this.score += points;
@@ -178,15 +191,17 @@ class ScoreManagerClass {
 	 * Example: 2x cascade with L1(3 balls) + L2(5 balls) = (3×1) + (5×2) + cascadeBonus(3) = 3 + 10 + 3 = 16 points
 	 * @param {Array<Number>} ballsPerLevel - Number of balls cleared at each cascade level [L1, L2, L3, ...]
 	 * @param {Number} cascadeCount - Total number of cascade levels in sequence
+	 * @param {Array<Number>} [diagonalBallsPerLevel] - Diagonal-match balls per cascade level
 	 * @returns {Number} Points earned after applying difficulty multiplier
 	 * @private
 	 */
-	_calculateCascadeScore(ballsPerLevel, cascadeCount) {
+	_calculateCascadeScore(ballsPerLevel, cascadeCount, diagonalBallsPerLevel) {
 		const basePoints = ConfigManager.get('scoring.basePointsPerBall', 1); // Default: 1 point per ball
 		const difficultyMultiplier = ConfigManager.get(`scoring.difficultyMultipliers.difficulty${this.difficulty}`, 1.0); // 1.0x - 3.0x
 		const cascadeBaseBonus = ConfigManager.get('scoring.cascadeBaseBonus', 3); // Base cascade bonus (default: 3)
 		
 		let score = 0;
+		let diagonalBonus = 0;
 		let breakdown = []; // For debug logging: ["L1(3×1=3)", "L2(5×2=10)"]
 		
 		// Progressive cascade scoring: each level gets increasing multiplier
@@ -197,7 +212,19 @@ class ScoreManagerClass {
 			const levelScore = balls * basePoints * multiplier;
 			score += levelScore;
 			breakdown.push(`L${level + 1}(${balls}×${multiplier}=${levelScore})`);
+			
+			// Diagonal bonus: extra points for balls matched diagonally
+			if (this.diagonalScoreMultiplier > 1.0 && diagonalBallsPerLevel) {
+				const diagBalls = diagonalBallsPerLevel[level] || 0;
+				if (diagBalls > 0) {
+					const diagExtra = diagBalls * basePoints * multiplier * (this.diagonalScoreMultiplier - 1.0);
+					diagonalBonus += diagExtra;
+					breakdown.push(`Diag${level + 1}(${diagBalls}×${multiplier}×${(this.diagonalScoreMultiplier - 1.0).toFixed(2)}=${diagExtra})`);
+				}
+			}
 		}
+		
+		score += diagonalBonus;
 		
 		// Add cascade bonus for 2+ cascades: 3 × (cascadeCount - 1)
 		let cascadeBonusTotal = 0;
@@ -211,7 +238,8 @@ class ScoreManagerClass {
 		score = Math.floor(score * difficultyMultiplier);
 		
 		const totalBalls = ballsPerLevel.reduce((sum, b) => sum + b, 0);
-		console.log(`🎯 SCORE CALC: ${totalBalls} balls, ${cascadeCount}x cascade, ${breakdown.join(' + ')}, difficulty=${difficultyMultiplier}x, TOTAL=${score}`);
+		const totalDiag = diagonalBallsPerLevel ? diagonalBallsPerLevel.reduce((sum, b) => sum + b, 0) : 0;
+		console.log(`🎯 SCORE CALC: ${totalBalls} balls (${totalDiag} diagonal), ${cascadeCount}x cascade, ${breakdown.join(' + ')}, difficulty=${difficultyMultiplier}x, TOTAL=${score}`);
 		
 		return score;
 	}

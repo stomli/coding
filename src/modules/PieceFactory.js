@@ -43,6 +43,8 @@ class PieceFactoryClass {
 		this.forceExplosiveNext = false;
 		// Seeded RNG for PUZZLE mode (null = use Math.random)
 		this._rng = null;
+		// Painter spawn multiplier from modifiers (1.0 = normal)
+		this.painterSpawnMultiplier = 1.0;
 	}
 
 	/**
@@ -302,6 +304,10 @@ class PieceFactoryClass {
 		if (this.gameMode === 'RISING_TIDE' && specialType === 'exploding') {
 			spawnRate = spawnRate * 3;
 		}
+		// Apply painter spawn multiplier for painter types
+		if (specialType.startsWith('painter') && this.painterSpawnMultiplier !== 1.0) {
+			spawnRate = Math.min(1, spawnRate * this.painterSpawnMultiplier);
+		}
 		return spawnRate;
 	}
 	
@@ -350,7 +356,11 @@ class PieceFactoryClass {
 		const pool = [];
 		for (const entry of entries) {
 			if (!unlockedTypes.includes(entry.type)) continue;
-			const weight = Math.max(0, Math.floor(weights[entry.key] ?? 1));
+			let weight = Math.max(0, Math.floor(weights[entry.key] ?? 1));
+			// Apply painter spawn multiplier for painter types
+			if (entry.key.startsWith('painter') && this.painterSpawnMultiplier !== 1.0) {
+				weight = Math.max(1, Math.round(weight * this.painterSpawnMultiplier));
+			}
 			for (let i = 0; i < weight; i++) {
 				pool.push(entry.type);
 			}
@@ -365,6 +375,14 @@ class PieceFactoryClass {
 	 */
 	setGameMode(mode) {
 		this.gameMode = mode || 'CLASSIC';
+	}
+	
+	/**
+	 * Set the painter spawn multiplier from difficulty modifiers.
+	 * @param {Number} multiplier - e.g. 1.0 (normal) or 2.0 (double painter weight)
+	 */
+	setPainterSpawnMultiplier(multiplier) {
+		this.painterSpawnMultiplier = multiplier || 1.0;
 	}
 	
 	/**
@@ -400,10 +418,15 @@ class PieceFactoryClass {
 		// If the level changed, discard the special bag so it is rebuilt with
 		// any newly-unlocked types at the start of the new level.
 		const prevLevel = this.currentLevel;
+		const prevDifficulty = this.currentDifficulty;
 		this.currentLevel = level;
 		this.currentDifficulty = difficulty;
 		if (prevLevel !== level) {
 			this.specialBag = [];
+		}
+		// New shapes may have unlocked at new difficulty
+		if (prevDifficulty !== difficulty) {
+			this.shapeBag = [];
 		}
 		
 		// Increment pieces dropped counter
@@ -606,19 +629,33 @@ class PieceFactoryClass {
 	 */
 	_getShapePool() {
 		const includeSingle = ConfigManager.get('pieceBag.includeSingle', false);
-		const configured = ConfigManager.get('pieceBag.shapes', null);
-		const defaultShapes = [
-			CONSTANTS.PIECE_TYPES.I,
-			CONSTANTS.PIECE_TYPES.O,
-			CONSTANTS.PIECE_TYPES.T,
-			CONSTANTS.PIECE_TYPES.L,
-			CONSTANTS.PIECE_TYPES.J,
-			CONSTANTS.PIECE_TYPES.S,
-			CONSTANTS.PIECE_TYPES.Z
-		];
-		let shapes = Array.isArray(configured) && configured.length > 0
-			? configured
-			: defaultShapes;
+		
+		// Check for difficulty-based shape unlocks
+		const difficultyKey = `shapeUnlocks.difficulty${this.currentDifficulty}`;
+		const difficultyShapes = ConfigManager.get(difficultyKey, null);
+		
+		let shapes;
+		if (Array.isArray(difficultyShapes) && difficultyShapes.length > 0) {
+			// Use difficulty-gated shapes
+			shapes = [...difficultyShapes];
+		}
+		else {
+			// Fall back to pieceBag config or defaults
+			const configured = ConfigManager.get('pieceBag.shapes', null);
+			const defaultShapes = [
+				CONSTANTS.PIECE_TYPES.I,
+				CONSTANTS.PIECE_TYPES.O,
+				CONSTANTS.PIECE_TYPES.T,
+				CONSTANTS.PIECE_TYPES.L,
+				CONSTANTS.PIECE_TYPES.J,
+				CONSTANTS.PIECE_TYPES.S,
+				CONSTANTS.PIECE_TYPES.Z
+			];
+			shapes = Array.isArray(configured) && configured.length > 0
+				? configured
+				: defaultShapes;
+		}
+		
 		if (includeSingle && !shapes.includes(CONSTANTS.PIECE_TYPES.SINGLE)) {
 			shapes = [...shapes, CONSTANTS.PIECE_TYPES.SINGLE];
 		}
@@ -756,11 +793,21 @@ class PieceFactoryClass {
 
 		// Apply level-based feature unlock gates
 		const unlocked = this._getUnlockedSpecialTypes(level);
-		const pool = candidates.filter(type => unlocked.includes(type));
+		let pool = candidates.filter(type => unlocked.includes(type));
 
 		if (pool.length === 0) {
 			return null; // nothing unlocked at this level yet
 		}
+		
+		// Apply painter spawn multiplier: add extra painter entries to weight selection
+		if (this.painterSpawnMultiplier > 1.0) {
+			const painterTypes = pool.filter(t => t.startsWith('PAINTER'));
+			const extraCopies = Math.round(this.painterSpawnMultiplier - 1);
+			for (let i = 0; i < extraCopies; i++) {
+				pool = pool.concat(painterTypes);
+			}
+		}
+		
 		return pool[this._randomInt(0, pool.length - 1)];
 	}
 	

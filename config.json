@@ -199,7 +199,7 @@
 	"puzzle": {
 		"pieceLimit": 1000,
 		"starThresholds": {
-			"baseScore": 200,
+			"baseScore": 5000,
 			"perLevel": 30,
 			"bronze": 0.30,
 			"silver": 0.60,
@@ -231,6 +231,37 @@
 			"name": "Master",
 			"dropSpeedModifier": 0.4,
 			"blockingBallFrequencyModifier": 3.0
+		}
+	},
+	"modifiers": {
+		"defaults": {
+			"difficulty1": { "lockDelay": 500, "diagonalScoreMultiplier": 1.0, "painterSpawnMultiplier": 1.0 },
+			"difficulty2": { "lockDelay": 475, "diagonalScoreMultiplier": 1.0, "painterSpawnMultiplier": 1.0 },
+			"difficulty3": { "lockDelay": 425, "diagonalScoreMultiplier": 1.0, "painterSpawnMultiplier": 1.0 },
+			"difficulty4": { "lockDelay": 375, "diagonalScoreMultiplier": 1.25, "painterSpawnMultiplier": 1.0 },
+			"difficulty5": { "lockDelay": 300, "diagonalScoreMultiplier": 1.5, "painterSpawnMultiplier": 1.0 }
+		},
+		"CLASSIC": {},
+		"ZEN": {
+			"difficulty1": { "lockDelay": 550 },
+			"difficulty2": { "lockDelay": 525 }
+		},
+		"GAUNTLET": {
+			"difficulty4": { "lockDelay": 350 },
+			"difficulty5": { "lockDelay": 275 }
+		},
+		"RISING_TIDE": {
+			"difficulty3": { "painterSpawnMultiplier": 1.5 },
+			"difficulty4": { "lockDelay": 350, "painterSpawnMultiplier": 1.5 },
+			"difficulty5": { "lockDelay": 275, "painterSpawnMultiplier": 2.0 }
+		},
+		"MISSION": {},
+		"PUZZLE": {
+			"difficulty1": { "lockDelay": 600, "diagonalScoreMultiplier": 1.25 },
+			"difficulty2": { "lockDelay": 550, "diagonalScoreMultiplier": 1.25 },
+			"difficulty3": { "lockDelay": 500, "diagonalScoreMultiplier": 1.25 },
+			"difficulty4": { "lockDelay": 450, "diagonalScoreMultiplier": 1.5 },
+			"difficulty5": { "lockDelay": 400, "diagonalScoreMultiplier": 1.5 }
 		}
 	},
 	"animations": {
@@ -332,12 +363,73 @@
 		],
 		"Single": [
 			[1]
+		],
+		"V": [
+			[1, 0],
+			[1, 1]
+		],
+		"Line3": [
+			[1, 1, 1]
+		],
+		"Plus": [
+			[0, 1, 0],
+			[1, 1, 1],
+			[0, 1, 0]
+		],
+		"U": [
+			[1, 0, 1],
+			[1, 1, 1]
+		],
+		"P": [
+			[1, 1],
+			[1, 1],
+			[1, 0]
+		],
+		"Y": [
+			[0, 1],
+			[1, 1],
+			[0, 1],
+			[0, 1]
+		],
+		"LongS": [
+			[0, 1, 1],
+			[0, 1, 0],
+			[1, 1, 0]
+		],
+		"LongZ": [
+			[1, 1, 0],
+			[0, 1, 0],
+			[0, 1, 1]
+		],
+		"LongL": [
+			[1, 0, 0],
+			[1, 0, 0],
+			[1, 0, 0],
+			[1, 1, 1]
+		],
+		"LongJ": [
+			[0, 0, 1],
+			[0, 0, 1],
+			[0, 0, 1],
+			[1, 1, 1]
+		],
+		"Ring": [
+			[1, 1, 1],
+			[1, 0, 1],
+			[1, 1, 1]
 		]
 	},
 	"pieceBag": {
 		"enabled": true,
 		"includeSingle": false,
 		"shapes": ["I", "O", "T", "L", "J", "S", "Z"]
+	},
+	"shapeUnlocks": {
+		"difficulty1": ["I", "O", "T", "L", "J", "S", "Z"],
+		"difficulty2": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3"],
+		"difficulty3": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3", "Plus", "U"],
+		"difficulty4": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3", "Plus", "U", "P", "Y", "LongS", "LongZ"],
+		"difficulty5": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3", "Plus", "U", "P", "Y", "LongS", "LongZ", "LongL", "LongJ", "Ring"]
 	},
 	"rendering": {
 		"ballRadius": 20,

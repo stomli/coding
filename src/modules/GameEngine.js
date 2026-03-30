@@ -682,6 +682,14 @@ class GameEngineClass {
 		this.dropInterval = Math.max(200, 1000 - (difficulty * 150));
 		this.basedropInterval = this.dropInterval;
 		
+		// Resolve per-mode+difficulty modifiers (lockDelay, diagonalScoreMultiplier, painterSpawnMultiplier)
+		const modifiers = ConfigManager.getModifiers(this.gameMode, this.difficulty);
+		this.lockDelay = modifiers.lockDelay;
+		
+		// Pass modifier values to subsystems
+		ScoreManager.setDiagonalMultiplier(modifiers.diagonalScoreMultiplier);
+		PieceFactory.setPainterSpawnMultiplier(modifiers.painterSpawnMultiplier);
+		
 		// Generate pieces (in debug mode, this will be async via callback)
 		if (DebugMode.isEnabled()) {
 			// In debug mode, request current piece (it will be spawned via callback)
@@ -1554,10 +1562,14 @@ class GameEngineClass {
 		
 		// Collect all positions to clear
 		const positionsToClear = new Set();
+		const diagonalPositions = new Set();
 		
 		for (const match of matches) {
 			for (const pos of match.positions) {
 				positionsToClear.add(`${pos.row},${pos.col}`);
+				if (match.type === 'diagonal') {
+					diagonalPositions.add(`${pos.row},${pos.col}`);
+				}
 			}
 		}
 		
@@ -1648,6 +1660,7 @@ class GameEngineClass {
 		// Emit clear event with ball data for statistics
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { 
 			count: positionsToClear.size,
+			diagonalCount: diagonalPositions.size,
 			balls: ballData // Ball type/color data for statistics
 		});
 		
@@ -1933,6 +1946,12 @@ class GameEngineClass {
 		// Restore drop speed
 		this.dropInterval = state.dropInterval || Math.max(200, 1000 - (this.difficulty * 150));
 		this.basedropInterval = this.dropInterval;
+		
+		// Resolve per-mode+difficulty modifiers for restored game
+		const modifiers = ConfigManager.getModifiers('ZEN', this.difficulty);
+		this.lockDelay = modifiers.lockDelay;
+		ScoreManager.setDiagonalMultiplier(modifiers.diagonalScoreMultiplier);
+		PieceFactory.setPainterSpawnMultiplier(modifiers.painterSpawnMultiplier);
 		
 		// Reset timers
 		this.dropTimer = 0;

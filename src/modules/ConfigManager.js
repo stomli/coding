@@ -110,6 +110,26 @@ class ConfigManagerClass {
 		return this.isLoaded;
 	}
 	
+	/**
+	 * Resolve difficulty modifiers for a mode+difficulty pair.
+	 * Mode-specific overrides are merged on top of defaults.
+	 * @param {String} mode - Game mode (e.g. 'CLASSIC', 'ZEN')
+	 * @param {Number} difficulty - Difficulty level (1-5)
+	 * @returns {{ lockDelay: Number, diagonalScoreMultiplier: Number, painterSpawnMultiplier: Number }}
+	 */
+	getModifiers(mode, difficulty) {
+		const diffKey = `difficulty${difficulty}`;
+		const defaults = this.get(`modifiers.defaults.${diffKey}`, {});
+		const modeOverrides = this.get(`modifiers.${mode}.${diffKey}`, {});
+		return {
+			lockDelay: 500,
+			diagonalScoreMultiplier: 1.0,
+			painterSpawnMultiplier: 1.0,
+			...defaults,
+			...modeOverrides
+		};
+	}
+	
 }
 
 // Create singleton instance

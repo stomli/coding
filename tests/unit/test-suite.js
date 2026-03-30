@@ -35,6 +35,7 @@ import testHintManager from './test-hint-manager.js';
 import testMissionManager from './test-mission-manager.js';
 import testPuzzleManager from './test-puzzle-manager.js';
 import testShareManager from './test-share-manager.js';
+import testDifficultyModifiers from './test-difficulty-modifiers.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -144,6 +145,10 @@ export async function runAllTests() {
 	// Run ShareManager tests
 	const shareManagerResults = await runAsyncTestSuite(testShareManager);
 	suites.push({ name: testShareManager.name, tests: shareManagerResults });
+
+	// Run Difficulty Modifiers tests
+	const difficultyModifiersResults = await runAsyncTestSuite(testDifficultyModifiers);
+	suites.push({ name: testDifficultyModifiers.name, tests: difficultyModifiersResults });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

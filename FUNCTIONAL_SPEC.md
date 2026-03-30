@@ -45,19 +45,42 @@ A Tetris-inspired puzzle game where colored ball pieces fall from the top and st
 
 ## 3. Game Pieces
 
-### 3.1 Standard Pieces (8 Shapes - Tetris-style)
-All pieces are composed of 4-6 colored balls arranged in these configurations:
+### 3.1 Standard Pieces (8 Core + 11 Advanced Shapes)
+All pieces are composed of 1-8 colored balls arranged in these configurations:
 
-1. **I-Piece:** 4 balls in a straight line
+#### Core Shapes (All Difficulties)
+1. **I-Piece:** 4 balls in a straight line (1×4)
 2. **O-Piece:** 6 balls in a 2×3 rectangle
-3. **T-Piece:** 4 balls in T-shape
-4. **L-Piece:** 5 balls in L-shape (3 vertical + 2 horizontal base)
-5. **J-Piece:** 5 balls in reverse L-shape (3 vertical + 2 horizontal base)
-6. **S-Piece:** 5 balls in S-shape (2-2-1 stagger)
-7. **Z-Piece:** 5 balls in Z-shape (2-2-1 stagger)
-8. **Single Ball:** 1 ball
+3. **T-Piece:** 4 balls in T-shape (2×3)
+4. **L-Piece:** 4 balls in L-shape (3×2)
+5. **J-Piece:** 4 balls in reverse L-shape (3×2)
+6. **S-Piece:** 4 balls in S-shape (2×3)
+7. **Z-Piece:** 4 balls in Z-shape (2×3)
+8. **Single Ball:** 1 ball (bag optional)
 
-**Note:** Variable ball counts (4-6) ensure each piece shape is visually distinct even when the same color.
+#### Advanced Shapes (Difficulty-Gated)
+Unlocked progressively as difficulty increases:
+
+**Difficulty 2+ (Medium):**
+9. **V-Piece:** 3 balls in a corner (2×2)
+10. **Line3-Piece:** 3 balls in a short line (1×3)
+
+**Difficulty 3+ (Hard):**
+11. **Plus-Piece:** 5 balls in a cross/plus (3×3, rotation-symmetric)
+12. **U-Piece:** 5 balls in a cup/trough (2×3)
+
+**Difficulty 4+ (Expert):**
+13. **P-Piece:** 5 balls in a fat L (3×2)
+14. **Y-Piece:** 5 balls with offset spike (4×2)
+15. **LongS-Piece:** 5 balls in a 3-step staircase (3×3)
+16. **LongZ-Piece:** 5 balls in a mirror staircase (3×3)
+
+**Difficulty 5 (Master):**
+17. **LongL-Piece:** 6 balls in a tall L (4×3)
+18. **LongJ-Piece:** 6 balls in a tall reverse L (4×3)
+19. **Ring-Piece:** 8 balls in a hollow square (3×3)
+
+**Note:** Variable ball counts (1-8) ensure each piece shape is visually distinct. Shape unlock tiers are configurable via `shapeUnlocks` in config.json.
 
 ### 3.2 Ball Colors
 - **Starting Colors (Levels 1-2):** 3 colors (Red, Green, Blue)
@@ -369,7 +392,22 @@ All pieces are composed of 4-6 colored balls arranged in these configurations:
   - Resets label/state each time GameEngine completes a level
 - **Integration:** GameEngine calls `ShareManager.setResult()` after final score + recap computed
 
-### 5.10 Score Display (Implemented)
+### 5.10 Advanced Difficulty Modifiers (Implemented)
+Three config-driven modifiers tunable per **mode + difficulty pair**:
+- **Lock Delay** (`lockDelay`, ms): Time before a piece locks after landing. Lower = tighter feel.
+  - Defaults: D1=500ms → D5=300ms. ZEN gets longer delays (D1=550, D2=525); GAUNTLET/RISING_TIDE tighter at Expert+ (275ms)
+  - PUZZLE mode has relaxed delays (D1=600 → D5=400) to suit deliberate play
+- **Diagonal Score Multiplier** (`diagonalScoreMultiplier`): Extra multiplier on balls matched diagonally.
+  - Defaults: D1–D3=1.0× (no bonus), D4=1.25×, D5=1.5×. PUZZLE mode has diagonal bonus from D1 (1.25×)
+  - Applied per cascade level on top of normal scoring: `diagBalls × basePoints × cascadeLevel × (multiplier - 1.0)`
+  - Diagonal ball counts tracked via `diagonalCount` field in `BALLS_CLEARED` events
+- **Painter Spawn Multiplier** (`painterSpawnMultiplier`): Weights painter types higher in special bag and interval selection.
+  - Defaults: 1.0× (normal). RISING_TIDE D3=1.5×, D4=1.5×, D5=2.0× (more painters to counter blockers)
+  - Multiplies painter weights in `_getSpecialBagPool()` and adds extra painter entries in `_pickIntervalSpecialType()`
+- **Config schema:** `modifiers.defaults.difficultyN` → base values; `modifiers.MODE.difficultyN` → per-mode overrides; merged at runtime via `ConfigManager.getModifiers(mode, difficulty)`
+- **Resolution:** GameEngine resolves modifiers at level start and on Zen restore; passes `diagonalScoreMultiplier` to ScoreManager and `painterSpawnMultiplier` to PieceFactory
+
+### 5.11 Score Display (Implemented)
 - **Score Manager:** Singleton module tracking score via event system
   - Listens for `BALLS_CLEARED` events to accumulate ball counts per cascade level
   - Tracks `ballsPerLevel` array to support progressive cascade scoring
@@ -963,17 +1001,17 @@ All game parameters should be configurable via JSON:
 - Grid breach handling per mode (success in ZEN, failure in others)
 
 ✅ **Quality Assurance (Continuous)**
-- 400+ unit tests across 20 test modules
+- 830+ unit tests across 21 test modules
 - Comprehensive test coverage:
   - **Core Utilities:** Helpers (20 tests), EventEmitter (18 tests)
   - **Game Entities:** Ball (31 tests), Piece (36 tests), Grid (88 tests)
-  - **Factories & Managers:** PieceFactory (26 tests), ScoreManager (35 tests), ConfigManager (12 tests), FloatingText (11 tests), GoalManager (10 tests), MissionManager (16 tests), PuzzleManager (15 tests), ShareManager (10 tests)
+  - **Factories & Managers:** PieceFactory (26 tests), ScoreManager (35 tests), ConfigManager (12 tests), FloatingText (11 tests), GoalManager (10 tests), MissionManager (16 tests), PuzzleManager (15 tests), ShareManager (10 tests), DifficultyModifiers (15 tests)
   - **Game Engine:** GameEngine (22 tests including Zen save/load)
 ---
 
-**Document Version:** 2.9  
+**Document Version:** 2.10  
 **Last Updated:** March 2026  
-**Status:** Living Document - Updated through Phase 10 Gameplay + Mission Mode + Puzzle Mode + Share/Brag
+**Status:** Living Document - Updated through Phase 10 Gameplay + All 4 Phases Complete
 
 ### 14.2 Pending Features (Phase 10 - Documentation & Deployment)
 ⏳ **Documentation**
