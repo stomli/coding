@@ -18,7 +18,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'getAvailableColors - Level 1 has 3 colors',
 	async run() {
-		await ConfigManager.loadConfig();
 		const colors = PieceFactory.getAvailableColors(1);
 		
 		if (colors.length !== 3) {
@@ -40,7 +39,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getAvailableColors - Level 3 has 4 colors',
 	async run() {
-		await ConfigManager.loadConfig();
 		const colors = PieceFactory.getAvailableColors(3);
 		
 		if (colors.length !== 4) {
@@ -59,7 +57,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getAvailableColors - Level 7 has 5 colors',
 	async run() {
-		await ConfigManager.loadConfig();
 		const colors = PieceFactory.getAvailableColors(7);
 		
 		if (colors.length !== 5) {
@@ -78,7 +75,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getAvailableColors - Level 11 has 6 colors',
 	async run() {
-		await ConfigManager.loadConfig();
 		const colors = PieceFactory.getAvailableColors(11);
 		
 		if (colors.length !== 6) {
@@ -97,7 +93,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getAvailableColors - Level 15 has 7 colors',
 	async run() {
-		await ConfigManager.loadConfig();
 		const colors = PieceFactory.getAvailableColors(15);
 		
 		if (colors.length !== 7) {
@@ -116,7 +111,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getAvailableColors - Level 19+ has 8 colors',
 	async run() {
-		await ConfigManager.loadConfig();
 		const colors = PieceFactory.getAvailableColors(19);
 		
 		if (colors.length !== 8) {
@@ -141,7 +135,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'shouldSpawnBlockingBall - Respects min pieces requirement',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		// At 0 pieces dropped, should never spawn on difficulty 1 (requires 50)
@@ -179,7 +172,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'generatePiece - Creates valid piece',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		const piece = PieceFactory.generatePiece(1, 1);
@@ -214,7 +206,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'generatePiece - Increments piecesDropped',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		const initialCount = PieceFactory.piecesDropped;
@@ -238,7 +229,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'generatePiece - Uses level-appropriate colors',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		// Generate many pieces at level 1
@@ -281,7 +271,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'reset - Clears piecesDropped counter',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		// Generate some pieces
 		PieceFactory.generatePiece(1, 1);
@@ -305,7 +294,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'generatePiece - All shapes have correct ball counts',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		// Expected ball counts for each shape
 		const expectedCounts = {
@@ -350,7 +338,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Level 1 has no special types unlocked',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 
 		const unlocked = PieceFactory._getUnlockedSpecialTypes(1);
@@ -365,7 +352,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Level 3 unlocks only PAINTER_HORIZONTAL',
 	async run() {
-		await ConfigManager.loadConfig();
 		const unlocked = PieceFactory._getUnlockedSpecialTypes(5);
 
 		if (!unlocked.includes(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL)) {
@@ -390,7 +376,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Level 5 unlocks PAINTER_HORIZONTAL and PAINTER_VERTICAL',
 	async run() {
-		await ConfigManager.loadConfig();
 		const unlocked = PieceFactory._getUnlockedSpecialTypes(9);
 
 		if (!unlocked.includes(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL)) {
@@ -412,7 +397,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Level 7 unlocks all painters, not yet EXPLODING',
 	async run() {
-		await ConfigManager.loadConfig();
 		const unlocked = PieceFactory._getUnlockedSpecialTypes(13);
 
 		const painters = [
@@ -438,7 +422,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Level 14 unlocks all painters, not yet EXPLODING',
 	async run() {
-		await ConfigManager.loadConfig();
 		const unlocked = PieceFactory._getUnlockedSpecialTypes(14);
 
 		const painters = [
@@ -462,7 +445,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Level 9 unlocks all special types including EXPLODING',
 	async run() {
-		await ConfigManager.loadConfig();
 		const unlocked = PieceFactory._getUnlockedSpecialTypes(19);
 
 		const allTypes = [
@@ -487,7 +469,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - No specials spawned at level 1 (random mode)',
 	async run() {
-		await ConfigManager.loadConfig();
 
 		// Temporarily disable interval mode so random-spawn path is exercised
 		const origInterval = ConfigManager.get('specialInterval.enabled');
@@ -535,7 +516,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - PAINTER_HORIZONTAL spawns at level 3 (random mode, rate=100%)',
 	async run() {
-		await ConfigManager.loadConfig();
 
 		ConfigManager.config.specialInterval.enabled = false;
 		ConfigManager.config.specialBag = { ...(ConfigManager.config.specialBag || {}), enabled: false };
@@ -571,7 +551,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Interval system skips forced special at level 1',
 	async run() {
-		await ConfigManager.loadConfig();
 
 		// Shorten interval to 1 so it triggers immediately
 		const origBase = ConfigManager.config.specialInterval.baseInterval;
@@ -606,7 +585,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - Special bag discarded on level change',
 	async run() {
-		await ConfigManager.loadConfig();
 
 		ConfigManager.config.specialInterval.enabled = false;
 		ConfigManager.config.specialBag = { ...(ConfigManager.config.specialBag || {}), enabled: true };
@@ -640,7 +618,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - _pickIntervalSpecialType returns null at level 1',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 
 		const result = PieceFactory._pickIntervalSpecialType(1);
@@ -654,7 +631,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - _pickIntervalSpecialType only returns PAINTER_HORIZONTAL at level 3',
 	async run() {
-		await ConfigManager.loadConfig();
 
 		const forbidden = [
 			CONSTANTS.BALL_TYPES.EXPLODING,
@@ -679,7 +655,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'featureUnlocks - All types unlocked when featureUnlocks config absent',
 	async run() {
-		await ConfigManager.loadConfig();
 
 		// Temporarily remove featureUnlocks config
 		const saved = ConfigManager.config.specialBalls.featureUnlocks;
@@ -712,7 +687,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Pity timer - Resets counter on reset()',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.piecesSinceLastExplosive = 99;
 		PieceFactory.reset();
@@ -727,7 +701,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Pity timer - Returns false when disabled',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		const savedEnabled = ConfigManager.get('pityTimer.enabled');
@@ -749,7 +722,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Pity timer - Returns false below threshold',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 1;
 		PieceFactory.piecesSinceLastExplosive = 10; // threshold for D1 is 15
@@ -766,7 +738,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Pity timer - Returns true at threshold with EXPLODING unlocked',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 1;
 		PieceFactory.piecesSinceLastExplosive = 15; // D1 threshold = 15
@@ -783,7 +754,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Pity timer - Returns false when EXPLODING not unlocked',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 1;
 		PieceFactory.piecesSinceLastExplosive = 999;
@@ -800,7 +770,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Pity timer - Counter increments per non-explosive piece',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		// Disable interval and set level low enough that no explosives spawn
@@ -832,7 +801,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Blocker failsafe - forceExplosiveNext resets on reset()',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.forceExplosiveNext = true;
 		PieceFactory.reset();
 		
@@ -846,7 +814,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Blocker failsafe - Forces EXPLODING when flag set',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.forceExplosiveNext = true;
 		
@@ -867,7 +834,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Blocker failsafe - No force if EXPLODING not unlocked',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.forceExplosiveNext = true;
 		
@@ -887,7 +853,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - Difficulty 1 has 7 core shapes',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 1;
 		
@@ -910,7 +875,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - Difficulty 2 adds V and Line3',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 2;
 		
@@ -933,7 +897,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - Difficulty 3 adds Plus and U',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 3;
 		
@@ -956,7 +919,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - Difficulty 4 adds P, Y, LongS, LongZ',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 4;
 		
@@ -979,7 +941,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - Difficulty 5 has all 18 shapes',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 5;
 		
@@ -1002,7 +963,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - Difficulty change resets shape bag',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		// Generate a piece at difficulty 1 to fill the shape bag
@@ -1027,7 +987,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape definitions - All 11 new shapes exist in config',
 	async run() {
-		await ConfigManager.loadConfig();
 		const newShapes = ['V', 'Line3', 'Plus', 'U', 'P', 'Y', 'LongS', 'LongZ', 'LongL', 'LongJ', 'Ring'];
 		
 		for (const shape of newShapes) {
@@ -1046,7 +1005,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape definitions - New shapes have correct ball counts',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		PieceFactory.currentDifficulty = 5;
 		
@@ -1079,7 +1037,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - generatePiece produces new shapes at difficulty 5',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		// Generate many pieces at difficulty 5 and check that at least one
@@ -1105,7 +1062,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Shape unlocks - Difficulty 1 never produces advanced shapes',
 	async run() {
-		await ConfigManager.loadConfig();
 		PieceFactory.reset();
 		
 		const newShapeSet = new Set(['V', 'Line3', 'Plus', 'U', 'P', 'Y', 'LongS', 'LongZ', 'LongL', 'LongJ', 'Ring']);

@@ -3,7 +3,7 @@
  * 
  * Description: Tracks ball type/color combination statistics for clearing events
  * 
- * Dependencies: Constants, ConfigManager, PieceFactory
+ * Dependencies: Constants, ConfigManager, EventEmitter
  * 
  * Exports: StatisticsTracker singleton
  */
@@ -12,6 +12,7 @@ import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
 import { EventEmitter } from '../utils/EventEmitter.js';
 import PieceFactory from './PieceFactory.js';
+import { SubscriptionSet } from '../utils/SubscriptionSet.js';
 
 /**
  * StatisticsTracker class for tracking match statistics
@@ -27,10 +28,21 @@ class StatisticsTrackerClass {
 		// Recap tracking
 		this.largestCascade = 0;
 		this.longestStreak = 0;
-		this._listenersActive = false;
-		
+		this._subs = new SubscriptionSet();
+
+		this._boundOnCascadeComplete = (data) => {
+			if (data.cascadeCount > this.largestCascade) {
+				this.largestCascade = data.cascadeCount;
+			}
+		};
+		this._boundOnScoreUpdate = (data) => {
+			if (data.matchStreak !== undefined && data.matchStreak > this.longestStreak) {
+				this.longestStreak = data.matchStreak;
+			}
+		};
+
 		// Initialize stats for all types and colors
-		this.reset(1);
+		this.reset(1, null);
 	}
 
 	/**
@@ -46,13 +58,16 @@ class StatisticsTrackerClass {
 
 	/**
 	 * Reset all statistics
-	 * @param {Number} level - Current level to determine available colors
+	 * @param {Number} level - Current level
+	 * @param {Array<String>|null} availableColors - Color hex codes for this level.
+	 *   Pass an explicit array (e.g. from GameEngine via PieceFactory) to avoid an
+	 *   internal lookup. Omit or pass null to resolve automatically via PieceFactory.
 	 */
-	reset(level = 1) {
+	reset(level = 1, availableColors = null) {
 		this.currentLevel = level;
-		
-		// Get available colors for this level from PieceFactory
-		this.availableColors = PieceFactory.getAvailableColors(level);
+		this.availableColors = availableColors !== null
+			? availableColors
+			: PieceFactory.getAvailableColors(level);
 
 		// Completely clear stats object to remove any dynamically added keys
 		this.stats = {};
@@ -71,19 +86,9 @@ class StatisticsTrackerClass {
 	 * @private
 	 */
 	_setupListeners() {
-		if (this._listenersActive) return;
-		this._listenersActive = true;
-
-		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, (data) => {
-			if (data.cascadeCount > this.largestCascade) {
-				this.largestCascade = data.cascadeCount;
-			}
-		});
-
-		EventEmitter.on(CONSTANTS.EVENTS.SCORE_UPDATE, (data) => {
-			if (data.matchStreak !== undefined && data.matchStreak > this.longestStreak) {
-				this.longestStreak = data.matchStreak;
-			}
+		this._subs.replace(EventEmitter, {
+			[CONSTANTS.EVENTS.CASCADE_COMPLETE]: this._boundOnCascadeComplete,
+			[CONSTANTS.EVENTS.SCORE_UPDATE]: this._boundOnScoreUpdate,
 		});
 	}
 

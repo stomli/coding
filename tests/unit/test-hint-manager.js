@@ -18,7 +18,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'initialize - sets enabled true for easy difficulty',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		if (!HintManager.enabled) {
 			throw new Error('Should be enabled for difficulty 1');
@@ -29,7 +28,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - sets enabled false for hard difficulty',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(4);
 		if (HintManager.enabled) {
 			throw new Error('Should be disabled for difficulty 4');
@@ -40,7 +38,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - resets state',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.noMatchRun = 10;
 		HintManager.shownThisLevel = ['a', 'b'];
 		HintManager.initialize(1);
@@ -58,7 +55,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'setEnabled - overrides enabled flag',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		HintManager.setEnabled(false);
 		if (HintManager.enabled) {
@@ -76,7 +72,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onNoMatch - returns null before threshold reached',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		const threshold = ConfigManager.get('hints.noMatchThreshold', 3);
 		for (let i = 0; i < threshold - 1; i++) {
@@ -91,7 +86,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onNoMatch - returns hint at threshold',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		const threshold = ConfigManager.get('hints.noMatchThreshold', 3);
 		let hint = null;
@@ -112,7 +106,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onMatch - resets noMatchRun counter',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		HintManager.onNoMatch(null);
 		HintManager.onNoMatch(null);
@@ -128,7 +121,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onNoMatch - respects maxPerLevel cap',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		const max = ConfigManager.get('hints.maxPerLevel', 3);
 		const threshold = ConfigManager.get('hints.noMatchThreshold', 3);
@@ -151,7 +143,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onNoMatch - does not repeat hints within a level',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		const threshold = ConfigManager.get('hints.noMatchThreshold', 3);
 		const max = ConfigManager.get('hints.maxPerLevel', 3);
@@ -174,7 +165,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onNoMatch - returns null when disabled',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		HintManager.setEnabled(false);
 		const threshold = ConfigManager.get('hints.noMatchThreshold', 3);
@@ -192,7 +182,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onNoMatch - emits HINT_SHOWN event',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		const threshold = ConfigManager.get('hints.noMatchThreshold', 3);
 		let emitted = null;
@@ -216,7 +205,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onNoMatch - triggers hint on high board fill',
 	async run() {
-		await ConfigManager.loadConfig();
 		HintManager.initialize(1);
 		// Create a mock grid with high fill
 		const fillPct = ConfigManager.get('hints.boardFillPercent', 70);

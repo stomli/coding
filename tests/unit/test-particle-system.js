@@ -3,6 +3,7 @@
  */
 
 import ParticleSystem from '../../src/modules/ParticleSystem.js';
+import { assert } from '../utils/assert.js';
 
 /**
  * Run all ParticleSystem tests
@@ -25,13 +26,6 @@ export function runParticleSystemTests() {
 			results.failed++;
 			results.tests.push({ name, pass: false, error: error.message });
 			console.error(`✗ ${name}: ${error.message}`);
-		}
-	}
-
-	// Helper function for assertions
-	function assert(condition, message) {
-		if (!condition) {
-			throw new Error(message || 'Assertion failed');
 		}
 	}
 

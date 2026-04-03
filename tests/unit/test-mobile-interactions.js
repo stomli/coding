@@ -31,7 +31,6 @@ function createMockTouchEvent(type, touches, changedTouches) {
 testSuite.tests.push({
 	name: 'canvas touch - Swipe up triggers rotate',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -76,7 +75,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Swipe down triggers hard drop',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -104,7 +102,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Tap left side triggers move left',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let moveLeftFired = false;
@@ -126,7 +123,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Tap right side triggers move right',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let moveRightFired = false;
@@ -148,7 +144,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Hold activates soft drop',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -176,7 +171,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Release ends soft drop',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -200,7 +194,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'kbd button - softDrop action triggers soft drop event',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let softDropFired = false;
@@ -222,7 +215,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'kbd button - Release ends soft drop',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let softDropEndFired = false;
@@ -244,7 +236,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Small movements do not trigger swipe',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -265,7 +256,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Slow movements do not trigger swipe',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -286,7 +276,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canvas touch - Large movements are not taps',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		

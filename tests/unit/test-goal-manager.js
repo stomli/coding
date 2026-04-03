@@ -18,7 +18,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'initialize - creates goals when enabled',
 	async run() {
-		await ConfigManager.loadConfig();
 		GoalManager.initialize(1, 1);
 		const goals = GoalManager.getGoals();
 		
@@ -38,7 +37,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - goals have required properties',
 	async run() {
-		await ConfigManager.loadConfig();
 		GoalManager.initialize(1, 1);
 		const goals = GoalManager.getGoals();
 		
@@ -56,7 +54,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - goals scale with difficulty',
 	async run() {
-		await ConfigManager.loadConfig();
 		GoalManager.initialize(1, 1);
 		const easy = GoalManager.getGoals().map(g => g.target);
 		GoalManager.reset();
@@ -78,7 +75,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'reset - clears all goals',
 	async run() {
-		await ConfigManager.loadConfig();
 		GoalManager.initialize(1, 1);
 		GoalManager.reset();
 		
@@ -93,7 +89,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'clearBalls - BALLS_CLEARED advances progress',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		// Force a clearBalls goal by initializing until we get one
 		let hasClearBalls = false;
@@ -138,7 +133,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'useSpecials - counts only non-NORMAL balls',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		let hasSpecials = false;
 		let attempts = 0;
@@ -179,7 +173,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'cascade - CASCADE_COMPLETE tracks max depth',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		let hasCascade = false;
 		let attempts = 0;
@@ -217,7 +210,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'completion - goal marked completed when target met',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		let hasClearBalls = false;
 		let attempts = 0;
@@ -253,7 +245,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'completion - getCompletedBonus returns correct bonus',
 	async run() {
-		await ConfigManager.loadConfig();
 		GoalManager.initialize(1, 1);
 		const bonusPerGoal = ConfigManager.get('goals.bonusPoints', 25);
 		
@@ -284,7 +275,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'completion - emits GOAL_UPDATE with justCompleted flag',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		let hasClearBalls = false;
 		let attempts = 0;

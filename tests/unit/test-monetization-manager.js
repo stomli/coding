@@ -220,7 +220,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'activateLicense - rejects empty key',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetManager();
 
 		// Need modal open for error display

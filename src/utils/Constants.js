@@ -36,6 +36,12 @@ const CONSTANTS = {
 	 * Painter ball types (subset for easy checking)
 	 */
 	PAINTER_TYPES: ['PAINTER_HORIZONTAL', 'PAINTER_VERTICAL', 'PAINTER_DIAGONAL_NE', 'PAINTER_DIAGONAL_NW'],
+
+	/**
+	 * All non-normal (special) ball types — extend this when adding new types.
+	 * Ball.isSpecial() depends on this set, keeping Ball.js closed to modification.
+	 */
+	SPECIAL_TYPES: ['EXPLODING', 'PAINTER_HORIZONTAL', 'PAINTER_VERTICAL', 'PAINTER_DIAGONAL_NE', 'PAINTER_DIAGONAL_NW', 'BLOCKING'],
 	
 	/**
 	 * Direction enumeration
@@ -230,7 +236,15 @@ const CONSTANTS = {
 		HIGH_SCORES: 'ballDropGame_highScores',
 		UNLOCKED_LEVELS: 'ballDropGame_unlockedLevels',
 		SETTINGS: 'ballDropGame_settings',
-		ZEN_SAVE_PREFIX: 'orbfall_zen_'
+		ZEN_SAVE_PREFIX: 'orbfall_zen_',
+		PLAYERS: 'ballMatcher_players',
+		CURRENT_PLAYER: 'ballMatcher_currentPlayer',
+		LEVEL_UNLOCKS: 'ballDrop_unlockedLevels',
+		AUDIO_SETTINGS: 'audioSettings',
+		LEVEL_BRIEFINGS: 'orbfall_hiddenLevelBriefings',
+		MONETIZATION_LICENSE: 'monetization_license',
+		MONETIZATION_AD_FREE: 'monetization_ad_free_until',
+		MONETIZATION_LAST_VALIDATION: 'monetization_last_validation'
 	}
 	
 };

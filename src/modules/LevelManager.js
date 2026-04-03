@@ -9,6 +9,7 @@
  */
 
 import { ConfigManager } from './ConfigManager.js';
+import { CONSTANTS } from '../utils/Constants.js';
 
 /**
  * LevelManager class for handling level progression
@@ -148,7 +149,7 @@ class LevelManagerClass {
 	 */
 	saveUnlockedLevels() {
 		try {
-			localStorage.setItem('ballDrop_unlockedLevels', JSON.stringify(this.unlockedLevels));
+			localStorage.setItem(CONSTANTS.STORAGE_KEYS.LEVEL_UNLOCKS, JSON.stringify(this.unlockedLevels));
 		} catch (e) {
 			console.error('Failed to save unlocked levels:', e);
 		}
@@ -159,7 +160,7 @@ class LevelManagerClass {
 	 */
 	loadUnlockedLevels() {
 		try {
-			const saved = localStorage.getItem('ballDrop_unlockedLevels');
+			const saved = localStorage.getItem(CONSTANTS.STORAGE_KEYS.LEVEL_UNLOCKS);
 			if (saved) {
 				this.unlockedLevels = JSON.parse(saved);
 				// Ensure level 1 is always unlocked

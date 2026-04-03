@@ -36,6 +36,8 @@ import testMissionManager from './test-mission-manager.js';
 import testPuzzleManager from './test-puzzle-manager.js';
 import testShareManager from './test-share-manager.js';
 import testDifficultyModifiers from './test-difficulty-modifiers.js';
+import { runSubscriptionSetTests } from './test-subscription-set.js';
+import { runPlayerDataMigratorTests } from './test-player-data-migrator.js';
 import ConfigManager from '../../src/modules/ConfigManager.js';
 
 /**
@@ -149,6 +151,12 @@ export async function runAllTests() {
 	// Run Difficulty Modifiers tests
 	const difficultyModifiersResults = await runAsyncTestSuite(testDifficultyModifiers);
 	suites.push({ name: testDifficultyModifiers.name, tests: difficultyModifiersResults });
+
+	// Run SubscriptionSet tests
+	suites.push({ name: 'SubscriptionSet', tests: runSubscriptionSetTests() });
+
+	// Run PlayerDataMigrator tests
+	suites.push({ name: 'PlayerDataMigrator', tests: runPlayerDataMigratorTests() });
 
 	let totalPassed = 0;
 	let totalFailed = 0;

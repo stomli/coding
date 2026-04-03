@@ -25,6 +25,7 @@
 import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
+import { SubscriptionSet } from '../utils/SubscriptionSet.js';
 
 /**
  * @typedef {Object} AdDisplayRules
@@ -51,6 +52,11 @@ class AdManagerClass {
 		this.scriptLoaded = false;
 		/** @type {boolean} */
 		this.initialized = false;
+		this._subs = new SubscriptionSet();
+
+		this._boundOnGameOver = () => this._onGameOver();
+		this._boundOnLevelComplete = () => this._onLevelComplete();
+		this._boundOnAdFreeActivated = () => this._onAdFreeActivated();
 	}
 
 	/**
@@ -58,6 +64,7 @@ class AdManagerClass {
 	 * @returns {void}
 	 */
 	initialize() {
+		this._subs.clear();
 		const adsConfig = ConfigManager.get('monetization.ads', null);
 
 		if (!adsConfig || !adsConfig.enabled) {
@@ -83,7 +90,7 @@ class AdManagerClass {
 	 * @returns {boolean}
 	 */
 	isAdFree() {
-		const adFreeUntil = localStorage.getItem('monetization_ad_free_until');
+		const adFreeUntil = localStorage.getItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_AD_FREE);
 		if (!adFreeUntil) return false;
 
 		const expirationTime = parseInt(adFreeUntil);
@@ -92,7 +99,7 @@ class AdManagerClass {
 		}
 
 		// Expired - clean up
-		localStorage.removeItem('monetization_ad_free_until');
+			localStorage.removeItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_AD_FREE);
 		return false;
 	}
 
@@ -119,9 +126,11 @@ class AdManagerClass {
 	 * @returns {void}
 	 */
 	_setupEventListeners() {
-		EventEmitter.on(CONSTANTS.EVENTS.GAME_OVER, () => this._onGameOver());
-		EventEmitter.on(CONSTANTS.EVENTS.LEVEL_COMPLETE, () => this._onLevelComplete());
-		EventEmitter.on(CONSTANTS.EVENTS.AD_FREE_ACTIVATED, () => this._onAdFreeActivated());
+		this._subs.replace(EventEmitter, {
+			[CONSTANTS.EVENTS.GAME_OVER]: this._boundOnGameOver,
+			[CONSTANTS.EVENTS.LEVEL_COMPLETE]: this._boundOnLevelComplete,
+			[CONSTANTS.EVENTS.AD_FREE_ACTIVATED]: this._boundOnAdFreeActivated,
+		});
 	}
 
 	/**

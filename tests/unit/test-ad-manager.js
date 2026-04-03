@@ -94,7 +94,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canShowInterstitial - returns false within min interval',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = Date.now(); // Just shown
@@ -110,7 +109,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canShowInterstitial - returns true after min interval',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = Date.now() - 400000; // 400s ago, > 300s min
@@ -126,7 +124,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'canShowInterstitial - returns false when ad-free active',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = 0;
@@ -146,7 +143,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_onGameOver - increments game over counter',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 
@@ -166,7 +162,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_onLevelComplete - increments level complete counter',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 
@@ -181,7 +176,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'showInterstitial - creates overlay element when conditions met',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = 0;
@@ -207,7 +201,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'showInterstitial - returns false when called too soon',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = Date.now(); // Just shown
@@ -223,7 +216,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'showInterstitial - overlay contains skip button',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = 0;
@@ -252,7 +244,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'showInterstitial - overlay has Advertisement label',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = 0;
@@ -279,7 +270,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'showInterstitial - skip button removes overlay on click',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = 0;
@@ -343,7 +333,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Game over frequency - interstitial shown on every Nth game over',
 	async run() {
-		await ConfigManager.loadConfig();
 		resetAdManager();
 		AdManager.adsEnabled = true;
 		AdManager.lastInterstitialTime = 0;

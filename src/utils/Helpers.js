@@ -209,6 +209,21 @@ class SeededRandom {
 	}
 }
 
+/**
+ * Compute the scaled target value for a goal or mission step.
+ * @param {Object} cfg - Config entry with {base, perLevel?, perDifficulty?, max?}
+ * @param {Number} level - Current level (1-based)
+ * @param {Number} difficulty - Current difficulty (1-based)
+ * @returns {Number} Computed target, floored and capped at cfg.max if set
+ */
+function computeGoalTarget(cfg, level, difficulty) {
+	const raw = cfg.base
+		+ ((level - 1) * (cfg.perLevel || 0))
+		+ ((difficulty - 1) * (cfg.perDifficulty || 0));
+	const rounded = Math.floor(raw);
+	return cfg.max ? Math.min(rounded, cfg.max) : rounded;
+}
+
 export {
 	getNestedProperty,
 	clamp,
@@ -220,5 +235,6 @@ export {
 	formatNumber,
 	formatTime,
 	iterateShapeCells,
-	SeededRandom
+	SeededRandom,
+	computeGoalTarget
 };

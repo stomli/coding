@@ -4,6 +4,7 @@
 
 import LevelManager from '../../src/modules/LevelManager.js';
 import { ConfigManager } from '../../src/modules/ConfigManager.js';
+import { assert, assertEquals, assertArrayEquals } from '../utils/assert.js';
 
 export function runLevelManagerTests() {
 	const results = [];
@@ -17,25 +18,6 @@ export function runLevelManagerTests() {
 			console.error(`✗ ${name}`);
 			console.error(`  Error: ${error.message}`);
 			results.push({ name, pass: false, error: error.message });
-		}
-	}
-	
-	// Helper function to assert
-	function assert(condition, message) {
-		if (!condition) {
-			throw new Error(message || 'Assertion failed');
-		}
-	}
-	
-	function assertEquals(actual, expected, message) {
-		if (actual !== expected) {
-			throw new Error(message || `Expected ${expected}, got ${actual}`);
-		}
-	}
-	
-	function assertArrayEquals(actual, expected, message) {
-		if (JSON.stringify(actual) !== JSON.stringify(expected)) {
-			throw new Error(message || `Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
 		}
 	}
 	

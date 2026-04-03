@@ -13,6 +13,7 @@ import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import PlayerManager from './PlayerManager.js';
 import StatisticsTracker from './StatisticsTracker.js';
+import { SubscriptionSet } from '../utils/SubscriptionSet.js';
 
 /**
  * ScoreManager class for tracking and calculating scores
@@ -28,7 +29,8 @@ class ScoreManagerClass {
 		this.matchStreak = 0;
 		this.diagonalScoreMultiplier = 1.0;
 		this.isInitialized = false;
-		
+		this._subs = new SubscriptionSet();
+
 		// Bind methods for event listener removal
 		this._boundOnBallsCleared = (data) => this._onBallsCleared(data);
 		this._boundOnCascadeLevelComplete = () => this._onCascadeLevelComplete();
@@ -50,17 +52,12 @@ class ScoreManagerClass {
 		this.currentCascadeData = null;
 		this.matchStreak = 0;
 		
-		// Remove old listeners if already initialized
-		if (this.isInitialized) {
-			EventEmitter.off(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-			EventEmitter.off(CONSTANTS.EVENTS.CASCADE, this._boundOnCascadeLevelComplete);
-			EventEmitter.off(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
-		}
-		
-		// Listen for scoring events
-		EventEmitter.on(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-		EventEmitter.on(CONSTANTS.EVENTS.CASCADE, this._boundOnCascadeLevelComplete);
-		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
+		// Replace event subscriptions
+		this._subs.replace(EventEmitter, {
+			[CONSTANTS.EVENTS.BALLS_CLEARED]: this._boundOnBallsCleared,
+			[CONSTANTS.EVENTS.CASCADE]: this._boundOnCascadeLevelComplete,
+			[CONSTANTS.EVENTS.CASCADE_COMPLETE]: this._boundOnCascadeComplete
+		});
 		
 		this.isInitialized = true;
 		

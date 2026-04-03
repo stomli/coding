@@ -12,7 +12,8 @@
 import { ConfigManager } from './ConfigManager.js';
 import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
-import { PieceFactory } from './PieceFactory.js';
+import { computeGoalTarget } from '../utils/Helpers.js';
+import { SubscriptionSet } from '../utils/SubscriptionSet.js';
 
 class MissionManagerClass {
 	constructor() {
@@ -21,6 +22,7 @@ class MissionManagerClass {
 		this.currentIndex = 0;
 		this.goalsCompleted = 0;
 		this.difficulty = 1;
+		this._subs = new SubscriptionSet();
 
 		this._boundOnBallsCleared = (data) => this._onBallsCleared(data);
 		this._boundOnCascadeComplete = (data) => this._onCascadeComplete(data);
@@ -31,8 +33,11 @@ class MissionManagerClass {
 	 * Initialize for a new mission run
 	 * @param {Number} difficulty - Current difficulty (1-5)
 	 * @param {Number} level - Current level (used to filter impossible goals)
+	 * @param {Boolean|null} hasSpecials - Whether special ball types are unlocked.
+	 *   Pass true/false when known (e.g. from GameEngine). Omit or pass null to
+	 *   fall back to the level-based heuristic (level >= 3).
 	 */
-	initialize(difficulty, level) {
+	initialize(difficulty, level, hasSpecials = null) {
 		this.difficulty = difficulty || 1;
 		this.level = level || 1;
 		this.currentIndex = 0;
@@ -40,14 +45,10 @@ class MissionManagerClass {
 		this.active = true;
 
 		// Remove old listeners
-		EventEmitter.off(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-		EventEmitter.off(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
-		EventEmitter.off(CONSTANTS.EVENTS.SCORE_UPDATE, this._boundOnScoreUpdate);
+		this._subs.clear();
 
-		// Check which special types are available at this level
-		const hasSpecials = PieceFactory.getUnlockedSpecialTypes
-			? PieceFactory.getUnlockedSpecialTypes(this.level).length > 0
-			: this.level >= 3; // fallback heuristic
+		// Resolve hasSpecials: use explicit value if provided, otherwise fall back to heuristic
+		const specialsAvailable = hasSpecials !== null ? hasSpecials : this.level >= 3;
 
 		// Build chain from config, filtering out impossible goals
 		const chainCfg = ConfigManager.get('mission.goalChain', []);
@@ -56,7 +57,7 @@ class MissionManagerClass {
 		this.chain = [];
 		for (const cfg of chainCfg) {
 			// Skip useSpecials if no specials unlocked at this level
-			if (cfg.type === 'useSpecials' && !hasSpecials) continue;
+			if (cfg.type === 'useSpecials' && !specialsAvailable) continue;
 
 			const target = this._computeTarget(cfg);
 			const points = Math.ceil(basePoints * Math.pow(1.2, this.chain.length) / 5) * 5;
@@ -73,9 +74,11 @@ class MissionManagerClass {
 		}
 
 		// Subscribe to events
-		EventEmitter.on(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
-		EventEmitter.on(CONSTANTS.EVENTS.SCORE_UPDATE, this._boundOnScoreUpdate);
+		this._subs.replace(EventEmitter, {
+			[CONSTANTS.EVENTS.BALLS_CLEARED]: this._boundOnBallsCleared,
+			[CONSTANTS.EVENTS.CASCADE_COMPLETE]: this._boundOnCascadeComplete,
+			[CONSTANTS.EVENTS.SCORE_UPDATE]: this._boundOnScoreUpdate
+		});
 
 		this._emitUpdate();
 	}
@@ -84,9 +87,7 @@ class MissionManagerClass {
 	 * Tear down listeners
 	 */
 	reset() {
-		EventEmitter.off(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-		EventEmitter.off(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
-		EventEmitter.off(CONSTANTS.EVENTS.SCORE_UPDATE, this._boundOnScoreUpdate);
+		this._subs.clear();
 		this.active = false;
 		this.chain = [];
 		this.currentIndex = 0;
@@ -96,9 +97,7 @@ class MissionManagerClass {
 	// ── Target Computation ──
 
 	_computeTarget(cfg) {
-		const raw = cfg.base + (this.difficulty - 1) * (cfg.perDifficulty || 0);
-		const rounded = Math.floor(raw);
-		return cfg.max ? Math.min(rounded, cfg.max) : rounded;
+		return computeGoalTarget(cfg, 1, this.difficulty);
 	}
 
 	// ── Current Goal ──

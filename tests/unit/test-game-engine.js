@@ -18,7 +18,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'singleton - GameEngine exists',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		if (!GameEngine) {
 			throw new Error('GameEngine singleton should exist');
@@ -34,7 +33,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'properties - Has required game state properties',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		
 		if (GameEngine.state === undefined) {
@@ -59,7 +57,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - Creates grid with correct dimensions',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		
 		const gridRows = ConfigManager.get('game.gridRows', 20);
@@ -83,7 +80,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'start - Changes state to PLAYING',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -97,7 +93,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'start - Spawns first piece',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -115,7 +110,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'pause - Toggles between PLAYING and PAUSED',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -144,7 +138,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_getGhostPieceY - Calculates landing position',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -168,7 +161,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'start - Spawns piece at top center',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -198,7 +190,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'properties - Has FloatingTextManager',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		
 		if (!GameEngine.floatingTextManager) {
@@ -215,7 +206,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'start - Drop speed increases with difficulty',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		
 		// Start with difficulty 1
@@ -236,7 +226,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'start - Sets level and difficulty',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(5, 3); // difficulty=5, level=3
 		
@@ -254,7 +243,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_startSoftDrop - Increases drop speed by 2.5x',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -280,7 +268,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_endSoftDrop - Restores normal drop speed',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -304,7 +291,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_startSoftDrop - Only works in PLAYING state',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		
 		// Try to start soft drop when not playing
@@ -321,7 +307,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_startSoftDrop - Requires active piece',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.state = CONSTANTS.GAME_STATES.PLAYING;
 		GameEngine.currentPiece = null;
@@ -339,7 +324,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: '_startSoftDrop - Prevents double activation',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
@@ -365,7 +349,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'setDifficulty - Updates basedropInterval',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(1, 3);
 		
@@ -383,7 +366,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'restart - Resets game state',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.initialize();
 		GameEngine.start(5, 10);
 		
@@ -432,7 +414,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'zen-save - saveZenState creates save in ZEN mode',
 	async run() {
-		await ConfigManager.loadConfig();
 		GameEngine.gameMode = 'ZEN';
 		GameEngine.difficulty = 2;
 		GameEngine.level = 3;

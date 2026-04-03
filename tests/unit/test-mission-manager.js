@@ -21,7 +21,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'initialize - builds chain from config',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const total = MissionManager.getTotalGoals();
 		if (total === 0) throw new Error('Chain should not be empty');
@@ -34,7 +33,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - resets state on re-init',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		// Simulate some progress
 		MissionManager.goalsCompleted = 3;
@@ -51,7 +49,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getCurrentGoal - returns first goal initially',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const goal = MissionManager.getCurrentGoal();
 		if (!goal) throw new Error('Should have a current goal');
@@ -65,7 +62,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getCurrentGoal - returns null when chain complete',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		// Fast-forward to end
 		MissionManager.currentIndex = MissionManager.chain.length;
@@ -80,7 +76,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'isChainComplete - false at start, true when done',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		if (MissionManager.isChainComplete()) throw new Error('Should not be complete at start');
 		MissionManager.currentIndex = MissionManager.chain.length;
@@ -94,7 +89,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onBallsCleared - advances clearBalls goal',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		// Find first clearBalls goal
 		const idx = MissionManager.chain.findIndex(g => g.type === 'clearBalls');
@@ -113,7 +107,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onCascadeComplete - advances cascade goal',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const idx = MissionManager.chain.findIndex(g => g.type === 'cascade');
 		if (idx === -1) throw new Error('Config should have at least one cascade goal');
@@ -133,7 +126,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'onScoreUpdate - advances streak goal',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const idx = MissionManager.chain.findIndex(g => g.type === 'streak');
 		if (idx === -1) throw new Error('Config should have at least one streak goal');
@@ -150,7 +142,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'completing a goal advances to the next one',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const firstGoal = MissionManager.getCurrentGoal();
 		// Force completion
@@ -168,7 +159,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'calculateScore - includes goals and time bonus',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const pointsPerGoal = ConfigManager.get('mission.pointsPerGoal', 50);
 		const timeMult = ConfigManager.get('mission.timeBonusMultiplier', 2);
@@ -185,7 +175,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'emits MISSION_GOAL_UPDATE on initialize',
 	async run() {
-		await ConfigManager.loadConfig();
 		let emitted = null;
 		const handler = (data) => { emitted = data; };
 		EventEmitter.on(CONSTANTS.EVENTS.MISSION_GOAL_UPDATE, handler);
@@ -206,7 +195,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'reset - clears state and deactivates',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		MissionManager.reset();
 		if (MissionManager.active) throw new Error('Should not be active after reset');
@@ -220,7 +208,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'targets scale with difficulty',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const easyTarget = MissionManager.chain[0].target;
 		MissionManager.reset();
@@ -236,7 +223,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'only the current goal receives event progress',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		// Ensure at least 2 goals
 		if (MissionManager.chain.length < 2) throw new Error('Need at least 2 goals for this test');
@@ -256,7 +242,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - filters useSpecials goals at level 1',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, 1);
 		const hasUseSpecials = MissionManager.chain.some(g => g.type === 'useSpecials');
 		if (hasUseSpecials) throw new Error('useSpecials should be filtered out at level 1 (no specials unlocked)');
@@ -267,7 +252,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - keeps useSpecials goals at high level',
 	async run() {
-		await ConfigManager.loadConfig();
 		MissionManager.initialize(1, HIGH_LEVEL);
 		const hasUseSpecials = MissionManager.chain.some(g => g.type === 'useSpecials');
 		if (!hasUseSpecials) throw new Error('useSpecials should be present at level 10 (specials unlocked)');

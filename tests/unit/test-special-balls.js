@@ -19,7 +19,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'processExplosions - Clears 7×7 area centered on exploding ball',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -65,7 +64,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Clears blocking balls within explosion radius',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -96,7 +94,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Does not clear balls outside 7×7 radius',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -127,7 +124,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Horizontal painter paints entire row',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -169,7 +165,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Vertical painter paints entire column',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -211,7 +206,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Diagonal painter paints diagonal lines',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -264,7 +258,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Does not paint blocking balls',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -301,7 +294,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Multiple exploding balls combine areas',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -345,7 +337,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Returns empty array for no matches',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -361,7 +352,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Returns empty array for no matches',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -377,7 +367,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Normal balls do not explode',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -417,7 +406,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Paints when painter is in match',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -448,7 +436,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Edge explosion stays in bounds',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(10, 10);
 		
@@ -488,7 +475,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Edge painter stays in bounds',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(10, 10);
 		
@@ -531,7 +517,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Works with mixed special balls',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -572,7 +557,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Multiple painters process correctly',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -616,7 +600,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processExplosions - Returns correct cleared positions',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(20, 10);
 		
@@ -663,7 +646,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'processPainters - Returns painted position data',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const grid = new Grid(10, 10);
 		
@@ -709,7 +691,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Blocking ball - Has correct properties',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const blockingBall = new Ball(CONSTANTS.BALL_TYPES.BLOCKING, '#888888');
 		
@@ -735,7 +716,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Exploding ball - Has correct properties',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const explodingBall = new Ball(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000');
 		
@@ -761,7 +741,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Painter ball - Has correct properties',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#00FF00');
 		

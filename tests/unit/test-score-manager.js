@@ -19,7 +19,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'initialize - Sets difficulty and resets score',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(3);
 		
@@ -37,7 +36,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'reset - Clears score to zero',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		ScoreManager.addPoints(100);
@@ -58,7 +56,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'addPoints - Increases score correctly',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		ScoreManager.addPoints(50);
@@ -79,7 +76,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Cascade scoring - Single cascade (no bonus)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1); // Difficulty 1 (1.0x multiplier)
 		
@@ -100,7 +96,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Cascade scoring - Double cascade (with bonus)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1); // Difficulty 1 (1.0x multiplier)
 		
@@ -126,7 +121,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Cascade scoring - Triple cascade (exponential bonus)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1); // Difficulty 1 (1.0x multiplier)
 		
@@ -154,7 +148,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Difficulty multiplier - Easy (1.0x)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1); // Easy
 		
@@ -174,7 +167,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Difficulty multiplier - Medium (1.5x)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(2); // Medium
 		
@@ -194,7 +186,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Difficulty multiplier - Hard (2.0x)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(3); // Hard
 		
@@ -214,7 +205,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Difficulty multiplier - Expert (2.5x)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(4); // Expert
 		
@@ -234,7 +224,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Difficulty multiplier - Master (3.0x)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(5); // Master
 		
@@ -254,7 +243,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Multiple cascades - Score accumulates',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -282,7 +270,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Cascade data - Resets between cascades',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -311,7 +298,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Cascade data - Resets between cascades',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -340,7 +326,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getScore - Returns current score value',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -360,7 +345,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'addPoints - Emits SCORE_UPDATE event',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -392,7 +376,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Edge case - Zero balls cleared',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -409,7 +392,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Edge case - Negative points handled',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		ScoreManager.addPoints(100);
@@ -425,7 +407,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Edge case - Large cascade count (10 levels)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -448,7 +429,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Edge case - Large ball count (1000 balls)',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -465,7 +445,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - Multiple calls remove old listeners',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		ScoreManager.initialize(1); // Call again
@@ -485,7 +464,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Difficulty change - Affects subsequent scoring',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1); // 1.0x
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 10, matches: 1 });
@@ -510,7 +488,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Edge case - CASCADE_COMPLETE without BALLS_CLEARED',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -528,7 +505,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'reset - Emits SCORE_UPDATE event',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		ScoreManager.addPoints(100);
@@ -559,7 +535,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Mixed cascades - Different sizes accumulate correctly',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		ScoreManager.initialize(1);
 		
@@ -594,7 +569,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - Starts at 0 after initialize',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		if (ScoreManager.matchStreak !== 0) {
@@ -607,7 +581,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - Increments on each cascade complete',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		// First cascade
@@ -632,7 +605,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - Resets to 0 on onNoMatch',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		// Build up streak
@@ -657,7 +629,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - No bonus at streak 1',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 5, matches: 1 });
@@ -674,7 +645,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - Bonus applied at streak 2+',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		// First cascade: 5 points, streak=1
@@ -696,7 +666,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - Bonus capped at streakCap',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		// Build streak to 12 (beyond cap of 10)
@@ -727,7 +696,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - Resets on reset()',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		EventEmitter.emit(CONSTANTS.EVENTS.BALLS_CLEARED, { count: 3, matches: 1 });
@@ -745,7 +713,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - Emits matchStreak in SCORE_UPDATE event',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		let receivedStreak = null;
@@ -772,7 +739,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'Streak - onNoMatch emits matchStreak 0',
 	async run() {
-		await ConfigManager.loadConfig();
 		ScoreManager.initialize(1);
 		
 		// Build streak

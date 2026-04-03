@@ -40,7 +40,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - sets active state and piece limit',
 	async run() {
-		await ConfigManager.loadConfig();
 		PuzzleManager.initialize(1, 1);
 		if (!PuzzleManager.active) throw new Error('Should be active');
 		if (PuzzleManager.getPiecesUsed() !== 0) throw new Error('Pieces used should be 0');
@@ -52,7 +51,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'initialize - resets on re-init',
 	async run() {
-		await ConfigManager.loadConfig();
 		PuzzleManager.initialize(1, 1);
 		PuzzleManager.recordPiece();
 		PuzzleManager.recordPiece();
@@ -67,7 +65,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'recordPiece - increments and returns true while under limit',
 	async run() {
-		await ConfigManager.loadConfig();
 		PuzzleManager.initialize(1, 1);
 		const result = PuzzleManager.recordPiece();
 		if (PuzzleManager.getPiecesUsed() !== 1) throw new Error('Should be 1');
@@ -79,7 +76,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'recordPiece - returns false when limit reached',
 	async run() {
-		await ConfigManager.loadConfig();
 		PuzzleManager.initialize(1, 1);
 		const limit = PuzzleManager.getPieceLimit();
 		// Fast-forward to just before limit
@@ -94,7 +90,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getPiecesRemaining - tracks correctly',
 	async run() {
-		await ConfigManager.loadConfig();
 		PuzzleManager.initialize(1, 1);
 		const limit = PuzzleManager.getPieceLimit();
 		PuzzleManager.recordPiece();
@@ -112,7 +107,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getStarThresholds - returns bronze < silver < gold',
 	async run() {
-		await ConfigManager.loadConfig();
 		const t = PuzzleManager.getStarThresholds(5, 3);
 		if (t.bronze >= t.silver) throw new Error(`Bronze (${t.bronze}) should be < Silver (${t.silver})`);
 		if (t.silver >= t.gold) throw new Error(`Silver (${t.silver}) should be < Gold (${t.gold})`);
@@ -122,7 +116,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getStarThresholds - scales with level',
 	async run() {
-		await ConfigManager.loadConfig();
 		const low = PuzzleManager.getStarThresholds(1, 1);
 		const high = PuzzleManager.getStarThresholds(10, 1);
 		if (high.gold <= low.gold) throw new Error('Higher level should have higher gold threshold');
@@ -132,7 +125,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getStarThresholds - scales with difficulty',
 	async run() {
-		await ConfigManager.loadConfig();
 		const easy = PuzzleManager.getStarThresholds(5, 1);
 		const hard = PuzzleManager.getStarThresholds(5, 5);
 		if (hard.gold <= easy.gold) throw new Error('Higher difficulty should have higher gold threshold');
@@ -144,7 +136,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getStars - returns 0 for score below bronze',
 	async run() {
-		await ConfigManager.loadConfig();
 		if (PuzzleManager.getStars(0, 1, 1) !== 0) throw new Error('0 score should be 0 stars');
 	}
 });
@@ -152,7 +143,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getStars - returns 1-3 at threshold boundaries',
 	async run() {
-		await ConfigManager.loadConfig();
 		const t = PuzzleManager.getStarThresholds(1, 1);
 		if (PuzzleManager.getStars(t.bronze, 1, 1) !== 1) throw new Error('Bronze score should be 1 star');
 		if (PuzzleManager.getStars(t.silver, 1, 1) !== 2) throw new Error('Silver score should be 2 stars');
@@ -163,7 +153,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'getStars - returns 3 for score above gold',
 	async run() {
-		await ConfigManager.loadConfig();
 		const t = PuzzleManager.getStarThresholds(1, 1);
 		if (PuzzleManager.getStars(t.gold + 1000, 1, 1) !== 3) throw new Error('Above gold should be 3 stars');
 	}
@@ -174,7 +163,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'emits PUZZLE_PIECES_UPDATE on initialize and recordPiece',
 	async run() {
-		await ConfigManager.loadConfig();
 		let count = 0;
 		const handler = () => { count++; };
 		EventEmitter.on(CONSTANTS.EVENTS.PUZZLE_PIECES_UPDATE, handler);
@@ -195,7 +183,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'reset - clears state',
 	async run() {
-		await ConfigManager.loadConfig();
 		PuzzleManager.initialize(1, 1);
 		PuzzleManager.recordPiece();
 		PuzzleManager.reset();

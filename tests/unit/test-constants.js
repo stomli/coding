@@ -3,6 +3,7 @@
  */
 
 import { CONSTANTS, BALL_TYPES, GAME_STATES, EVENTS } from '../../src/utils/Constants.js';
+import { assert, assertEquals } from '../utils/assert.js';
 
 export function runConstantsTests() {
 	const results = [];
@@ -16,14 +17,6 @@ export function runConstantsTests() {
 			console.error(`  Error: ${error.message}`);
 			results.push({ name, pass: false, error: error.message });
 		}
-	}
-
-	function assert(condition, message) {
-		if (!condition) throw new Error(message || 'Assertion failed');
-	}
-
-	function assertEquals(actual, expected, message) {
-		if (actual !== expected) throw new Error(message || `Expected ${expected}, got ${actual}`);
 	}
 
 	// ── CONSTANTS object structure ──

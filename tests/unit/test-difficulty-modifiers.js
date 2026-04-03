@@ -19,7 +19,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'getModifiers - returns defaults for CLASSIC mode',
 	async run() {
-		await ConfigManager.loadConfig();
 		const mods = ConfigManager.getModifiers('CLASSIC', 1);
 		if (mods.lockDelay !== 500) throw new Error(`Expected lockDelay 500, got ${mods.lockDelay}`);
 		if (mods.diagonalScoreMultiplier !== 1.0) throw new Error(`Expected diag 1.0, got ${mods.diagonalScoreMultiplier}`);

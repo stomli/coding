@@ -47,13 +47,9 @@ class Ball {
 	 * @returns {void}
 	 */
 	setColor(newColor) {
-		const isValidColor = newColor && typeof newColor === 'string';
-		
-		// Update color if valid
-		if (isValidColor) {
+		if (newColor && typeof newColor === 'string') {
 			this.color = newColor;
-		}
-		else {
+		} else {
 			console.warn('Ball: Invalid color provided', newColor);
 		}
 	}
@@ -63,15 +59,7 @@ class Ball {
 	 * @returns {Boolean} True for normal and special balls, false for blocking
 	 */
 	isMatchable() {
-		const isBlocking = this.type === CONSTANTS.BALL_TYPES.BLOCKING;
-		
-		// Blocking balls cannot be matched
-		if (isBlocking) {
-			return false;
-		}
-		else {
-			return true;
-		}
+		return this.type !== CONSTANTS.BALL_TYPES.BLOCKING;
 	}
 	
 	/**
@@ -79,17 +67,7 @@ class Ball {
 	 * @returns {Boolean} True if exploding or painting type
 	 */
 	isSpecial() {
-		const isExploding = this.type === CONSTANTS.BALL_TYPES.EXPLODING;
-		const isPainter = CONSTANTS.PAINTER_TYPES.includes(this.type);
-		const isBlocking = this.type === CONSTANTS.BALL_TYPES.BLOCKING;
-		
-		// Check if any special type
-		if (isExploding || isPainter || isBlocking) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return CONSTANTS.SPECIAL_TYPES.includes(this.type);
 	}
 	
 	/**
@@ -97,15 +75,7 @@ class Ball {
 	 * @returns {Boolean} True if exploding ball
 	 */
 	isExploding() {
-		const isExploding = this.type === CONSTANTS.BALL_TYPES.EXPLODING;
-		
-		// Return exploding status
-		if (isExploding) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return this.type === CONSTANTS.BALL_TYPES.EXPLODING;
 	}
 	
 	/**
@@ -113,15 +83,7 @@ class Ball {
 	 * @returns {Boolean} True if any painter type
 	 */
 	isPainter() {
-		const isPainter = CONSTANTS.PAINTER_TYPES.includes(this.type);
-		
-		// Return painter status
-		if (isPainter) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return CONSTANTS.PAINTER_TYPES.includes(this.type);
 	}
 	
 	/**
@@ -129,24 +91,13 @@ class Ball {
 	 * @returns {String|null} 'horizontal', 'vertical', 'diagonal-ne', 'diagonal-nw', or null if not a painter
 	 */
 	getPainterDirection() {
-		// Map type to direction
 		const directionMap = {
 			[CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL]: 'horizontal',
 			[CONSTANTS.BALL_TYPES.PAINTER_VERTICAL]: 'vertical',
 			[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NE]: 'diagonal-ne',
 			[CONSTANTS.BALL_TYPES.PAINTER_DIAGONAL_NW]: 'diagonal-nw'
 		};
-		
-		const direction = directionMap[this.type];
-		const hasDirection = direction !== undefined;
-		
-		// Return direction or null
-		if (hasDirection) {
-			return direction;
-		}
-		else {
-			return null;
-		}
+		return directionMap[this.type] ?? null;
 	}
 	
 }

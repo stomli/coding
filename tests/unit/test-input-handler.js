@@ -19,7 +19,6 @@ const testSuite = {
 testSuite.tests.push({
 	name: 'singleton - InputHandler exists',
 	async run() {
-		await ConfigManager.loadConfig();
 		
 		if (!InputHandler) {
 			throw new Error('InputHandler singleton should exist');
@@ -35,7 +34,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - emits move-left on ArrowLeft',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -63,7 +61,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - emits move-right on ArrowRight',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -91,7 +88,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - emits rotate on ArrowUp',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -119,7 +115,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - emits hard-drop on ArrowDown',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -147,7 +142,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - emits pause on KeyP',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -175,7 +169,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - emits restart on KeyR',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -203,7 +196,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - prevents default on arrow keys',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		const event = {
@@ -225,7 +217,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - ignores non-game keys',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -265,7 +256,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyDown - emits soft-drop on Space',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -293,7 +283,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'handleKeyUp - emits soft-drop-end on Space release',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -321,7 +310,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'triggerAction - emits soft-drop for softDrop action',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -343,7 +331,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'triggerActionEnd - emits soft-drop-end for softDrop action',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;
@@ -365,7 +352,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'triggerAction - supports all mobile gesture actions',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		const actions = [
@@ -397,7 +383,6 @@ testSuite.tests.push({
 testSuite.tests.push({
 	name: 'enableInput/disableInput - controls event emission',
 	async run() {
-		await ConfigManager.loadConfig();
 		InputHandler.initialize();
 		
 		let eventFired = false;

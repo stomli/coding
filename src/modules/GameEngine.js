@@ -85,7 +85,7 @@ class GameEngineClass {
 		this.isHandlingMatches = false;
 
 		// Level briefing visibility preferences (mode+difficulty+level keys)
-		this.levelBriefingStorageKey = 'orbfall_hiddenLevelBriefings';
+		this.levelBriefingStorageKey = CONSTANTS.STORAGE_KEYS.LEVEL_BRIEFINGS;
 		this.hiddenLevelBriefings = this._loadHiddenLevelBriefings();
 		this.pendingLevelChangesOverlay = false;
 		this.activeProgressionState = null;
@@ -660,7 +660,7 @@ class GameEngineClass {
 		}
 		
 		// Reset statistics with current level
-		StatisticsTracker.reset(this.level);
+		StatisticsTracker.reset(this.level, PieceFactory.getAvailableColors(this.level));
 		
 		// Reset PieceFactory
 		PieceFactory.reset();
@@ -689,7 +689,8 @@ class GameEngineClass {
 		// Initialize GoalManager (optional per-level goals) — skip for MISSION/PUZZLE modes
 		if (this.gameMode === 'MISSION') {
 			GoalManager.reset();
-			MissionManager.initialize(this.difficulty, this.level);
+			const hasSpecials = PieceFactory.getUnlockedSpecialTypes(this.level).length > 0;
+			MissionManager.initialize(this.difficulty, this.level, hasSpecials);
 		} else if (this.gameMode === 'PUZZLE') {
 			GoalManager.reset();
 			MissionManager.reset();
@@ -2000,7 +2001,7 @@ class GameEngineClass {
 		
 		// Start playing
 		this.state = CONSTANTS.GAME_STATES.PLAYING;
-		StatisticsTracker.reset(this.level);
+		StatisticsTracker.reset(this.level, PieceFactory.getAvailableColors(this.level));
 		this.render();
 		this._gameLoop();
 		

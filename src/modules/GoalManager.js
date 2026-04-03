@@ -16,6 +16,8 @@
 import { ConfigManager } from './ConfigManager.js';
 import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
+import { shuffleArray, computeGoalTarget } from '../utils/Helpers.js';
+import { SubscriptionSet } from '../utils/SubscriptionSet.js';
 
 /**
  * Goal manager class — picks goals for each level and tracks progress
@@ -28,7 +30,8 @@ class GoalManagerClass {
 		this.level = 1;
 		this.enabled = false;
 		this.allCompleted = false;
-		
+		this._subs = new SubscriptionSet();
+
 		// Bound handlers for cleanup
 		this._boundOnBallsCleared = (data) => this._onBallsCleared(data);
 		this._boundOnCascadeComplete = (data) => this._onCascadeComplete(data);
@@ -48,16 +51,14 @@ class GoalManagerClass {
 		this.enabled = ConfigManager.get('goals.enabled', true);
 		if (!this.enabled) return;
 
-		// Remove old listeners
-		EventEmitter.off(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-		EventEmitter.off(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
-
 		// Pick goals
 		this._selectGoals();
 
 		// Subscribe to events
-		EventEmitter.on(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
+		this._subs.replace(EventEmitter, {
+			[CONSTANTS.EVENTS.BALLS_CLEARED]: this._boundOnBallsCleared,
+			[CONSTANTS.EVENTS.CASCADE_COMPLETE]: this._boundOnCascadeComplete
+		});
 
 		// Emit initial state
 		this._emitUpdate();
@@ -67,8 +68,7 @@ class GoalManagerClass {
 	 * Reset / tear down (called on game over, menu return, etc.)
 	 */
 	reset() {
-		EventEmitter.off(CONSTANTS.EVENTS.BALLS_CLEARED, this._boundOnBallsCleared);
-		EventEmitter.off(CONSTANTS.EVENTS.CASCADE_COMPLETE, this._boundOnCascadeComplete);
+		this._subs.clear();
 		this.goals = [];
 		this.allCompleted = false;
 	}
@@ -87,12 +87,12 @@ class GoalManagerClass {
 		if (typeKeys.length === 0) return;
 
 		// Shuffle and pick N distinct goal types
-		const shuffled = this._shuffle([...typeKeys]);
+		const shuffled = shuffleArray([...typeKeys]);
 		const picked = shuffled.slice(0, Math.min(goalsPerLevel, shuffled.length));
 
 		picked.forEach((key, index) => {
 			const cfg = types[key];
-			const target = this._computeTarget(cfg);
+			const target = computeGoalTarget(cfg, this.level, this.difficulty);
 			const label = cfg.label.replace('{n}', target);
 
 			this.goals.push({
@@ -104,33 +104,6 @@ class GoalManagerClass {
 				completed: false
 			});
 		});
-	}
-
-	/**
-	 * Compute the target value for a goal type based on level & difficulty
-	 * @param {Object} cfg - Goal type config {base, perLevel, perDifficulty, max?}
-	 * @returns {number}
-	 * @private
-	 */
-	_computeTarget(cfg) {
-		const raw = cfg.base + (this.level - 1) * (cfg.perLevel || 0)
-		                     + (this.difficulty - 1) * (cfg.perDifficulty || 0);
-		const rounded = Math.floor(raw);
-		return cfg.max ? Math.min(rounded, cfg.max) : rounded;
-	}
-
-	/**
-	 * Fisher–Yates shuffle
-	 * @param {Array} arr
-	 * @returns {Array}
-	 * @private
-	 */
-	_shuffle(arr) {
-		for (let i = arr.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[arr[i], arr[j]] = [arr[j], arr[i]];
-		}
-		return arr;
 	}
 
 	// ── Event Handlers ──

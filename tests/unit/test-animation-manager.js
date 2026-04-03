@@ -3,6 +3,7 @@
  */
 
 import AnimationManager from '../../src/modules/AnimationManager.js';
+import { assert } from '../utils/assert.js';
 
 /**
  * Run all AnimationManager tests
@@ -25,13 +26,6 @@ export function runAnimationManagerTests() {
 			results.failed++;
 			results.tests.push({ name, pass: false, error: error.message });
 			console.error(`✗ ${name}: ${error.message}`);
-		}
-	}
-
-	// Helper function for assertions
-	function assert(condition, message) {
-		if (!condition) {
-			throw new Error(message || 'Assertion failed');
 		}
 	}
 

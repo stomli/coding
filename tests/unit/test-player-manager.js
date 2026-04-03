@@ -3,6 +3,7 @@
  */
 
 import PlayerManager from '../../src/modules/PlayerManager.js';
+import { assert, assertEquals, assertNotNull, assertArrayContains } from '../utils/assert.js';
 
 export function runPlayerManagerTests() {
 	const results = [];
@@ -16,31 +17,6 @@ export function runPlayerManagerTests() {
 			console.error(`✗ ${name}`);
 			console.error(`  Error: ${error.message}`);
 			results.push({ name, pass: false, error: error.message });
-		}
-	}
-	
-	// Helper function to assert
-	function assert(condition, message) {
-		if (!condition) {
-			throw new Error(message || 'Assertion failed');
-		}
-	}
-	
-	function assertEquals(actual, expected, message) {
-		if (actual !== expected) {
-			throw new Error(message || `Expected ${expected}, got ${actual}`);
-		}
-	}
-	
-	function assertNotNull(value, message) {
-		if (value === null || value === undefined) {
-			throw new Error(message || 'Value should not be null or undefined');
-		}
-	}
-	
-	function assertArrayContains(array, value, message) {
-		if (!array.includes(value)) {
-			throw new Error(message || `Array should contain ${value}`);
 		}
 	}
 	

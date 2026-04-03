@@ -62,75 +62,61 @@ class AudioManagerClass {
 	}
 
 	/**
+	 * Guard + execute pattern: calls fn() only when sound can play.
+	 * Use for play methods that have a single audio path.
+	 * @param {Function} fn - Sound synthesis closure
+	 * @private
+	 */
+	_withSound(fn) {
+		if (this.canPlaySound()) fn();
+	}
+
+	/**
 	 * Play piece move sound
 	 */
 	playMove() {
-		if (!this.canPlaySound()) return;
-		
-		const now = this.audioContext.currentTime;
-		const oscillator = this.audioContext.createOscillator();
-		const gainNode = this.audioContext.createGain();
-		
-		oscillator.connect(gainNode);
-		gainNode.connect(this.audioContext.destination);
-		
-		oscillator.frequency.setValueAtTime(200, now);
-		oscillator.type = 'sine';
-		
-		gainNode.gain.setValueAtTime(0.1 * this.getEffectiveVolume(), now);
-		gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-		
-		oscillator.start(now);
-		oscillator.stop(now + 0.05);
+		this._withSound(() => {
+			const { now, oscillator, gainNode } = this._createTone();
+			oscillator.frequency.setValueAtTime(200, now);
+			oscillator.type = 'sine';
+			gainNode.gain.setValueAtTime(0.1 * this.getEffectiveVolume(), now);
+			gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+			oscillator.start(now);
+			oscillator.stop(now + 0.05);
+		});
 	}
 
 	/**
 	 * Play piece rotation sound
 	 */
 	playRotate() {
-		if (!this.canPlaySound()) return;
-		
-		const now = this.audioContext.currentTime;
-		const oscillator = this.audioContext.createOscillator();
-		const gainNode = this.audioContext.createGain();
-		
-		oscillator.connect(gainNode);
-		gainNode.connect(this.audioContext.destination);
-		
-		oscillator.frequency.setValueAtTime(300, now);
-		oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.08);
-		oscillator.type = 'square';
-		
-		gainNode.gain.setValueAtTime(0.15 * this.getEffectiveVolume(), now);
-		gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-		
-		oscillator.start(now);
-		oscillator.stop(now + 0.08);
+		this._withSound(() => {
+			const { now, oscillator, gainNode } = this._createTone();
+			oscillator.frequency.setValueAtTime(300, now);
+			oscillator.frequency.exponentialRampToValueAtTime(400, now + 0.08);
+			oscillator.type = 'square';
+			gainNode.gain.setValueAtTime(0.15 * this.getEffectiveVolume(), now);
+			gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+			oscillator.start(now);
+			oscillator.stop(now + 0.08);
+		});
 	}
 
 	/**
 	 * Play piece drop sound - descending swoop
 	 */
 	playDrop() {
-		if (!this.canPlaySound()) return;
-		
-		const now = this.audioContext.currentTime;
-		const oscillator = this.audioContext.createOscillator();
-		const gainNode = this.audioContext.createGain();
-		
-		oscillator.connect(gainNode);
-		gainNode.connect(this.audioContext.destination);
-		
-		// Descending swoop: 600Hz (D5) down to 150Hz (D3) over 200ms
-		oscillator.frequency.setValueAtTime(600, now); // Starting pitch: D5
-		oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.2); // Ending pitch: D3, 0.2s = 200ms duration
-		oscillator.type = 'triangle'; // Triangle wave for smooth, mellow tone
-		
-		gainNode.gain.setValueAtTime(0.12 * this.getEffectiveVolume(), now);
-		gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-		
-		oscillator.start(now);
-		oscillator.stop(now + 0.2);
+		this._withSound(() => {
+			const { now, oscillator, gainNode } = this._createTone();
+			// Descending swoop: 600Hz (D5) down to 150Hz (D3) over 200ms
+			oscillator.frequency.setValueAtTime(600, now);
+			oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+			oscillator.type = 'triangle';
+			gainNode.gain.setValueAtTime(0.12 * this.getEffectiveVolume(), now);
+			gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+			oscillator.start(now);
+			oscillator.stop(now + 0.2);
+		});
 	}
 
 	/**
@@ -290,26 +276,17 @@ class AudioManagerClass {
 	 * @param {Number} level - Cascade level (1, 2, 3...)
 	 */
 	playCascade(level = 1) {
-		if (!this.canPlaySound()) return;
-		
-		const now = this.audioContext.currentTime;
-		const oscillator = this.audioContext.createOscillator();
-		const gainNode = this.audioContext.createGain();
-		
-		oscillator.connect(gainNode);
-		gainNode.connect(this.audioContext.destination);
-		
-		// Escalating pitch for higher cascades
-		const baseFreq = 500 + (level * 100);
-		oscillator.frequency.setValueAtTime(baseFreq, now);
-		oscillator.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.2);
-		oscillator.type = 'sawtooth';
-		
-		gainNode.gain.setValueAtTime(0.2 * this.getEffectiveVolume(), now);
-		gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-		
-		oscillator.start(now);
-		oscillator.stop(now + 0.2);
+		this._withSound(() => {
+			const { now, oscillator, gainNode } = this._createTone();
+			const baseFreq = 500 + (level * 100);
+			oscillator.frequency.setValueAtTime(baseFreq, now);
+			oscillator.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.2);
+			oscillator.type = 'sawtooth';
+			gainNode.gain.setValueAtTime(0.2 * this.getEffectiveVolume(), now);
+			gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+			oscillator.start(now);
+			oscillator.stop(now + 0.2);
+		});
 	}
 
 	/**
@@ -343,26 +320,17 @@ class AudioManagerClass {
 	 * Play game over sound
 	 */
 	playGameOver() {
-		if (!this.canPlaySound()) return;
-		
-		const now = this.audioContext.currentTime;
-		
-		// Descending tone
-		const oscillator = this.audioContext.createOscillator();
-		const gainNode = this.audioContext.createGain();
-		
-		oscillator.connect(gainNode);
-		gainNode.connect(this.audioContext.destination);
-		
-		oscillator.frequency.setValueAtTime(400, now);
-		oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.5);
-		oscillator.type = 'sawtooth';
-		
-		gainNode.gain.setValueAtTime(0.3 * this.getEffectiveVolume(), now);
-		gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-		
-		oscillator.start(now);
-		oscillator.stop(now + 0.5);
+		this._withSound(() => {
+			// Descending tone
+			const { now, oscillator, gainNode } = this._createTone();
+			oscillator.frequency.setValueAtTime(400, now);
+			oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+			oscillator.type = 'sawtooth';
+			gainNode.gain.setValueAtTime(0.3 * this.getEffectiveVolume(), now);
+			gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+			oscillator.start(now);
+			oscillator.stop(now + 0.5);
+		});
 	}
 
 	/**
@@ -523,25 +491,17 @@ class AudioManagerClass {
 	 * Play time warning alarm - soft beep for last 5 seconds
 	 */
 	playTimeWarning() {
-		if (!this.canPlaySound()) return;
-		
-		const now = this.audioContext.currentTime;
-		const oscillator = this.audioContext.createOscillator();
-		const gainNode = this.audioContext.createGain();
-		
-		oscillator.connect(gainNode);
-		gainNode.connect(this.audioContext.destination);
-		
-		// Soft beep at 880 Hz (A5)
-		oscillator.frequency.setValueAtTime(880, now);
-		oscillator.type = 'sine';
-		
-		gainNode.gain.setValueAtTime(0, now);
-		gainNode.gain.linearRampToValueAtTime(0.15 * this.getEffectiveVolume(), now + 0.02);
-		gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
-		
-		oscillator.start(now);
-		oscillator.stop(now + 0.15);
+		this._withSound(() => {
+			const { now, oscillator, gainNode } = this._createTone();
+			// Soft beep at 880 Hz (A5)
+			oscillator.frequency.setValueAtTime(880, now);
+			oscillator.type = 'sine';
+			gainNode.gain.setValueAtTime(0, now);
+			gainNode.gain.linearRampToValueAtTime(0.15 * this.getEffectiveVolume(), now + 0.02);
+			gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
+			oscillator.start(now);
+			oscillator.stop(now + 0.15);
+		});
 	}
 
 	/**
@@ -577,23 +537,15 @@ class AudioManagerClass {
 	 * Play UI click sound
 	 */
 	playClick() {
-		if (!this.canPlaySound()) return;
-		
-		const now = this.audioContext.currentTime;
-		const oscillator = this.audioContext.createOscillator();
-		const gainNode = this.audioContext.createGain();
-		
-		oscillator.connect(gainNode);
-		gainNode.connect(this.audioContext.destination);
-		
-		oscillator.frequency.setValueAtTime(800, now);
-		oscillator.type = 'sine';
-		
-		gainNode.gain.setValueAtTime(0.1 * this.getEffectiveVolume(), now);
-		gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-		
-		oscillator.start(now);
-		oscillator.stop(now + 0.05);
+		this._withSound(() => {
+			const { now, oscillator, gainNode } = this._createTone();
+			oscillator.frequency.setValueAtTime(800, now);
+			oscillator.type = 'sine';
+			gainNode.gain.setValueAtTime(0.1 * this.getEffectiveVolume(), now);
+			gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+			oscillator.start(now);
+			oscillator.stop(now + 0.05);
+		});
 	}
 
 	/**
@@ -1077,6 +1029,20 @@ class AudioManagerClass {
 	}
 
 	/**
+	 * Create a connected oscillator+gain pair.
+	 * @returns {{ now: Number, oscillator: OscillatorNode, gainNode: GainNode }}
+	 * @private
+	 */
+	_createTone() {
+		const now = this.audioContext.currentTime;
+		const oscillator = this.audioContext.createOscillator();
+		const gainNode = this.audioContext.createGain();
+		oscillator.connect(gainNode);
+		gainNode.connect(this.audioContext.destination);
+		return { now, oscillator, gainNode };
+	}
+
+	/**
 	 * Check if sound effects can be played
 	 * @returns {Boolean}
 	 */
@@ -1103,7 +1069,7 @@ class AudioManagerClass {
 				musicVolume: this.musicVolume,
 				isMuted: this.isMuted
 			};
-			localStorage.setItem('audioSettings', JSON.stringify(settings));
+			localStorage.setItem(CONSTANTS.STORAGE_KEYS.AUDIO_SETTINGS, JSON.stringify(settings));
 		} catch (error) {
 			console.warn('AudioManager: Failed to save settings', error);
 		}
@@ -1114,7 +1080,7 @@ class AudioManagerClass {
 	 */
 	loadSettings() {
 		try {
-			const saved = localStorage.getItem('audioSettings');
+			const saved = localStorage.getItem(CONSTANTS.STORAGE_KEYS.AUDIO_SETTINGS);
 			if (saved) {
 				const settings = JSON.parse(saved);
 				this.masterVolume = settings.masterVolume ?? 0.7;

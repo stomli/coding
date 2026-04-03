@@ -100,7 +100,7 @@ class MonetizationManagerClass {
 		if (!status) return;
 
 		// Re-validate periodically (every 7 days)
-		const lastValidation = parseInt(localStorage.getItem('monetization_last_validation') || '0');
+		const lastValidation = parseInt(localStorage.getItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LAST_VALIDATION) || '0');
 		const daysSinceValidation = (Date.now() - lastValidation) / (1000 * 60 * 60 * 24);
 
 		if (daysSinceValidation >= 7) {
@@ -259,7 +259,7 @@ class MonetizationManagerClass {
 
 			const data = await response.json();
 
-			localStorage.setItem('monetization_last_validation', Date.now().toString());
+			localStorage.setItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LAST_VALIDATION, Date.now().toString());
 
 			if (!data.valid) {
 				// License no longer valid — clear ad-free state
@@ -271,7 +271,7 @@ class MonetizationManagerClass {
 			if (data.license_key.expires_at !== stored.expiresAt) {
 				stored.expiresAt = data.license_key.expires_at;
 				stored.status = data.license_key.status;
-				localStorage.setItem('monetization_license', JSON.stringify(stored));
+localStorage.setItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LICENSE, JSON.stringify(stored));
 			}
 
 			return true;
@@ -289,9 +289,9 @@ class MonetizationManagerClass {
 	 * @returns {void}
 	 */
 	_storeLicense(licenseData) {
-		localStorage.setItem('monetization_license', JSON.stringify(licenseData));
-		localStorage.setItem('monetization_ad_free_until', 'license');
-		localStorage.setItem('monetization_last_validation', Date.now().toString());
+		localStorage.setItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LICENSE, JSON.stringify(licenseData));
+		localStorage.setItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_AD_FREE, 'license');
+		localStorage.setItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LAST_VALIDATION, Date.now().toString());
 	}
 
 	/**
@@ -300,7 +300,7 @@ class MonetizationManagerClass {
 	 * @returns {Object|null}
 	 */
 	_getStoredLicense() {
-		const stored = localStorage.getItem('monetization_license');
+		const stored = localStorage.getItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LICENSE);
 		if (!stored) return null;
 
 		try {
@@ -316,9 +316,9 @@ class MonetizationManagerClass {
 	 * @returns {void}
 	 */
 	_clearLicense() {
-		localStorage.removeItem('monetization_license');
-		localStorage.removeItem('monetization_ad_free_until');
-		localStorage.removeItem('monetization_last_validation');
+		localStorage.removeItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LICENSE);
+		localStorage.removeItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_AD_FREE);
+		localStorage.removeItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_LAST_VALIDATION);
 	}
 
 	/**
@@ -326,7 +326,7 @@ class MonetizationManagerClass {
 	 * @returns {Object|null} Status object or null
 	 */
 	getAdFreeStatus() {
-		const adFreeFlag = localStorage.getItem('monetization_ad_free_until');
+		const adFreeFlag = localStorage.getItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_AD_FREE);
 		if (!adFreeFlag) return null;
 
 		// License-based ad-free (perpetual or until expiry)
@@ -370,7 +370,7 @@ class MonetizationManagerClass {
 		}
 
 		// Expired
-		localStorage.removeItem('monetization_ad_free_until');
+			localStorage.removeItem(CONSTANTS.STORAGE_KEYS.MONETIZATION_AD_FREE);
 		return null;
 	}
 

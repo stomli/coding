@@ -14,7 +14,8 @@ import {
 	formatNumber,
 	formatTime,
 	iterateShapeCells,
-	SeededRandom
+	SeededRandom,
+	computeGoalTarget
 } from '../../src/utils/Helpers.js';
 
 /**
@@ -605,6 +606,68 @@ export function testHelpers() {
 			}
 			return true;
 		})(),
+		error: null
+	});
+
+	// ── computeGoalTarget ──
+
+	tests.push({
+		name: 'computeGoalTarget - base only (level 1, difficulty 1)',
+		pass: computeGoalTarget({ base: 10 }, 1, 1) === 10,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - scales by level',
+		pass: computeGoalTarget({ base: 10, perLevel: 5 }, 3, 1) === 20,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - scales by difficulty',
+		pass: computeGoalTarget({ base: 10, perDifficulty: 4 }, 1, 3) === 18,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - scales by both level and difficulty',
+		pass: computeGoalTarget({ base: 10, perLevel: 5, perDifficulty: 4 }, 3, 3) === 28,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - floors fractional results',
+		pass: computeGoalTarget({ base: 10, perLevel: 1.7 }, 2, 1) === 11,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - respects max cap',
+		pass: computeGoalTarget({ base: 10, perLevel: 100, max: 50 }, 5, 1) === 50,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - does not cap when under max',
+		pass: computeGoalTarget({ base: 10, perLevel: 5, max: 100 }, 3, 1) === 20,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - no max means uncapped',
+		pass: computeGoalTarget({ base: 10, perLevel: 100 }, 10, 1) === 910,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - handles missing perLevel (defaults to 0)',
+		pass: computeGoalTarget({ base: 5 }, 10, 1) === 5,
+		error: null
+	});
+
+	tests.push({
+		name: 'computeGoalTarget - handles missing perDifficulty (defaults to 0)',
+		pass: computeGoalTarget({ base: 5 }, 1, 10) === 5,
 		error: null
 	});
 

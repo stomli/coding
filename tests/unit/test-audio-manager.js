@@ -3,6 +3,7 @@
  */
 
 import AudioManager from '../../src/modules/AudioManager.js';
+import { assert, assertEquals, assertBetween } from '../utils/assert.js';
 
 export function runAudioManagerTests() {
 	const results = [];
@@ -16,25 +17,6 @@ export function runAudioManagerTests() {
 			console.error(`✗ ${name}`);
 			console.error(`  Error: ${error.message}`);
 			results.push({ name, pass: false, error: error.message });
-		}
-	}
-	
-	// Helper function to assert
-	function assert(condition, message) {
-		if (!condition) {
-			throw new Error(message || 'Assertion failed');
-		}
-	}
-	
-	function assertEquals(actual, expected, message) {
-		if (actual !== expected) {
-			throw new Error(message || `Expected ${expected}, got ${actual}`);
-		}
-	}
-	
-	function assertBetween(value, min, max, message) {
-		if (value < min || value > max) {
-			throw new Error(message || `Expected ${value} to be between ${min} and ${max}`);
 		}
 	}
 	
