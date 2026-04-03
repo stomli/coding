@@ -100,7 +100,17 @@ class PWAManagerClass {
 			this._setOfflineIndicator(true);
 		}
 
+		this._populateCacheVersion();
 		this.initialized = true;
+	}
+
+	async _populateCacheVersion() {
+		try {
+			const keys = await caches.keys();
+			const cacheKey = keys.find(k => k.startsWith('orbfall-'));
+			const el = document.getElementById('cacheVersion');
+			if (el && cacheKey) el.textContent = cacheKey;
+		} catch (_e) { /* caches API may be unavailable outside SW context */ }
 	}
 
 	// ─── Private Methods ───────────────────────────────────────────────────────

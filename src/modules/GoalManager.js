@@ -42,9 +42,10 @@ class GoalManagerClass {
 	 * @param {number} difficulty - Current difficulty (1-5)
 	 * @param {number} level - Current level number
 	 */
-	initialize(difficulty, level) {
+	initialize(difficulty, level, availableSpecials = null) {
 		this.difficulty = difficulty || 1;
 		this.level = level || 1;
+		this._availableSpecials = availableSpecials;
 		this.goals = [];
 		this.allCompleted = false;
 
@@ -82,7 +83,12 @@ class GoalManagerClass {
 	_selectGoals() {
 		const goalsPerLevel = ConfigManager.get('goals.goalsPerLevel', 2);
 		const types = ConfigManager.get('goals.types', {});
-		const typeKeys = Object.keys(types);
+		let typeKeys = Object.keys(types);
+
+		// Exclude useSpecials when no special orbs are unlocked at this level
+		if (Array.isArray(this._availableSpecials) && this._availableSpecials.length === 0) {
+			typeKeys = typeKeys.filter(k => k !== 'useSpecials');
+		}
 
 		if (typeKeys.length === 0) return;
 

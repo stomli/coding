@@ -695,7 +695,7 @@ class GameEngineClass {
 			GoalManager.reset();
 			MissionManager.reset();
 		} else {
-			GoalManager.initialize(this.difficulty, this.level);
+			GoalManager.initialize(this.difficulty, this.level, this.activeProgressionState?.specials ?? []);
 		}
 		
 		// Initialize HintManager for this difficulty
@@ -1950,7 +1950,7 @@ class GameEngineClass {
 		ScoreManager.matchStreak = state.matchStreak || 0;
 		
 		// Initialize goals (fresh — goal progress not persisted in Zen saves)
-		GoalManager.initialize(this.difficulty, this.level);
+		GoalManager.initialize(this.difficulty, this.level, this.activeProgressionState?.specials ?? []);
 		
 		// Initialize hints for this difficulty
 		HintManager.initialize(this.difficulty);

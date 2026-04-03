@@ -315,4 +315,65 @@ testSuite.tests.push({
 	}
 });
 
+// ── availableSpecials filtering ──
+
+testSuite.tests.push({
+	name: 'initialize - excludes useSpecials goal when no specials available',
+	async run() {
+		// Pass an explicit empty specials array (as GameEngine does for level 1)
+		GoalManager.initialize(1, 1, []);
+		const goals = GoalManager.getGoals();
+
+		const hasUseSpecials = goals.some(g => g.type === 'useSpecials');
+		if (hasUseSpecials) {
+			GoalManager.reset();
+			throw new Error('useSpecials goal should not appear when availableSpecials is empty');
+		}
+
+		GoalManager.reset();
+	}
+});
+
+testSuite.tests.push({
+	name: 'initialize - allows useSpecials goal when specials are available',
+	async run() {
+		// Pass a non-empty specials array; useSpecials should be eligible
+		let hasUseSpecials = false;
+		let attempts = 0;
+		while (!hasUseSpecials && attempts < 30) {
+			GoalManager.initialize(1, 1, ['PAINTER_HORIZONTAL']);
+			hasUseSpecials = GoalManager.getGoals().some(g => g.type === 'useSpecials');
+			if (!hasUseSpecials) GoalManager.reset();
+			attempts++;
+		}
+
+		GoalManager.reset();
+
+		if (!hasUseSpecials) {
+			throw new Error('useSpecials goal should be eligible when specials are available (not seen in 30 attempts)');
+		}
+	}
+});
+
+testSuite.tests.push({
+	name: 'initialize - null availableSpecials does not filter useSpecials (legacy call)',
+	async run() {
+		// Passing no third arg (null sentinel) should preserve original behaviour
+		let hasUseSpecials = false;
+		let attempts = 0;
+		while (!hasUseSpecials && attempts < 30) {
+			GoalManager.initialize(1, 1);
+			hasUseSpecials = GoalManager.getGoals().some(g => g.type === 'useSpecials');
+			if (!hasUseSpecials) GoalManager.reset();
+			attempts++;
+		}
+
+		GoalManager.reset();
+
+		if (!hasUseSpecials) {
+			throw new Error('useSpecials goal should remain eligible when availableSpecials is null (30 attempts)');
+		}
+	}
+});
+
 export default testSuite;
