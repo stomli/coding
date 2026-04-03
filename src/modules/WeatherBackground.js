@@ -33,14 +33,6 @@ class WeatherBackgroundClass {
 	}
 
 	/**
-	 * Get current weather data
-	 * @returns {Object|null} Current weather data
-	 */
-	getCurrentWeather() {
-		return this.currentWeather;
-	}
-
-	/**
 	 * Create the background DOM element
 	 */
 	createBackgroundElement() {
@@ -209,9 +201,13 @@ class WeatherBackgroundClass {
 		const moon = document.createElement('div');
 		moon.className = 'weather-moon';
 		
-		// Calculate moon phase (simplified - based on day of month)
-		const day = new Date().getDate();
-		const phase = Math.floor((day / 29.53) * 8) % 8; // 0-7 phases
+		// Calculate moon phase using a known reference new moon (Jan 6, 2000 18:14 UTC)
+		// and the mean synodic period of 29.53058867 days.
+		const KNOWN_NEW_MOON = Date.UTC(2000, 0, 6, 18, 14, 0);
+		const SYNODIC_DAYS = 29.53058867;
+		const elapsed = (Date.now() - KNOWN_NEW_MOON) / (1000 * 60 * 60 * 24);
+		const cyclePos = ((elapsed % SYNODIC_DAYS) + SYNODIC_DAYS) % SYNODIC_DAYS;
+		const phase = Math.floor((cyclePos / SYNODIC_DAYS) * 8); // 0-7 phases
 		moon.setAttribute('data-phase', phase);
 		
 		container.appendChild(moon);

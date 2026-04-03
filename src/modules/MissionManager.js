@@ -61,15 +61,11 @@ class MissionManagerClass {
 			const target = this._computeTarget(cfg);
 			const points = Math.ceil(basePoints * Math.pow(1.2, this.chain.length) / 5) * 5;
 			// Cascade and streak goals are binary (achieved or not): target=1, required depth/streak stored separately
-			const isCascade = cfg.type === 'cascade';
-			const isStreak = cfg.type === 'streak';
 			this.chain.push({
 				id: idx++,
 				type: cfg.type,
 				label: cfg.label.replace('{n}', target),
-				target: (isCascade || isStreak) ? 1 : target,
-				requiredDepth: isCascade ? target : undefined,
-				requiredStreak: isStreak ? target : undefined,
+				target,
 				progress: 0,
 				completed: false,
 				points
@@ -132,7 +128,9 @@ class MissionManagerClass {
 	 * @returns {Number}
 	 */
 	calculateScore(remainingTime) {
-		return 0; // Points awarded immediately per-mission via MISSION_GOAL_COMPLETE
+		const pointsPerGoal = ConfigManager.get('mission.pointsPerGoal', 50);
+		const timeMult = ConfigManager.get('mission.timeBonusMultiplier', 2);
+		return (this.goalsCompleted * pointsPerGoal) + Math.floor(remainingTime * timeMult);
 	}
 
 	// ── Event Handlers ──
@@ -160,9 +158,7 @@ class MissionManagerClass {
 		if (!goal || goal.completed) return;
 
 		if (goal.type === 'cascade') {
-			if (data.cascadeCount >= (goal.requiredDepth ?? goal.target)) {
-				goal.progress = 1;
-			}
+			goal.progress = Math.max(goal.progress, data.cascadeCount ?? 0);
 		}
 
 		this._checkCurrent();
@@ -173,10 +169,8 @@ class MissionManagerClass {
 		const goal = this.getCurrentGoal();
 		if (!goal || goal.completed) return;
 
-		if (goal.type === 'streak') {
-			if (data.matchStreak !== undefined && data.matchStreak >= (goal.requiredStreak ?? goal.target)) {
-				goal.progress = 1;
-			}
+		if (goal.type === 'streak' && data.matchStreak !== undefined) {
+			goal.progress = Math.max(goal.progress, data.matchStreak);
 		}
 
 		this._checkCurrent();

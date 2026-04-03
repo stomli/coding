@@ -767,6 +767,16 @@ class GameEngineClass {
 				timerElement.style.display = '';
 			}
 		}
+
+		// Hide clock in puzzle mode
+		const clockElement = document.querySelector('.hud-item.clock');
+		if (clockElement) {
+			if (this.gameMode === 'PUZZLE') {
+				clockElement.style.display = 'none';
+			} else {
+				clockElement.style.display = '';
+			}
+		}
 		
 		// Update state
 		this.state = CONSTANTS.GAME_STATES.PLAYING;

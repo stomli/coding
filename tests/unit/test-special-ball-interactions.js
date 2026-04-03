@@ -262,12 +262,6 @@ export function runSpecialBallInteractionTests() {
 		
 		const matches = grid.findMatches();
 		
-		// Log match details
-		console.log(`DEBUG: Found ${matches.length} matches`);
-		matches.forEach((m, i) => {
-			console.log(`  Match${i}(${m.direction},len=${m.positions.length}): ${m.positions.map(p => `(${p.row},${p.col})`).join(',')}`);
-		});
-		
 		if (matches.length === 0) {
 			throw new Error('No match found');
 		}
@@ -301,22 +295,10 @@ export function runSpecialBallInteractionTests() {
 			throw new Error('Horizontal painter NOT in match! vPainter in match: ' + vPainterProcessed);
 		}
 		
-		console.log('Test 3b - Painted positions:', painted.length);
 		const row21Painted = painted.filter(p => p.row === 21);
-		console.log('Row 21 painted count:', row21Painted.length);
-		console.log('Row 21 ALL painted positions:', row21Painted.map(p => `col${p.col}:${p.oldColor}->${p.newColor}`).join(', '));
-		
-		// Check ALL balls in row 21
-		console.log('Row 21 actual ball colors after painting:');
-		for (let c = 0; c < 15; c++) {
-			const ball = grid.getBallAt(21, c);
-			if (ball) {
-				console.log(`  col${c}: ${ball.getColor()}`);
-			}
-		}
 		
 		if (row21Painted.length === 0) {
-			throw new Error('Horizontal painter did not paint row 21 - check console logs above');
+			throw new Error('Horizontal painter did not paint row 21');
 		}
 		
 		// Both painters should have painted with green
@@ -325,12 +307,8 @@ export function runSpecialBallInteractionTests() {
 		const col10 = grid.getBallAt(21, 10)?.getColor();
 		
 		if (col8 !== '#00FF00' || col9 !== '#00FF00' || col10 !== '#00FF00') {
-			// Show detailed info in error
 			const row21PaintedDetails = row21Painted.map(p => `col${p.col}:${p.oldColor}→${p.newColor}`).join(', ');
-			const allDebugInfo = row21Painted.map((p, i) => `[${i}] ${p._debug || 'no debug'}`).join('\n');
-			const processedPainters = painted[0]?._processedPainters || 'NO PAINTERS PROCESSED';
-			const allPositions = painted[0]?._allPositionsChecked || 'NO POSITIONS CHECKED';
-			throw new Error(`Row should be green but isn't. Actual: col8=${col8}, col9=${col9}, col10=${col10}. Painted array for row 21 (${row21Painted.length} positions): [${row21PaintedDetails}]\n\nProcessed painters: ${processedPainters}\n\nAll positions checked: ${allPositions}`);
+			throw new Error(`Row should be green. Actual: col8=${col8}, col9=${col9}, col10=${col10}. Painted row 21 (${row21Painted.length} positions): [${row21PaintedDetails}]`);
 		}
 		
 		tests.push({
@@ -346,139 +324,6 @@ export function runSpecialBallInteractionTests() {
 		});
 	}
 	
-	/* ORIGINAL COMPLEX TEST - COMMENTED OUT FOR NOW
-	try {
-		const grid = new Grid(25, 15);
-		
-		// Setup: horizontal painter already on the grid with non-matching balls
-		const hPainter = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#FF0000');
-		const redBall1 = new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#0000FF');
-		const redBall2 = new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#FFFF00');
-		const redBall3 = new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#FF00FF');
-		
-		grid.setBallAt(21, 7, hPainter);
-		grid.setBallAt(21, 8, redBall1);
-		grid.setBallAt(21, 9, redBall2);
-		grid.setBallAt(21, 10, redBall3);
-		
-		// Drop a vertical column with vertical painter (same color for all)
-		// This creates a vertical match of 5 balls in column 7
-		const vPainter = new Ball(CONSTANTS.BALL_TYPES.PAINTER_VERTICAL, '#00FF00');
-		const greenBall1 = new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00');
-		const greenBall2 = new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00');
-		const greenBall3 = new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#00FF00');
-		
-		// Place vertical column including the row where horizontal painter is
-		// Vertical match: rows 17-21, column 7 (5 consecutive balls)
-		grid.setBallAt(17, 7, vPainter);     // Top
-		grid.setBallAt(18, 7, greenBall1);
-		grid.setBallAt(19, 7, greenBall2);
-		grid.setBallAt(20, 7, greenBall3);
-		// Row 21, col 7 already has hPainter - need to make it green to match
-		
-		// Change horizontal painter to green to form the vertical match
-		hPainter.setColor('#00FF00');
-		
-		// Now we have a vertical match: vPainter + 3 green balls + hPainter (all green)
-		// Find initial matches
-		const matches1 = grid.findMatches();
-		
-		console.log('Total matches found:', matches1.length);
-		matches1.forEach((match, idx) => {
-			console.log(`Match ${idx}: ${match.direction}, ${match.positions.length} balls, positions:`, 
-			            match.positions.map(p => `(${p.row},${p.col})`).join(', '));
-		});
-		
-		if (matches1.length === 0) {
-			throw new Error('No initial vertical match found');
-		}
-		
-		// Verify both painters are in the vertical match
-		const verticalMatch = matches1.find(m => m.direction === 'vertical' && m.positions.some(p => p.row === 17 && p.col === 7));
-		if (!verticalMatch) {
-			throw new Error('Vertical match with painters not found');
-		}
-		
-		console.log('Vertical match found with', verticalMatch.positions.length, 'positions');
-		console.log('Match positions:', verticalMatch.positions.map(p => `(${p.row},${p.col})`).join(', '));
-		
-		const hasVPainter = verticalMatch.positions.some(p => p.row === 17 && p.col === 7);
-		const hasHPainter = verticalMatch.positions.some(p => p.row === 21 && p.col === 7);
-		
-		if (!hasVPainter || !hasHPainter) {
-			throw new Error(`Both painters should be in vertical match: vPainter=${hasVPainter}, hPainter=${hasHPainter}`);
-		}
-		
-		// Check painter colors before processing
-		const vPainterBall = grid.getBallAt(17, 7);
-		const hPainterBall = grid.getBallAt(21, 7);
-		console.log('Before processPainters:');
-		console.log('  vPainter color:', vPainterBall?.getColor());
-		console.log('  hPainter color:', hPainterBall?.getColor());
-		console.log('  hPainter type:', hPainterBall?.getType());
-		console.log('  hPainter isPainter:', hPainterBall?.isPainter());
-		console.log('  hPainter direction:', hPainterBall?.getPainterDirection());
-		console.log('Row 21 before painting:');
-		for (let c = 7; c <= 10; c++) {
-			const ball = grid.getBallAt(21, c);
-			console.log(`  (21, ${c}): type=${ball?.getType()}, color=${ball?.getColor()}`);
-		}
-		
-		// Process painters - both should trigger
-		const painted1 = grid.processPainters(matches1);
-		
-		console.log('Painted positions count:', painted1.length);
-		console.log('Sample painted positions:', painted1.slice(0, 5));
-		
-		// Check painted positions for row 21
-		const row21Painted = painted1.filter(p => p.row === 21);
-		console.log('Row 21 painted positions:', row21Painted.length);
-		console.log('Row 21 painted:', row21Painted.map(p => `(${p.row},${p.col}): ${p.oldColor}->${p.newColor}`).join(', '));
-		
-		// Check what the balls actually are after painting
-		console.log('After painting, row 21 colors:');
-		for (let c = 7; c <= 10; c++) {
-			const ball = grid.getBallAt(21, c);
-			console.log(`  (21, ${c}): type=${ball?.getType()}, color=${ball?.getColor()}`);
-		}
-		
-		if (painted1.length === 0) {
-			throw new Error('No balls painted initially');
-		}
-		
-		// Verify horizontal painter painted its row (should paint the non-matching balls to green)
-		const row21_col8 = grid.getBallAt(21, 8)?.getColor();
-		const row21_col9 = grid.getBallAt(21, 9)?.getColor();
-		const row21_col10 = grid.getBallAt(21, 10)?.getColor();
-		
-		const rowPainted = row21_col8 === '#00FF00' && row21_col9 === '#00FF00' && row21_col10 === '#00FF00';
-		
-		if (!rowPainted) {
-			throw new Error(`Horizontal row should be painted green: col8=${row21_col8}, col9=${row21_col9}, col10=${row21_col10}`);
-		}
-		
-		// Verify vertical painter painted its column
-		const columnPainted = grid.getBallAt(17, 7)?.getColor() === '#00FF00' &&
-		                      grid.getBallAt(18, 7)?.getColor() === '#00FF00' &&
-		                      grid.getBallAt(19, 7)?.getColor() === '#00FF00';
-		
-		if (!columnPainted) {
-			throw new Error('Vertical column should be painted green');
-		}
-		
-		tests.push({
-			name: 'SpecialBalls - Painter paints another painter, both effects trigger',
-			pass: true,
-			error: null
-		});
-	} catch (error) {
-		tests.push({
-			name: 'SpecialBalls - Painter paints another painter, both effects trigger',
-			pass: false,
-			error: error.message
-		});
-	}
-	*/
 	
 	// Test 4: Complex chain - Painter → Painter → Explosion
 	try {
