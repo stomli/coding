@@ -105,12 +105,20 @@ class PWAManagerClass {
 	}
 
 	async _populateCacheVersion() {
+		const el = document.getElementById('cacheVersion');
+		if (!el) return;
+		try {
+			// Parse CACHE_VERSION directly from service-worker.js — works even before first install
+			const res = await fetch('service-worker.js', { cache: 'no-store' });
+			const text = await res.text();
+			const match = text.match(/CACHE_VERSION\s*=\s*'([^']+)'/);
+			if (match) { el.textContent = match[1]; return; }
+		} catch (_e) { /* fall through to cache lookup */ }
 		try {
 			const keys = await caches.keys();
 			const cacheKey = keys.find(k => k.startsWith('orbfall-'));
-			const el = document.getElementById('cacheVersion');
-			if (el && cacheKey) el.textContent = cacheKey;
-		} catch (_e) { /* caches API may be unavailable outside SW context */ }
+			if (cacheKey) el.textContent = cacheKey;
+		} catch (_e) { /* caches API unavailable */ }
 	}
 
 	// ─── Private Methods ───────────────────────────────────────────────────────
