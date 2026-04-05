@@ -1051,6 +1051,46 @@ body::after {
 	font-weight: bold;
 	color: var(--color-game-green);
 	font-family: 'Courier New', monospace;
+	transition: color 0.3s ease;
+}
+
+/* Time warning states — driven by JS class toggles on #gameCanvas and #timerDisplay */
+@keyframes timer-pulse-amber {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0.45; }
+}
+
+@keyframes timer-pulse-red {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0.2; }
+}
+
+@keyframes canvas-warn-amber {
+	0%, 100% { box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); border-color: var(--color-border); }
+	50%      { box-shadow: 0 0 28px rgba(255, 180, 0, 0.55); border-color: rgba(255, 180, 0, 0.8); }
+}
+
+@keyframes canvas-warn-red {
+	0%, 100% { box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); border-color: var(--color-border); }
+	50%      { box-shadow: 0 0 36px rgba(255, 50, 50, 0.75); border-color: rgba(255, 60, 60, 0.95); }
+}
+
+.timer-warning {
+	color: #ffb300 !important;
+	animation: timer-pulse-amber 1s ease-in-out infinite;
+}
+
+.timer-urgent {
+	color: #ff3c3c !important;
+	animation: timer-pulse-red 0.5s ease-in-out infinite;
+}
+
+#gameCanvas.canvas-warning {
+	animation: canvas-warn-amber 1s ease-in-out infinite;
+}
+
+#gameCanvas.canvas-urgent {
+	animation: canvas-warn-red 0.5s ease-in-out infinite;
 }
 
 /* Game Container */
@@ -1790,7 +1830,7 @@ body::after {
 	}
 	
 	.mode-btn {
-		padding: 0.75rem;
+		padding: 0.4rem 0.8rem;
 	}
 	
 	.level-grid {
@@ -1906,12 +1946,12 @@ body::after {
 	.level-changes-content {
 		min-width: 300px;
 		max-width: 92vw;
-		padding: 1.5rem;
+		padding: 1rem 1.25rem;
 		height: 90vh;
 	}
 
 	.level-changes-list {
-		max-height: 36vh;
+		max-height: none;
 	}
 }
 

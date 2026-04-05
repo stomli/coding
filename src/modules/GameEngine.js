@@ -901,6 +901,17 @@ class GameEngineClass {
 					AudioManager.playTimeWarning();
 				}
 			}
+
+			// Visual time-warning: amber pulse ≤15s, red urgent flash ≤5s
+			const canvas = this.renderer?.canvas;
+			const urgent = timeRemaining > 0 && timeRemaining <= 5;
+			const warning = timeRemaining > 0 && timeRemaining <= 15;
+			timerDisplay.classList.toggle('timer-urgent', urgent);
+			timerDisplay.classList.toggle('timer-warning', warning && !urgent);
+			if (canvas) {
+				canvas.classList.toggle('canvas-urgent', urgent);
+				canvas.classList.toggle('canvas-warning', warning && !urgent);
+			}
 		}
 		
 		// Update score display
@@ -2177,6 +2188,16 @@ class GameEngineClass {
 	 */
 	_levelComplete(reason = 'timeout') {
 		this.state = CONSTANTS.GAME_STATES.LEVEL_COMPLETE;
+
+		// Clear time-warning visual state
+		this.lastWarningSecond = null;
+		const timerDisplay = document.getElementById('timerDisplay');
+		if (timerDisplay) {
+			timerDisplay.classList.remove('timer-warning', 'timer-urgent');
+		}
+		if (this.renderer?.canvas) {
+			this.renderer.canvas.classList.remove('canvas-warning', 'canvas-urgent');
+		}
 		
 		// Clear Zen save — game ended naturally
 		this.clearZenState();

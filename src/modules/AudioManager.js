@@ -1087,6 +1087,16 @@ class AudioManagerClass {
 				this.sfxVolume = settings.sfxVolume ?? 0.8;
 				this.musicVolume = settings.musicVolume ?? 0;
 				this.isMuted = settings.isMuted ?? false;
+			} else {
+				// No saved preference yet.
+				// Web Audio API bypasses the hardware silent/vibrate switch on iOS (and
+				// some Android configurations) because it routes through the media
+				// playback session rather than the ringer channel.  There is no browser
+				// API to read the silent-switch state, so the safest default for a
+				// first-run mobile user is muted — they can enable sound in Settings.
+				// Desktop browsers keep the original default of unmuted.
+				const isMobile = typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0;
+				this.isMuted = isMobile;
 			}
 		} catch (error) {
 			console.warn('AudioManager: Failed to load settings', error);
