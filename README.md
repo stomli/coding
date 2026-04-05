@@ -1,6 +1,6 @@
 # Ball Drop Puzzle Game
 
-A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+ balls of the same color to clear them and score points. Features special balls (exploding, painting, blocking) and progressive difficulty across 5 difficulty levels.
+A color-matching puzzle game where piece clusters of orbs fall and stack. Match 3+ balls of the same color to clear them and score points. Features special balls (exploding, painting, blocking) and progressive difficulty across 5 difficulty levels.
 
 ## 🎮 Game Features
 
@@ -9,7 +9,7 @@ A Tetris-inspired puzzle game where colored ball pieces fall and stack. Match 3+
   - 🧘 **Zen:** Untimed mode - fill the grid to complete levels
   - ⚔️ **Gauntlet:** Pre-filled challenge with rising random orbs
   - 🌊 **Rising Tide:** Rising blocking orbs - clear with explosions
-- **Classic Tetris Mechanics:** 8 piece shapes made of colored balls
+- **Piece Mechanics:** 8 piece shapes made of colored balls
 - **Color Matching:** Match 3+ balls horizontally, vertically, or diagonally
 - **Cascade System:** Continuous matching after balls drop
 - **Special Balls:**
@@ -177,7 +177,7 @@ All dependencies must be FOSS (Free and Open Source Software) licensed.
 
 ## 🙏 Acknowledgments
 
-- Inspired by classic Tetris and Puzzle Bobble mechanics
+- Inspired by classic falling-piece and color-matching puzzle games
 - Built with vanilla JavaScript - no framework dependencies
 
 ## 📧 Contact

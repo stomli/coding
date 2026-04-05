@@ -139,6 +139,23 @@ body {
 	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 
+.guide-legal {
+	margin-top: 2rem;
+	text-align: center;
+	font-size: 0.78rem;
+	color: rgba(255, 255, 255, 0.35);
+}
+
+.guide-legal a {
+	color: rgba(255, 255, 255, 0.5);
+	text-decoration: none;
+}
+
+.guide-legal a:hover {
+	color: rgba(255, 255, 255, 0.85);
+	text-decoration: underline;
+}
+
 /* ============================================
    Privacy Page — Specific Styles
    ============================================ */

@@ -788,6 +788,12 @@ body::after {
 	text-decoration: underline;
 }
 
+.menu-legal-sep,
+.menu-legal-copy {
+	color: rgba(255, 255, 255, 0.35);
+	font-size: 0.75rem;
+}
+
 .menu-version {
 	display: block;
 	color: rgba(255, 255, 255, 0.35);

@@ -60,7 +60,7 @@
 Survive for **90 seconds** without filling any column to the top of the board.
 
 ### Basic Gameplay Loop
-1. **Falling Pieces:** Colored ball pieces fall from the top (like Tetris)
+1. **Falling Pieces:** Colored ball pieces fall from the top of the grid
 2. **Stacking:** Position pieces to stack balls at the bottom
 3. **Matching:** Match 3+ balls of the same color to clear them
 4. **Cascades:** Balls above cleared ones drop down and can create new matches

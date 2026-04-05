@@ -1,7 +1,7 @@
 {
 	"name": "Orb•Fall: ChromaCrush",
 	"short_name": "Orb•Fall",
-	"description": "Match colored orbs in this Tetris-inspired puzzle game with special power orbs.",
+	"description": "Drop piece clusters of colored orbs, match 3+ in any direction, trigger cascades, and unleash special power orbs. Free browser puzzle game with 6 modes \u2014 no download required.",
 	"start_url": "/",
 	"scope": "/",
 	"display": "standalone",
