@@ -1,5 +1,5 @@
 {
-	"buildVersion": "orbfall-v1.0.80",
+	"buildVersion": "orbfall-v1.0.2604051959",
 	"game": {
 		"gridRows": 22,
 		"gridCols": 15,
@@ -17,81 +17,293 @@
 			"baseline": {
 				"dropIntervalMs": 1000,
 				"lockDelayMs": 500,
-				"diagonalScoreMultiplier": 1.0,
-				"painterSpawnMultiplier": 1.0,
-				"colors": ["red", "green", "blue"],
-				"pieces": ["I", "O", "T", "L", "J", "S", "Z"],
+				"diagonalScoreMultiplier": 1,
+				"painterSpawnMultiplier": 1,
+				"colors": [
+					"red",
+					"green",
+					"blue"
+				],
+				"pieces": [
+					"I",
+					"O",
+					"T",
+					"L",
+					"J",
+					"S",
+					"Z"
+				],
 				"specials": []
 			},
 			"levels": {
-				"1": { "primaryChange": "baseline", "briefing": "Learn the basics with the starter set." },
-				"2": { "primaryChange": "speed", "speed": { "dropIntervalMultiplier": 0.95 }, "briefing": "Drop speed is 5% faster." },
-				"3": { "primaryChange": "colorUnlock", "colorUnlock": { "add": "yellow" }, "briefing": "Yellow orbs are now in play." },
-				"4": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "V" }, "briefing": "A new piece layout is now in rotation." },
-				"5": { "primaryChange": "specialUnlock", "specialUnlock": { "add": "PAINTER_HORIZONTAL" }, "briefing": "Horizontal Painter unlocked." },
-				"6": { "primaryChange": "speed", "speed": { "dropIntervalMultiplier": 0.95 }, "briefing": "Drop speed is 5% faster." },
-				"7": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "Line3" }, "briefing": "A new piece layout is now in rotation." },
-				"8": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "Plus" }, "briefing": "A new piece layout is now in rotation." },
-				"9": { "primaryChange": "specialUnlock", "specialUnlock": { "add": "PAINTER_VERTICAL" }, "briefing": "Vertical Painter unlocked." },
-				"10": { "primaryChange": "speed", "speed": { "dropIntervalMultiplier": 0.95 }, "briefing": "Drop speed is 5% faster." },
-				"11": { "primaryChange": "colorUnlock", "colorUnlock": { "add": "magenta" }, "briefing": "Magenta orbs are now in play." },
-				"12": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "U" }, "briefing": "A new piece layout is now in rotation." },
-				"13": { "primaryChange": "specialUnlock", "specialUnlock": { "add": "PAINTER_DIAGONAL_NE" }, "briefing": "Diagonal Painter (NE-SW) unlocked." },
-				"14": { "primaryChange": "specialUnlock", "specialUnlock": { "add": "PAINTER_DIAGONAL_NW" }, "briefing": "Diagonal Painter (NW-SE) unlocked." },
-				"15": { "primaryChange": "speed", "speed": { "dropIntervalMultiplier": 0.95 }, "briefing": "Drop speed is 5% faster." },
-				"16": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "P" }, "briefing": "A new piece layout is now in rotation." },
-				"17": { "primaryChange": "colorUnlock", "colorUnlock": { "add": "cyan" }, "briefing": "Cyan orbs are now in play." },
-				"18": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "LongS" }, "briefing": "A new piece layout is now in rotation." },
-				"19": { "primaryChange": "specialUnlock", "specialUnlock": { "add": "EXPLODING" }, "briefing": "Exploding Orbs unlocked." },
-				"20": { "primaryChange": "speed", "speed": { "dropIntervalMultiplier": 0.95 }, "briefing": "Drop speed is 5% faster." },
-				"21": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "LongZ" }, "briefing": "A new piece layout is now in rotation." },
-				"22": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "Y" }, "briefing": "A new piece layout is now in rotation." },
-				"23": { "primaryChange": "colorUnlock", "colorUnlock": { "add": "orange" }, "briefing": "Orange orbs are now in play." },
-				"24": { "primaryChange": "spawnRateChange", "spawnRateChange": { "painterSpawnMultiplierMultiplier": 1.1 }, "briefing": "Painter Orbs appear more often." },
-				"25": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "LongL" }, "briefing": "A new piece layout is now in rotation." },
-				"26": { "primaryChange": "speed", "speed": { "dropIntervalMultiplier": 0.95 }, "briefing": "Drop speed is 5% faster." },
-				"27": { "primaryChange": "colorUnlock", "colorUnlock": { "add": "purple" }, "briefing": "Purple orbs are now in play." },
-				"28": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "LongJ" }, "briefing": "A new piece layout is now in rotation." },
-				"29": { "primaryChange": "pieceUnlock", "pieceUnlock": { "add": "Ring" }, "briefing": "A new piece layout is now in rotation." },
-				"30": { "primaryChange": "speed", "speed": { "dropIntervalMultiplier": 0.95 }, "briefing": "Drop speed is 5% faster." }
+				"1": {
+					"primaryChange": "baseline",
+					"briefing": "Learn the basics with the starter set."
+				},
+				"2": {
+					"primaryChange": "speed",
+					"speed": {
+						"dropIntervalMultiplier": 0.95
+					},
+					"briefing": "Drop speed is 5% faster."
+				},
+				"3": {
+					"primaryChange": "colorUnlock",
+					"colorUnlock": {
+						"add": "yellow"
+					},
+					"briefing": "Yellow orbs are now in play."
+				},
+				"4": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "V"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"5": {
+					"primaryChange": "specialUnlock",
+					"specialUnlock": {
+						"add": "PAINTER_HORIZONTAL"
+					},
+					"briefing": "Horizontal Painter unlocked."
+				},
+				"6": {
+					"primaryChange": "speed",
+					"speed": {
+						"dropIntervalMultiplier": 0.95
+					},
+					"briefing": "Drop speed is 5% faster."
+				},
+				"7": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "Line3"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"8": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "Plus"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"9": {
+					"primaryChange": "specialUnlock",
+					"specialUnlock": {
+						"add": "PAINTER_VERTICAL"
+					},
+					"briefing": "Vertical Painter unlocked."
+				},
+				"10": {
+					"primaryChange": "speed",
+					"speed": {
+						"dropIntervalMultiplier": 0.95
+					},
+					"briefing": "Drop speed is 5% faster."
+				},
+				"11": {
+					"primaryChange": "colorUnlock",
+					"colorUnlock": {
+						"add": "magenta"
+					},
+					"briefing": "Magenta orbs are now in play."
+				},
+				"12": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "U"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"13": {
+					"primaryChange": "specialUnlock",
+					"specialUnlock": {
+						"add": "PAINTER_DIAGONAL_NE"
+					},
+					"briefing": "Diagonal Painter (NE-SW) unlocked."
+				},
+				"14": {
+					"primaryChange": "specialUnlock",
+					"specialUnlock": {
+						"add": "PAINTER_DIAGONAL_NW"
+					},
+					"briefing": "Diagonal Painter (NW-SE) unlocked."
+				},
+				"15": {
+					"primaryChange": "speed",
+					"speed": {
+						"dropIntervalMultiplier": 0.95
+					},
+					"briefing": "Drop speed is 5% faster."
+				},
+				"16": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "P"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"17": {
+					"primaryChange": "colorUnlock",
+					"colorUnlock": {
+						"add": "cyan"
+					},
+					"briefing": "Cyan orbs are now in play."
+				},
+				"18": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "LongS"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"19": {
+					"primaryChange": "specialUnlock",
+					"specialUnlock": {
+						"add": "EXPLODING"
+					},
+					"briefing": "Exploding Orbs unlocked."
+				},
+				"20": {
+					"primaryChange": "speed",
+					"speed": {
+						"dropIntervalMultiplier": 0.95
+					},
+					"briefing": "Drop speed is 5% faster."
+				},
+				"21": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "LongZ"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"22": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "Y"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"23": {
+					"primaryChange": "colorUnlock",
+					"colorUnlock": {
+						"add": "orange"
+					},
+					"briefing": "Orange orbs are now in play."
+				},
+				"24": {
+					"primaryChange": "spawnRateChange",
+					"spawnRateChange": {
+						"painterSpawnMultiplierMultiplier": 1.1
+					},
+					"briefing": "Painter Orbs appear more often."
+				},
+				"25": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "LongL"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"26": {
+					"primaryChange": "speed",
+					"speed": {
+						"dropIntervalMultiplier": 0.95
+					},
+					"briefing": "Drop speed is 5% faster."
+				},
+				"27": {
+					"primaryChange": "colorUnlock",
+					"colorUnlock": {
+						"add": "purple"
+					},
+					"briefing": "Purple orbs are now in play."
+				},
+				"28": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "LongJ"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"29": {
+					"primaryChange": "pieceUnlock",
+					"pieceUnlock": {
+						"add": "Ring"
+					},
+					"briefing": "A new piece layout is now in rotation."
+				},
+				"30": {
+					"primaryChange": "speed",
+					"speed": {
+						"dropIntervalMultiplier": 0.95
+					},
+					"briefing": "Drop speed is 5% faster."
+				}
 			}
 		},
 		"modeProfiles": {
 			"ZEN": {
-				"baseline": { "lockDelayMs": 550 },
+				"baseline": {
+					"lockDelayMs": 550
+				},
 				"levels": {
-					"1": { "primaryChange": "baseline", "briefing": "No timer in Zen mode. Focus on combos and flow." }
+					"1": {
+						"primaryChange": "baseline",
+						"briefing": "No timer in Zen mode. Focus on combos and flow."
+					}
 				}
 			},
 			"RISING_TIDE": {
 				"levels": {
-					"1": { "primaryChange": "baseline", "briefing": "Rows rise over time in Rising Tide mode." }
+					"1": {
+						"primaryChange": "baseline",
+						"briefing": "Rows rise over time in Rising Tide mode."
+					}
 				}
 			}
 		},
 		"modeDifficultyProfiles": {
 			"CLASSIC": {
 				"difficulty1": {
-					"baseline": { "dropIntervalMs": 850, "lockDelayMs": 500 }
+					"baseline": {
+						"dropIntervalMs": 850,
+						"lockDelayMs": 500
+					}
 				},
 				"difficulty2": {
-					"baseline": { "dropIntervalMs": 700, "lockDelayMs": 475 }
+					"baseline": {
+						"dropIntervalMs": 700,
+						"lockDelayMs": 475
+					}
 				},
 				"difficulty3": {
-					"baseline": { "dropIntervalMs": 550, "lockDelayMs": 425 }
+					"baseline": {
+						"dropIntervalMs": 550,
+						"lockDelayMs": 425
+					}
 				},
 				"difficulty4": {
-					"baseline": { "dropIntervalMs": 400, "lockDelayMs": 375 }
+					"baseline": {
+						"dropIntervalMs": 400,
+						"lockDelayMs": 375
+					}
 				},
 				"difficulty5": {
-					"baseline": { "dropIntervalMs": 250, "lockDelayMs": 300 }
+					"baseline": {
+						"dropIntervalMs": 250,
+						"lockDelayMs": 300
+					}
 				}
 			},
 			"RISING_TIDE": {
 				"difficulty5": {
 					"baseline": {
 						"lockDelayMs": 275,
-						"painterSpawnMultiplier": 2.0
+						"painterSpawnMultiplier": 2
 					}
 				}
 			}
@@ -123,12 +335,51 @@
 		}
 	},
 	"colorUnlocks": {
-		"level1": ["red", "green", "blue"],
-		"level3": ["red", "green", "blue", "yellow"],
-		"level7": ["red", "green", "blue", "yellow", "magenta"],
-		"level11": ["red", "green", "blue", "yellow", "magenta", "cyan"],
-		"level15": ["red", "green", "blue", "yellow", "magenta", "cyan", "orange"],
-		"level19": ["red", "green", "blue", "yellow", "magenta", "cyan", "orange", "purple"]
+		"level1": [
+			"red",
+			"green",
+			"blue"
+		],
+		"level3": [
+			"red",
+			"green",
+			"blue",
+			"yellow"
+		],
+		"level7": [
+			"red",
+			"green",
+			"blue",
+			"yellow",
+			"magenta"
+		],
+		"level11": [
+			"red",
+			"green",
+			"blue",
+			"yellow",
+			"magenta",
+			"cyan"
+		],
+		"level15": [
+			"red",
+			"green",
+			"blue",
+			"yellow",
+			"magenta",
+			"cyan",
+			"orange"
+		],
+		"level19": [
+			"red",
+			"green",
+			"blue",
+			"yellow",
+			"magenta",
+			"cyan",
+			"orange",
+			"purple"
+		]
 	},
 	"specialBalls": {
 		"featureUnlocks": {
@@ -209,11 +460,11 @@
 		"cascadeBaseBonus": 3,
 		"cascadeBonusMultiplier": 2,
 		"difficultyMultipliers": {
-			"difficulty1": 1.0,
+			"difficulty1": 1,
 			"difficulty2": 1.5,
-			"difficulty3": 2.0,
+			"difficulty3": 2,
 			"difficulty4": 2.5,
-			"difficulty5": 3.0
+			"difficulty5": 3
 		},
 		"streakBonus": 2,
 		"streakCap": 10
@@ -248,14 +499,59 @@
 	"mission": {
 		"pointsPerGoal": 50,
 		"goalChain": [
-			{ "type": "clearBalls", "label": "Clear {n} orbs", "base": 10, "perDifficulty": 3 },
-			{ "type": "cascade", "label": "Achieve a {n}x cascade", "base": 2, "perDifficulty": 0.2, "max": 5 },
-			{ "type": "useSpecials", "label": "Clear {n} special orbs", "base": 2, "perDifficulty": 1, "max": 10 },
-			{ "type": "streak", "label": "Reach a {n}x streak", "base": 3, "perDifficulty": 0.5, "max": 8 },
-			{ "type": "clearBalls", "label": "Clear {n} orbs", "base": 20, "perDifficulty": 5 },
-			{ "type": "cascade", "label": "Achieve a {n}x cascade", "base": 3, "perDifficulty": 0.3, "max": 6 },
-			{ "type": "useSpecials", "label": "Clear {n} special orbs", "base": 4, "perDifficulty": 1.5, "max": 15 },
-			{ "type": "clearBalls", "label": "Clear {n} orbs", "base": 30, "perDifficulty": 8 }
+			{
+				"type": "clearBalls",
+				"label": "Clear {n} orbs",
+				"base": 10,
+				"perDifficulty": 3
+			},
+			{
+				"type": "cascade",
+				"label": "Achieve a {n}x cascade",
+				"base": 2,
+				"perDifficulty": 0.2,
+				"max": 5
+			},
+			{
+				"type": "useSpecials",
+				"label": "Clear {n} special orbs",
+				"base": 2,
+				"perDifficulty": 1,
+				"max": 10
+			},
+			{
+				"type": "streak",
+				"label": "Reach a {n}x streak",
+				"base": 3,
+				"perDifficulty": 0.5,
+				"max": 8
+			},
+			{
+				"type": "clearBalls",
+				"label": "Clear {n} orbs",
+				"base": 20,
+				"perDifficulty": 5
+			},
+			{
+				"type": "cascade",
+				"label": "Achieve a {n}x cascade",
+				"base": 3,
+				"perDifficulty": 0.3,
+				"max": 6
+			},
+			{
+				"type": "useSpecials",
+				"label": "Clear {n} special orbs",
+				"base": 4,
+				"perDifficulty": 1.5,
+				"max": 15
+			},
+			{
+				"type": "clearBalls",
+				"label": "Clear {n} orbs",
+				"base": 30,
+				"perDifficulty": 8
+			}
 		]
 	},
 	"hints": {
@@ -289,16 +585,16 @@
 		"starThresholds": {
 			"baseScore": 5000,
 			"perLevel": 30,
-			"bronze": 0.30,
-			"silver": 0.60,
-			"gold": 1.00
+			"bronze": 0.3,
+			"silver": 0.6,
+			"gold": 1
 		}
 	},
 	"difficulty": {
 		"difficulty1": {
 			"name": "Easy",
-			"dropSpeedModifier": 1.0,
-			"blockingBallFrequencyModifier": 1.0
+			"dropSpeedModifier": 1,
+			"blockingBallFrequencyModifier": 1
 		},
 		"difficulty2": {
 			"name": "Medium",
@@ -308,7 +604,7 @@
 		"difficulty3": {
 			"name": "Hard",
 			"dropSpeedModifier": 0.7,
-			"blockingBallFrequencyModifier": 2.0
+			"blockingBallFrequencyModifier": 2
 		},
 		"difficulty4": {
 			"name": "Expert",
@@ -318,38 +614,89 @@
 		"difficulty5": {
 			"name": "Master",
 			"dropSpeedModifier": 0.4,
-			"blockingBallFrequencyModifier": 3.0
+			"blockingBallFrequencyModifier": 3
 		}
 	},
 	"modifiers": {
 		"defaults": {
-			"difficulty1": { "lockDelay": 500, "diagonalScoreMultiplier": 1.0, "painterSpawnMultiplier": 1.0 },
-			"difficulty2": { "lockDelay": 475, "diagonalScoreMultiplier": 1.0, "painterSpawnMultiplier": 1.0 },
-			"difficulty3": { "lockDelay": 425, "diagonalScoreMultiplier": 1.0, "painterSpawnMultiplier": 1.0 },
-			"difficulty4": { "lockDelay": 375, "diagonalScoreMultiplier": 1.25, "painterSpawnMultiplier": 1.0 },
-			"difficulty5": { "lockDelay": 300, "diagonalScoreMultiplier": 1.5, "painterSpawnMultiplier": 1.0 }
+			"difficulty1": {
+				"lockDelay": 500,
+				"diagonalScoreMultiplier": 1,
+				"painterSpawnMultiplier": 1
+			},
+			"difficulty2": {
+				"lockDelay": 475,
+				"diagonalScoreMultiplier": 1,
+				"painterSpawnMultiplier": 1
+			},
+			"difficulty3": {
+				"lockDelay": 425,
+				"diagonalScoreMultiplier": 1,
+				"painterSpawnMultiplier": 1
+			},
+			"difficulty4": {
+				"lockDelay": 375,
+				"diagonalScoreMultiplier": 1.25,
+				"painterSpawnMultiplier": 1
+			},
+			"difficulty5": {
+				"lockDelay": 300,
+				"diagonalScoreMultiplier": 1.5,
+				"painterSpawnMultiplier": 1
+			}
 		},
 		"CLASSIC": {},
 		"ZEN": {
-			"difficulty1": { "lockDelay": 550 },
-			"difficulty2": { "lockDelay": 525 }
+			"difficulty1": {
+				"lockDelay": 550
+			},
+			"difficulty2": {
+				"lockDelay": 525
+			}
 		},
 		"GAUNTLET": {
-			"difficulty4": { "lockDelay": 350 },
-			"difficulty5": { "lockDelay": 275 }
+			"difficulty4": {
+				"lockDelay": 350
+			},
+			"difficulty5": {
+				"lockDelay": 275
+			}
 		},
 		"RISING_TIDE": {
-			"difficulty3": { "painterSpawnMultiplier": 1.5 },
-			"difficulty4": { "lockDelay": 350, "painterSpawnMultiplier": 1.5 },
-			"difficulty5": { "lockDelay": 275, "painterSpawnMultiplier": 2.0 }
+			"difficulty3": {
+				"painterSpawnMultiplier": 1.5
+			},
+			"difficulty4": {
+				"lockDelay": 350,
+				"painterSpawnMultiplier": 1.5
+			},
+			"difficulty5": {
+				"lockDelay": 275,
+				"painterSpawnMultiplier": 2
+			}
 		},
 		"MISSION": {},
 		"PUZZLE": {
-			"difficulty1": { "lockDelay": 600, "diagonalScoreMultiplier": 1.25 },
-			"difficulty2": { "lockDelay": 550, "diagonalScoreMultiplier": 1.25 },
-			"difficulty3": { "lockDelay": 500, "diagonalScoreMultiplier": 1.25 },
-			"difficulty4": { "lockDelay": 450, "diagonalScoreMultiplier": 1.5 },
-			"difficulty5": { "lockDelay": 400, "diagonalScoreMultiplier": 1.5 }
+			"difficulty1": {
+				"lockDelay": 600,
+				"diagonalScoreMultiplier": 1.25
+			},
+			"difficulty2": {
+				"lockDelay": 550,
+				"diagonalScoreMultiplier": 1.25
+			},
+			"difficulty3": {
+				"lockDelay": 500,
+				"diagonalScoreMultiplier": 1.25
+			},
+			"difficulty4": {
+				"lockDelay": 450,
+				"diagonalScoreMultiplier": 1.5
+			},
+			"difficulty5": {
+				"lockDelay": 400,
+				"diagonalScoreMultiplier": 1.5
+			}
 		}
 	},
 	"animations": {
@@ -398,7 +745,12 @@
 				"type": "sine"
 			},
 			"levelComplete": {
-				"frequencies": [523, 659, 784, 1047],
+				"frequencies": [
+					523,
+					659,
+					784,
+					1047
+				],
 				"noteDuration": 0.15,
 				"type": "sine"
 			},
@@ -420,103 +772,351 @@
 	},
 	"pieceShapes": {
 		"I": [
-			[1, 1]
+			[
+				1,
+				1
+			]
 		],
 		"O": [
-			[1, 1],
-			[1, 1],
-			[1, 1]
+			[
+				1,
+				1
+			],
+			[
+				1,
+				1
+			],
+			[
+				1,
+				1
+			]
 		],
 		"T": [
-			[0, 1, 0],
-			[1, 1, 1]
+			[
+				0,
+				1,
+				0
+			],
+			[
+				1,
+				1,
+				1
+			]
 		],
 		"L": [
-			[1, 0],
-			[1, 0],
-			[1, 1]
+			[
+				1,
+				0
+			],
+			[
+				1,
+				0
+			],
+			[
+				1,
+				1
+			]
 		],
 		"J": [
-			[0, 1],
-			[0, 1],
-			[1, 1]
+			[
+				0,
+				1
+			],
+			[
+				0,
+				1
+			],
+			[
+				1,
+				1
+			]
 		],
 		"S": [
-			[0, 1, 1],
-			[1, 1, 0]
+			[
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				1,
+				0
+			]
 		],
 		"Z": [
-			[1, 1, 0],
-			[0, 1, 1]
+			[
+				1,
+				1,
+				0
+			],
+			[
+				0,
+				1,
+				1
+			]
 		],
 		"Single": [
-			[1]
+			[
+				1
+			]
 		],
 		"V": [
-			[1, 0],
-			[1, 1]
+			[
+				1,
+				0
+			],
+			[
+				1,
+				1
+			]
 		],
 		"Line3": [
-			[1, 1, 1]
+			[
+				1,
+				1,
+				1
+			]
 		],
 		"Plus": [
-			[0, 1, 0],
-			[1, 1, 1],
-			[0, 1, 0]
+			[
+				0,
+				1,
+				0
+			],
+			[
+				1,
+				1,
+				1
+			],
+			[
+				0,
+				1,
+				0
+			]
 		],
 		"U": [
-			[1, 0, 1],
-			[1, 1, 1]
+			[
+				1,
+				0,
+				1
+			],
+			[
+				1,
+				1,
+				1
+			]
 		],
 		"P": [
-			[1, 1],
-			[1, 1],
-			[1, 0]
+			[
+				1,
+				1
+			],
+			[
+				1,
+				1
+			],
+			[
+				1,
+				0
+			]
 		],
 		"Y": [
-			[1, 0, 1],
-			[0, 1, 0],
-			[0, 1, 0]
+			[
+				1,
+				0,
+				1
+			],
+			[
+				0,
+				1,
+				0
+			],
+			[
+				0,
+				1,
+				0
+			]
 		],
 		"LongS": [
-			[0, 1, 1],
-			[0, 1, 0],
-			[1, 1, 0]
+			[
+				0,
+				1,
+				1
+			],
+			[
+				0,
+				1,
+				0
+			],
+			[
+				1,
+				1,
+				0
+			]
 		],
 		"LongZ": [
-			[1, 1, 0],
-			[0, 1, 0],
-			[0, 1, 1]
+			[
+				1,
+				1,
+				0
+			],
+			[
+				0,
+				1,
+				0
+			],
+			[
+				0,
+				1,
+				1
+			]
 		],
 		"LongL": [
-			[1, 0, 0],
-			[1, 0, 0],
-			[1, 0, 0],
-			[1, 1, 1]
+			[
+				1,
+				0,
+				0
+			],
+			[
+				1,
+				0,
+				0
+			],
+			[
+				1,
+				0,
+				0
+			],
+			[
+				1,
+				1,
+				1
+			]
 		],
 		"LongJ": [
-			[0, 0, 1],
-			[0, 0, 1],
-			[0, 0, 1],
-			[1, 1, 1]
+			[
+				0,
+				0,
+				1
+			],
+			[
+				0,
+				0,
+				1
+			],
+			[
+				0,
+				0,
+				1
+			],
+			[
+				1,
+				1,
+				1
+			]
 		],
 		"Ring": [
-			[1, 1, 1],
-			[1, 0, 1],
-			[1, 1, 1]
+			[
+				1,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				1
+			],
+			[
+				1,
+				1,
+				1
+			]
 		]
 	},
 	"pieceBag": {
 		"enabled": true,
 		"includeSingle": false,
-		"shapes": ["I", "O", "T", "L", "J", "S", "Z"]
+		"shapes": [
+			"I",
+			"O",
+			"T",
+			"L",
+			"J",
+			"S",
+			"Z"
+		]
 	},
 	"shapeUnlocks": {
-		"difficulty1": ["I", "O", "T", "L", "J", "S", "Z"],
-		"difficulty2": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3"],
-		"difficulty3": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3", "Plus", "U"],
-		"difficulty4": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3", "Plus", "U", "P", "Y", "LongS", "LongZ"],
-		"difficulty5": ["I", "O", "T", "L", "J", "S", "Z", "V", "Line3", "Plus", "U", "P", "Y", "LongS", "LongZ", "LongL", "LongJ", "Ring"]
+		"difficulty1": [
+			"I",
+			"O",
+			"T",
+			"L",
+			"J",
+			"S",
+			"Z"
+		],
+		"difficulty2": [
+			"I",
+			"O",
+			"T",
+			"L",
+			"J",
+			"S",
+			"Z",
+			"V",
+			"Line3"
+		],
+		"difficulty3": [
+			"I",
+			"O",
+			"T",
+			"L",
+			"J",
+			"S",
+			"Z",
+			"V",
+			"Line3",
+			"Plus",
+			"U"
+		],
+		"difficulty4": [
+			"I",
+			"O",
+			"T",
+			"L",
+			"J",
+			"S",
+			"Z",
+			"V",
+			"Line3",
+			"Plus",
+			"U",
+			"P",
+			"Y",
+			"LongS",
+			"LongZ"
+		],
+		"difficulty5": [
+			"I",
+			"O",
+			"T",
+			"L",
+			"J",
+			"S",
+			"Z",
+			"V",
+			"Line3",
+			"Plus",
+			"U",
+			"P",
+			"Y",
+			"LongS",
+			"LongZ",
+			"LongL",
+			"LongJ",
+			"Ring"
+		]
 	},
 	"rendering": {
 		"ballRadius": 20,

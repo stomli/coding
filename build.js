@@ -15,12 +15,67 @@
 import { cpSync, mkdirSync, rmSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 const OUT  = join(ROOT, 'dist', 'orbfall');
 
 const noClean = process.argv.includes('--no-clean');
+
+// ── Generate build version (orbfall-v1.0.YYMMDDHHMM) ─────────────────────────
+
+function buildVersion() {
+	const now = new Date();
+	const YY  = String(now.getFullYear()).slice(-2);
+	const MM  = String(now.getMonth() + 1).padStart(2, '0');
+	const DD  = String(now.getDate()).padStart(2, '0');
+	const HH  = String(now.getHours()).padStart(2, '0');
+	const min = String(now.getMinutes()).padStart(2, '0');
+	return `orbfall-v1.0.${YY}${MM}${DD}${HH}${min}`;
+}
+
+const VERSION = buildVersion();
+
+// ── Stamp source files ────────────────────────────────────────────────────────
+//
+// Update CACHE_VERSION in source service-worker.js and buildVersion in source
+// config.json so the repo always reflects the last-built version.
+
+console.log(`\n[0/5] Stamping version ${VERSION} into source files…`);
+
+const srcSwPath  = join(ROOT, 'service-worker.js');
+const srcSwText  = readFileSync(srcSwPath, 'utf8');
+const stampedSw  = srcSwText.replace(/CACHE_VERSION\s*=\s*'orbfall-[^']*'/, `CACHE_VERSION = '${VERSION}'`);
+if (stampedSw === srcSwText) {
+	console.warn('  ⚠ CACHE_VERSION not found in source service-worker.js — check manually');
+} else {
+	writeFileSync(srcSwPath, stampedSw, 'utf8');
+	ok(`service-worker.js CACHE_VERSION = '${VERSION}'`);
+}
+
+const srcCfgPath = join(ROOT, 'config.json');
+const srcCfg     = JSON.parse(readFileSync(srcCfgPath, 'utf8'));
+srcCfg.buildVersion = VERSION;
+writeFileSync(srcCfgPath, JSON.stringify(srcCfg, null, '\t'), 'utf8');
+ok(`config.json buildVersion = '${VERSION}'`);
+
+// Stage the two stamped source files so the version is included in the commit
+try {
+	execSync('git add service-worker.js config.json', { cwd: ROOT, stdio: 'pipe' });
+	ok('git add service-worker.js config.json');
+} catch (_e) {
+	warn('git add failed — stamp will not be staged automatically');
+}
+
+// Tag the current HEAD so this version can be retrieved with: git checkout <VERSION>
+try {
+	execSync(`git tag ${VERSION}`, { cwd: ROOT, stdio: 'pipe' });
+	ok(`git tag ${VERSION}`);
+} catch (_e) {
+	// Tag may already exist (e.g. re-running build without committing) — not fatal
+	warn(`git tag ${VERSION} skipped (tag may already exist)`);
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,7 +96,7 @@ function copy(src, destRel) {
 // ── Clean ─────────────────────────────────────────────────────────────────────
 
 if (!noClean) {
-	console.log('\n[1/4] Cleaning dist/orbfall/…');
+	console.log('\n[1/5] Cleaning dist/orbfall/…');
 	if (existsSync(join(ROOT, 'dist'))) {
 		rmSync(join(ROOT, 'dist'), { recursive: true, force: true });
 	}
@@ -52,7 +107,7 @@ mkdirSync(OUT, { recursive: true });
 
 // ── Copy static files ─────────────────────────────────────────────────────────
 
-console.log('\n[2/4] Copying static assets…');
+console.log('\n[2/5] Copying static assets…');
 
 // Root HTML + config
 copy('index.html',       'index.html');
@@ -75,7 +130,7 @@ copy('src', 'src');
 // We rewrite every '/index.html' → './index.html' etc. in the output copy only
 // (the source file is left unchanged).
 
-console.log('\n[3/4] Patching service-worker.js paths for /orbfall sub-path…');
+console.log('\n[3/5] Patching service-worker.js paths for /orbfall sub-path…');
 
 const swPath = join(OUT, 'service-worker.js');
 let sw = readFileSync(swPath, 'utf8');
@@ -95,21 +150,9 @@ if (patchedSw === sw) {
 	ok('service-worker.js paths rewritten to relative form');
 }
 
-// Extract CACHE_VERSION and stamp it into config.json
-const versionMatch = sw.match(/CACHE_VERSION\s*=\s*'([^']+)'/);
-if (versionMatch) {
-	const configPath = join(OUT, 'config.json');
-	const cfg = JSON.parse(readFileSync(configPath, 'utf8'));
-	cfg.buildVersion = versionMatch[1];
-	writeFileSync(configPath, JSON.stringify(cfg, null, '\t'), 'utf8');
-	ok(`config.json buildVersion set to ${versionMatch[1]}`);
-} else {
-	warn('Could not extract CACHE_VERSION from service-worker.js — buildVersion not stamped');
-}
-
 // ── manifest.json: patch start_url and scope ─────────────────────────────────
 
-console.log('\n[4/4] Patching manifest.json for /orbfall sub-path…');
+console.log('\n[4/5] Patching manifest.json for /orbfall sub-path…');
 
 const manifestPath = join(OUT, 'manifest.json');
 let manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
@@ -126,6 +169,8 @@ if (Array.isArray(manifest.shortcuts)) {
 
 writeFileSync(manifestPath, JSON.stringify(manifest, null, '\t'), 'utf8');
 ok('manifest.json start_url and scope set to /orbfall/');
+
+console.log('\n[5/5] Done.');
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 
