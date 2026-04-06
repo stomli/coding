@@ -27,12 +27,12 @@ const noClean = process.argv.includes('--no-clean');
 
 function buildVersion() {
 	const now = new Date();
-	const YY  = String(now.getFullYear()).slice(-2);
-	const MM  = String(now.getMonth() + 1).padStart(2, '0');
-	const DD  = String(now.getDate()).padStart(2, '0');
-	const HH  = String(now.getHours()).padStart(2, '0');
-	const min = String(now.getMinutes()).padStart(2, '0');
-	return `orbfall-v1.0.${YY}${MM}${DD}${HH}${min}`;
+	const YY  = String(now.getUTCFullYear()).slice(-2);
+	const MM  = String(now.getUTCMonth() + 1).padStart(2, '0');
+	const DD  = String(now.getUTCDate()).padStart(2, '0');
+	const HH  = String(now.getUTCHours()).padStart(2, '0');
+	const min = String(now.getUTCMinutes()).padStart(2, '0');
+	return `orbfall-v${YY}.${MM}${DD}.${HH}${min}`;
 }
 
 const VERSION = buildVersion();

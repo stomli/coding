@@ -223,7 +223,8 @@ class AdManagerClass {
 		const adSenseId = ConfigManager.get('monetization.ads.adSenseId', '');
 		const slotId = ConfigManager.get('monetization.ads.slotIds.interstitial', '');
 
-		if (adSenseId && slotId && slotId !== 'XXXXXXXXXX') {
+		const showAd = adSenseId && slotId && slotId !== 'XXXXXXXXXX';
+		if (showAd) {
 			const ins = document.createElement('ins');
 			ins.className = 'adsbygoogle';
 			ins.style.display = 'block';
@@ -232,12 +233,6 @@ class AdManagerClass {
 			ins.setAttribute('data-ad-format', 'auto');
 			ins.setAttribute('data-full-width-responsive', 'true');
 			adContainer.appendChild(ins);
-
-			try {
-				(window.adsbygoogle = window.adsbygoogle || []).push({});
-			} catch (_e) {
-				// AdSense not loaded - graceful degradation
-			}
 		} else {
 			// Placeholder for development/testing
 			adContainer.innerHTML = '<p style="color: #888; padding: 40px;">Ad Placeholder</p>';
@@ -274,6 +269,16 @@ class AdManagerClass {
 		overlay.appendChild(skipButton);
 		document.body.appendChild(overlay);
 		document.body.classList.add('interstitial-active');
+
+		// push() must be called AFTER the <ins> is in the DOM so AdSense can
+		// measure the container and fire the ad request.
+		if (showAd) {
+			try {
+				(window.adsbygoogle = window.adsbygoogle || []).push({});
+			} catch (_e) {
+				// AdSense library not loaded — graceful degradation
+			}
+		}
 	}
 
 	/**

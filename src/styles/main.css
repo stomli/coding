@@ -1997,17 +1997,21 @@ body::after {
 }
 
 .interstitial-ad-container {
-	max-width: 90%;
-	max-height: 70%;
+	flex: 1;
+	width: 100%;
 	background: #222;
-	padding: 20px;
 	border-radius: 8px;
-	text-align: center;
-	min-width: 300px;
-	min-height: 250px;
+	overflow: hidden;
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	justify-content: center;
+	min-height: 250px;
+}
+
+.interstitial-ad-container .adsbygoogle {
+	flex: 1;
+	width: 100% !important;
+	height: 100% !important;
 }
 
 .skip-ad-button {
