@@ -20,7 +20,7 @@ body {
 	font-family: var(--font-family);
 	background: var(--color-bg);
 	color: #ffffff;
-	overflow: hidden;
+	overflow: clip; /* clips scroll without clipping position:fixed children */
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -1976,10 +1976,7 @@ body::after {
 /* Interstitial Overlay - shown at natural breaks only */
 .interstitial-overlay {
 	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
+	inset: 0;
 	background: rgba(0, 0, 0, 0.92);
 	z-index: 10000;
 	display: flex;
