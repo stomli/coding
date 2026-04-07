@@ -39,39 +39,21 @@ class ConfigManagerClass {
 		}
 		
 		try {
-			// Try multiple possible paths (for tests and normal operation)
-			const possiblePaths = ['./config.json', '../config.json', '../../config.json'];
-			let response = null;
-			let loadedPath = null;
+			const response = await fetch('./config.json');
 			
-			for (const path of possiblePaths) {
-				try {
-					response = await fetch(path);
-					if (response.ok) {
-						loadedPath = path;
-						break;
-					}
-				} catch (e) {
-					// Try next path
-					continue;
-				}
+			if (!response.ok) {
+				throw new Error(`Failed to load config.json: HTTP ${response.status}`);
 			}
 			
-			// Parse JSON if successful
-			if (response && response.ok) {
-				this.config = await response.json();
-				this.isLoaded = true;
-				const progressionValidation = this.validateProgressionConfig();
-				if (!progressionValidation.valid) {
-					progressionValidation.errors.forEach(err => {
-						console.warn('ConfigManager: progression config warning:', err);
-					});
-				}
-				return this.config;
+			this.config = await response.json();
+			this.isLoaded = true;
+			const progressionValidation = this.validateProgressionConfig();
+			if (!progressionValidation.valid) {
+				progressionValidation.errors.forEach(err => {
+					console.warn('ConfigManager: progression config warning:', err);
+				});
 			}
-			else {
-				throw new Error(`Failed to load config: Could not find config.json in any expected location`);
-			}
+			return this.config;
 		}
 		catch (error) {
 			console.error('ConfigManager: Error loading config.json', error);
