@@ -47,5 +47,5 @@ jobs:
       - name: Invalidate CloudFront
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id E1FSXOLSCUJUU3 \
+            --distribution-id EFPCI3NCVKM46 \
             --paths "/orbfall/*" "/index.html"
