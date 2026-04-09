@@ -1149,7 +1149,7 @@
 		},
 		"lemonsqueezy": {
 			"enabled": true,
-			"storeUrl": "https://gusto4tech.lemonsqueezy.com/buy/your-product-id",
+			"storeUrl": "https://gusto4tech.lemonsqueezy.com/checkout/buy/9ad57b05-b26f-44fa-9eed-93bcd6d90a97?logo=0",
 			"storeId": 0,
 			"productId": 0,
 			"buttonText": "✨ Go Ad-Free"

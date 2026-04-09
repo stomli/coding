@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<!--
+	Orb•Fall: ChromaCrush - Early Access Announcement
+	Copyright (c) 2026 Gusto4Tech. All Rights Reserved.
+-->
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Early Access — Orb•Fall: ChromaCrush</title>
+	<meta name="description" content="Orb•Fall: ChromaCrush is in Early Access! Stack orbs, crush colors, and help shape the game with your feedback.">
+	<meta name="robots" content="noindex, follow">
+	<link rel="manifest" href="manifest.json">
+	<meta name="theme-color" content="#667eea">
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://gusto4tech.com/orbfall/early-access.html">
+	<meta property="og:title" content="Early Access — Orb•Fall: ChromaCrush">
+	<meta property="og:description" content="Stack orbs, crush colors — help shape the game with your feedback!">
+	<meta property="og:image" content="https://gusto4tech.com/orbfall/src/img/Logotrans.png">
+	<meta property="og:site_name" content="Orb•Fall: ChromaCrush">
+
+	<link rel="stylesheet" href="src/styles/shared-variables.css">
+	<link rel="stylesheet" href="src/styles/shared-components.css">
+	<link rel="stylesheet" href="src/styles/main.css">
+
+	<style>
+		/* ── Page layout ──────────────────────────────────────────── */
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		/* Override main.css game-shell constraints so the page scrolls */
+		body {
+			font-family: var(--font-family);
+			color: var(--color-text);
+			min-height: 100vh;
+			height: auto !important;
+			overflow: auto !important;
+			display: block !important;
+			align-items: unset !important;
+			justify-content: unset !important;
+			line-height: 1.6;
+		}
+
+		#app {
+			width: 100%;
+			height: auto !important;
+			min-height: 100vh;
+			position: relative;
+			max-width: unset;
+		}
+
+		/* ── Scrollable content layer on top of weather bg ───────── */
+		.page-content {
+			position: relative;
+			z-index: 1;
+			padding: 30px 20px 60px;
+		}
+
+		.container {
+			max-width: 860px;
+			margin: 0 auto;
+		}
+
+		/* ── Hero header ──────────────────────────────────────────── */
+		.hero {
+			text-align: center;
+			padding: 60px 20px 40px;
+		}
+
+		.badge-early-access {
+			display: inline-block;
+			background: linear-gradient(135deg, #f093fb, #f5576c);
+			color: white;
+			font-size: 0.8em;
+			font-weight: 700;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			padding: 6px 18px;
+			border-radius: 50px;
+			margin-bottom: 20px;
+			box-shadow: 0 4px 14px rgba(240, 147, 251, 0.5);
+		}
+
+		.hero h1 {
+			font-size: clamp(2em, 6vw, 3.5em);
+			font-weight: 900;
+			margin-bottom: 12px;
+			text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+			background: linear-gradient(135deg, #ffffff 0%, #c9d6ff 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+
+		.hero .tagline {
+			font-size: 1.2em;
+			color: rgba(255, 255, 255, 0.85);
+			margin-bottom: 30px;
+			text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+		}
+
+		.hero-actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 14px;
+			justify-content: center;
+			margin-top: 10px;
+		}
+
+		/* ── Cards ────────────────────────────────────────────────── */
+		.card {
+			background: rgba(26, 26, 46, 0.82);
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: var(--radius-xl);
+			padding: 30px;
+			margin-bottom: 24px;
+			box-shadow: var(--shadow-large);
+		}
+
+		.card h2 {
+			font-size: 1.5em;
+			color: var(--color-accent);
+			margin-bottom: 16px;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.card p {
+			color: rgba(255, 255, 255, 0.82);
+			margin-bottom: 12px;
+		}
+
+		.card p:last-child {
+			margin-bottom: 0;
+		}
+
+		/* ── Game mode grid ───────────────────────────────────────── */
+		.modes-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+			gap: 16px;
+			margin-top: 8px;
+		}
+
+		.mode-card {
+			background: rgba(255, 255, 255, 0.06);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: var(--radius-lg);
+			padding: 18px;
+			transition: background var(--transition-fast);
+		}
+
+		.mode-card:hover {
+			background: rgba(255, 255, 255, 0.1);
+		}
+
+		.mode-card h3 {
+			font-size: 1.05em;
+			margin-bottom: 6px;
+			color: var(--color-game-green);
+		}
+
+		.mode-card p {
+			font-size: 0.9em;
+			color: rgba(255, 255, 255, 0.72);
+			margin-bottom: 0;
+		}
+
+		/* ── Feedback topics ──────────────────────────────────────── */
+		.feedback-list {
+			list-style: none;
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+			gap: 12px;
+			margin-top: 8px;
+		}
+
+		.feedback-list li {
+			background: rgba(255, 255, 255, 0.06);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: var(--radius-md);
+			padding: 12px 16px;
+			display: flex;
+			align-items: flex-start;
+			gap: 10px;
+			color: rgba(255, 255, 255, 0.82);
+			font-size: 0.95em;
+		}
+
+		.feedback-list li .icon {
+			font-size: 1.3em;
+			flex-shrink: 0;
+		}
+
+		/* ── Known issues ─────────────────────────────────────────── */
+		.issues-list {
+			list-style: none;
+			margin-top: 8px;
+		}
+
+		.issues-list li {
+			display: flex;
+			align-items: flex-start;
+			gap: 12px;
+			padding: 12px 0;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+			color: rgba(255, 255, 255, 0.8);
+		}
+
+		.issues-list li:last-child {
+			border-bottom: none;
+		}
+
+		.issue-badge {
+			flex-shrink: 0;
+			font-size: 0.75em;
+			font-weight: 700;
+			letter-spacing: 0.05em;
+			text-transform: uppercase;
+			padding: 3px 10px;
+			border-radius: 50px;
+			margin-top: 2px;
+		}
+
+		.issue-badge.known {
+			background: rgba(255, 200, 0, 0.2);
+			color: var(--color-gold);
+			border: 1px solid rgba(255, 200, 0, 0.35);
+		}
+
+		.issue-badge.roadmap {
+			background: rgba(102, 126, 234, 0.2);
+			color: #a5b4fc;
+			border: 1px solid rgba(102, 126, 234, 0.35);
+		}
+
+		.issue-text strong {
+			display: block;
+			margin-bottom: 2px;
+			color: rgba(255, 255, 255, 0.95);
+		}
+
+		.issue-text span {
+			font-size: 0.88em;
+			color: rgba(255, 255, 255, 0.55);
+		}
+
+		/* ── Privacy summary box ──────────────────────────────────── */
+		.privacy-summary {
+			background: rgba(0, 204, 255, 0.07);
+			border: 1px solid rgba(0, 204, 255, 0.2);
+			border-radius: var(--radius-lg);
+			padding: 18px 22px;
+			margin-top: 12px;
+		}
+
+		.privacy-summary p {
+			font-size: 0.92em;
+			color: rgba(255, 255, 255, 0.72);
+			margin-bottom: 8px;
+		}
+
+		.privacy-summary p:last-child {
+			margin-bottom: 0;
+		}
+
+		.privacy-summary strong {
+			color: var(--color-cyan);
+		}
+
+		/* ── Divider ──────────────────────────────────────────────── */
+		.section-divider {
+			border: none;
+			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			margin: 8px 0 20px;
+		}
+
+		/* ── Buttons override for dark bg ─────────────────────────── */
+		.btn-primary {
+			background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+			padding: 13px 32px;
+			font-size: 1em;
+		}
+
+		.btn-secondary {
+			color: rgba(255, 255, 255, 0.85);
+			border-color: rgba(255, 255, 255, 0.4);
+			padding: 11px 28px;
+			font-size: 1em;
+		}
+
+		.btn-secondary:hover {
+			background: rgba(255, 255, 255, 0.12);
+			color: white;
+			border-color: rgba(255, 255, 255, 0.7);
+		}
+
+		/* ── Compatibility note ───────────────────────────────────── */
+		.compat-note {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 14px;
+		}
+
+		.compat-pill {
+			background: rgba(0, 0, 0, 0.55);
+			border: 1px solid rgba(0, 255, 136, 0.45);
+			border-radius: 50px;
+			padding: 6px 16px;
+			font-size: 0.85em;
+			color: var(--color-game-green);
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			backdrop-filter: blur(6px);
+			-webkit-backdrop-filter: blur(6px);
+			text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+		}
+
+		/* ── Footer ───────────────────────────────────────────────── */
+		.footer {
+			text-align: center;
+			padding: 30px 20px;
+			color: rgba(255, 255, 255, 0.4);
+			font-size: 0.85em;
+		}
+
+		.footer a {
+			color: rgba(255, 255, 255, 0.55);
+			text-decoration: underline;
+			text-underline-offset: 3px;
+		}
+
+		.footer a:hover {
+			color: rgba(255, 255, 255, 0.85);
+		}
+
+		/* ── Responsive ───────────────────────────────────────────── */
+		@media (max-width: 600px) {
+			.hero {
+				padding: 40px 10px 30px;
+			}
+
+			.card {
+				padding: 22px 18px;
+			}
+
+			.modes-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.feedback-list {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+<div id="app">
+	<!-- Weather background injected here by WeatherBackground.js -->
+
+	<div class="page-content">
+		<div class="container">
+
+			<!-- ── Hero ──────────────────────────────────────────────── -->
+			<div class="hero">
+				<div class="badge-early-access">✨ Early Access</div>
+				<h1>Orb•Fall: ChromaCrush</h1>
+				<p class="tagline">Stack the Chaos. Crush the Colors.</p>
+
+				<div class="compat-note" style="justify-content:center; margin-bottom: 24px;">
+					<span class="compat-pill">📱 Mobile Web</span>
+					<span class="compat-pill">🖥️ Desktop Web</span>
+					<span class="compat-pill">📶 Play Offline (PWA)</span>
+					<span class="compat-pill">🌐 No Install Required</span>
+				</div>
+
+				<div class="hero-actions">
+					<a href="index.html" class="btn-primary">▶ Play Now</a>
+					<a href="guide.html" class="btn-secondary">How to Play</a>
+				</div>
+			</div>
+
+			<!-- ── Thank You ─────────────────────────────────────────── -->
+			<div class="card">
+				<h2>🙏 Thank You for Playing!</h2>
+				<p>
+					We're so grateful you're here. <strong>Orb•Fall: ChromaCrush</strong> is in
+					early access, and your involvement right now genuinely matters. You're among
+					the first people to experience the game, and your feedback will directly shape
+					what it becomes.
+				</p>
+				<p>
+					Share this link with anyone you think would enjoy it — the more people
+					playing and sharing thoughts, the better we can make the experience for
+					everyone. 🎉
+				</p>
+			</div>
+
+			<!-- ── About the Game ────────────────────────────────────── -->
+			<div class="card">
+				<h2>🎮 What Is Orb•Fall: ChromaCrush?</h2>
+				<p>
+					Orb•Fall is a fast-paced color-matching puzzle game inspired by classic
+					block-droppers. Colorful orb pieces fall from the top of the grid — line up
+					three or more matching colors to clear them, chain combos, and trigger
+					explosions to rack up points before time runs out.
+				</p>
+				<p>
+					The game runs entirely in your browser with no app store required. You can
+					install it as a <strong>Progressive Web App (PWA)</strong> on your phone or
+					desktop for a near-native experience, and once installed it works
+					<strong>fully offline</strong>.
+				</p>
+				<hr class="section-divider">
+				<p style="font-size:0.9em; color: rgba(255,255,255,0.5);">
+					Currently optimized for Chromium-based browsers (Chrome, Edge, Brave).
+					Other browsers may have minor visual differences.
+				</p>
+			</div>
+
+			<!-- ── Game Modes ────────────────────────────────────────── -->
+			<div class="card">
+				<h2>🕹️ Game Modes</h2>
+				<p>Six distinct modes — each a fresh challenge. All modes track independent
+				progress and high scores.</p>
+
+				<div class="modes-grid">
+					<div class="mode-card">
+						<h3>⚡ Classic</h3>
+						<p>Timed 90-second rounds. Clear orbs fast, survive as long as you can.
+						The best starting point for new players.</p>
+					</div>
+					<div class="mode-card">
+						<h3>🧘 Zen</h3>
+						<p>No timer, no pressure. Play at your own pace, save and resume anytime.
+						Perfect for strategy and relaxation.</p>
+					</div>
+					<div class="mode-card">
+						<h3>⚔️ Gauntlet</h3>
+						<p>Start with a pre-filled grid and face a rising wave of random orbs every
+						5 seconds. Fast clears are essential.</p>
+					</div>
+					<div class="mode-card">
+						<h3>🌊 Rising Tide</h3>
+						<p>Immovable blocking orbs rise from the bottom every 5 seconds. Only
+						Exploding orbs can remove them — plan wisely.</p>
+					</div>
+					<div class="mode-card">
+						<h3>🎯 Mission</h3>
+						<p>Complete a chain of sequential micro-goals — clear orbs, trigger cascades,
+						use specials, build streaks. One goal revealed at a time.</p>
+					</div>
+					<div class="mode-card">
+						<h3>🧩 Puzzle</h3>
+						<p>No auto-drop, no timer. A deterministic piece sequence — same puzzle every
+						time. Earn bronze, silver, or gold stars.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- ── We Want Your Feedback ─────────────────────────────── -->
+			<div class="card">
+				<h2>💬 We Want Your Feedback</h2>
+				<p>
+					This is a <em>working game</em>, not a demo — but it's also a work in progress.
+					Your honest opinions on every aspect help us tune and improve it. Here's what
+					we're most curious about:
+				</p>
+
+				<ul class="feedback-list">
+					<li>
+						<span class="icon">🎮</span>
+						<div>
+							<strong>Gameplay feel</strong>
+							Does it feel fun and responsive? Is movement and placement satisfying?
+						</div>
+					</li>
+					<li>
+						<span class="icon">📈</span>
+						<div>
+							<strong>Difficulty curve</strong>
+							Is early-game too easy? Does hard mode spike too fast? Where do you get stuck?
+						</div>
+					</li>
+					<li>
+						<span class="icon">✨</span>
+						<div>
+							<strong>Engagement</strong>
+							Does it keep you coming back? What would make it more compelling?
+						</div>
+					</li>
+					<li>
+						<span class="icon">💡</span>
+						<div>
+							<strong>Suggestions</strong>
+							Features you'd love to see, things that feel missing, or ideas for new modes.
+						</div>
+					</li>
+					<li>
+						<span class="icon">🐞</span>
+						<div>
+							<strong>Bugs</strong>
+							Anything that breaks, looks wrong, or behaves unexpectedly.
+						</div>
+					</li>
+					<li>
+						<span class="icon">📢</span>
+						<div>
+							<strong>Ad experience</strong>
+							Are ad placements intrusive? Do they feel fair relative to the free content?
+						</div>
+					</li>
+				</ul>
+
+				<div style="margin-top: 22px;">
+					<a href="https://github.com/OrbFall/OrbFall/issues"
+					   target="_blank" rel="noopener noreferrer"
+					   class="btn-primary">
+						💬 Share Feedback or File a Bug
+					</a>
+				</div>
+			</div>
+
+			<!-- ── Known Issues ──────────────────────────────────────── -->
+			<div class="card">
+				<h2>⚠️ Known Issues &amp; Limitations</h2>
+				<p>We want to be transparent about what's not quite ready yet:</p>
+
+				<ul class="issues-list">
+					<li>
+						<span class="issue-badge known">Known</span>
+						<div class="issue-text">
+							<strong>Payments not connected</strong>
+							<span>Premium features and in-app purchases are visible in the UI but
+							are not yet wired to a payment processor. Nothing will be charged.</span>
+						</div>
+					</li>
+					<li>
+						<span class="issue-badge known">Known</span>
+						<div class="issue-text">
+							<strong>Ads framework in place — no ads showing</strong>
+							<span>The ad infrastructure is integrated and the placements are live,
+							but ad inventory is not yet active. You may see placeholder ad slots.</span>
+						</div>
+					</li>
+					<li>
+						<span class="issue-badge roadmap">Roadmap</span>
+						<div class="issue-text">
+							<strong>Not yet available as a distributed app</strong>
+							<span>The game is currently web-only. App Store and Google Play
+							distribution is planned for a future release.</span>
+						</div>
+					</li>
+				</ul>
+			</div>
+
+			<!-- ── Privacy ───────────────────────────────────────────── -->
+			<div class="card">
+				<h2>🔒 Privacy — Quick Summary</h2>
+
+				<div class="privacy-summary">
+					<p>
+						<strong>No account required.</strong> Your game progress, settings, and
+						player profiles are stored locally on your device using
+						<code style="color: var(--color-cyan); background: rgba(0,204,255,0.1); padding: 1px 6px; border-radius: 4px;">localStorage</code>
+						and are never sent to our servers.
+					</p>
+					<p>
+						<strong>Analytics.</strong> We collect anonymous gameplay analytics
+						(events, session length, level completions) to understand how the game
+						is played. No personally identifiable information is collected.
+					</p>
+					<p>
+						<strong>Ads.</strong> When live, ads may use third-party SDKs that set
+						their own cookies or collect data per their own privacy policies.
+					</p>
+					<p>
+						<strong>No data is sold.</strong> We do not sell personal data to third parties.
+					</p>
+				</div>
+
+				<p style="margin-top: 16px;">
+					<a href="privacy.html" style="color: var(--color-cyan); text-underline-offset: 3px;">
+						→ Read the full Privacy Policy
+					</a>
+				</p>
+			</div>
+
+		</div><!-- /.container -->
+
+		<footer class="footer">
+			<p>&copy; 2026 Gusto4Tech &mdash; Orb•Fall: ChromaCrush. All rights reserved.</p>
+			<p style="margin-top: 6px;">
+				<a href="index.html">Play</a> &nbsp;·&nbsp;
+				<a href="guide.html">Guide</a> &nbsp;·&nbsp;
+				<a href="privacy.html">Privacy</a>
+			</p>
+		</footer>
+
+	</div><!-- /.page-content -->
+</div><!-- /#app -->
+
+<script type="module">
+	import WeatherBackground from './src/modules/WeatherBackground.js';
+	WeatherBackground.initialize();
+</script>
+</body>
+</html>

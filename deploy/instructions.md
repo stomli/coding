@@ -1,78 +1,119 @@
-# Deploying to Wix
+# Deploying Orb•Fall: ChromaCrush
 
-## Quick Steps
+Production URL: `https://gusto4tech.com/orbfall/`
+Host: S3 bucket + CloudFront distribution (gusto4tech.com root)
 
-### Method 1: Direct HTML Embed (Simplest)
+---
 
-1. **Zip your game files:**
-   - Include: `index.html`, `guide.html`, `src/` folder, `config/` folder, `assets/` folder
-   - Keep the folder structure intact
+## Step 1 — Build
 
-2. **Upload to a free hosting service:**
-   - **GitHub Pages** (recommended):
-     - Create a GitHub repo
-     - Push all files
-     - Enable GitHub Pages in repo settings
-     - You'll get a URL like: `https://yourusername.github.io/yourrepo`
-   
-   - **Netlify Drop**:
-     - Go to https://app.netlify.com/drop
-     - Drag and drop your folder
-     - Get instant URL
+```powershell
+node build.js
+```
 
-3. **Embed in Wix:**
-   - In Wix Editor: Add → Embed → HTML iframe
-   - Paste your hosted game URL
-   - Resize the iframe to fit your page
+Output goes to `dist/orbfall/`. The build script:
+- stamps the version into `service-worker.js` and `config.json`
+- rewrites SW asset paths to relative form (`./index.html` etc.)
+- patches `manifest.json` scope and start_url to `/orbfall/`
 
-### Method 2: Wix File Manager Upload
+---
 
-1. **In Wix Dashboard:**
-   - Go to your site dashboard
-   - Click "Site Files" or "File Manager"
+## Step 2 — Upload to S3
 
-2. **Upload files:**
-   - Upload `index.html` (may need to rename to avoid conflicts)
-   - Upload entire `src/` folder maintaining structure
-   - Upload `config/` and `assets/` folders
+### ⚠️ Critical: upload to the `orbfall/` prefix, NOT the bucket root
 
-3. **Create HTML Component:**
-   - In Wix Editor: Add → Embed → HTML Code
-   - Add an iframe pointing to your uploaded files:
-   ```html
-   <iframe src="/files/index.html" style="width:100%; height:800px; border:none;"></iframe>
-   ```
+```bash
+aws s3 sync dist/orbfall/ s3://YOUR_BUCKET/orbfall/ --delete
+```
 
-### Method 3: Use Wix Velo (Advanced)
+**Do NOT run:**
+```bash
+# WRONG — puts files at bucket root, breaks /orbfall/ routing
+aws s3 sync dist/orbfall/ s3://YOUR_BUCKET/ --delete
+```
 
-If you want the game fully integrated:
-1. Enable Wix Velo (formerly Corvid)
-2. Add your JavaScript modules to Velo's backend/public folders
-3. Use Velo to manage game state, scores, etc.
+Why this matters: S3 static website hosting uses `index.html` as the error
+document. If game files are at the bucket root instead of under `orbfall/`,
+any request to `/orbfall/anything` that doesn't find its key returns the root
+`index.html` — making every game URL silently serve the wrong page.
 
-## Recommended Approach
+### After uploading, verify the key prefix is correct:
 
-**Use GitHub Pages + Wix iFrame:**
+```bash
+aws s3 ls s3://YOUR_BUCKET/orbfall/
+# Should show: index.html, guide.html, service-worker.js, src/, etc.
+# Should NOT show these at the bucket root
+```
 
-1. Create GitHub repo for your game
-2. Push all files
-3. Enable GitHub Pages
-4. Embed in Wix using HTML iframe
+---
 
-This keeps your game code separate and easier to update!
+## Step 3 — Invalidate CloudFront cache
 
-## File Checklist
+After every upload, invalidate so stale files aren't served:
 
-Make sure these are included:
-- ✅ index.html (main game)
-- ✅ guide.html (instructions)
-- ✅ src/ folder (all JavaScript modules)
-- ✅ src/styles/ folder (CSS files)
-- ✅ config/ folder (game configuration)
-- ✅ assets/ folder (if you have images/sounds)
+```bash
+aws cloudfront create-invalidation \
+  --distribution-id YOUR_DISTRIBUTION_ID \
+  --paths "/orbfall/*"
+```
 
-## Notes
+Invalidating only `/orbfall/*` is intentional — it avoids unnecessary cost
+on the root gusto4tech.com site.
 
-- Ensure all file paths are **relative** (no absolute paths like `C:\Users\...`)
-- Test your game works when hosted before embedding in Wix
-- The game is designed to be responsive and should work in an iframe
+---
+
+## CloudFront Distribution Settings
+
+These must stay correct or routing breaks again:
+
+| Setting | Value |
+|---|---|
+| Origin domain | `YOUR_BUCKET.s3.amazonaws.com` |
+| Origin path | *(empty — bucket root)* |
+| Default root object | `index.html` (root site only, NOT game) |
+| Error responses | 403 → `/index.html`, 200 (root fallback only) |
+
+### Behaviors
+
+| Path pattern | Origin path prefix | Notes |
+|---|---|---|
+| `/orbfall/*` | *(none — full S3 path included)* | Serves game files directly |
+| `Default (*)` | *(none)* | Root gusto4tech.com site |
+
+> If both behaviors share the same error response rule (`403 → /index.html`),
+> that rule must point to `/orbfall/index.html` only for the `/orbfall/*`
+> behavior — otherwise a missing root path falls back to the game.
+
+---
+
+## Files Deployed
+
+```
+dist/orbfall/
+  index.html          ← game shell
+  guide.html
+  privacy.html
+  early-access.html
+  config.json
+  manifest.json
+  service-worker.js   ← SW paths rewritten to relative form by build.js
+  ads.txt
+  src/
+    main.js
+    modules/
+    styles/
+    utils/
+    config/
+    img/
+```
+
+---
+
+## Checklist Before Each Deploy
+
+- [ ] `node build.js` ran cleanly (no warnings)
+- [ ] `dist/orbfall/index.html` exists
+- [ ] S3 sync target is `s3://YOUR_BUCKET/orbfall/` (trailing slash)
+- [ ] CloudFront invalidation for `/orbfall/*` issued
+- [ ] Tested `https://gusto4tech.com/orbfall/` in a private/incognito window
+- [ ] Tested direct navigation to `https://gusto4tech.com/orbfall/guide.html`
