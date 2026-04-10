@@ -1960,6 +1960,7 @@ body::after {
 
 	#gameScreen {
 		padding: 0.25rem 0.4rem;
+		overflow: hidden;
 	}
 
 	.hud {
@@ -1977,6 +1978,10 @@ body::after {
 
 	.controls-info {
 		margin-top: 0.25rem;
+	}
+
+	#gameCanvas {
+		max-height: 58dvh;
 	}
 	
 	.controls-keys .controls-text {
