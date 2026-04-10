@@ -1593,7 +1593,6 @@ body::after {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-	min-width: 160px;
 }
 
 .setting-icon {
@@ -1645,8 +1644,8 @@ body::after {
 .setting-item .btn-primary,
 .setting-item .btn-secondary,
 .setting-item .btn-danger {
-	font-size: 0.95rem;
-	padding: 0.5rem 1.2rem;
+	font-size: 0.95rem !important;
+	padding: 0.5rem 1.2rem !important;
 }
 
 /* ============================================
