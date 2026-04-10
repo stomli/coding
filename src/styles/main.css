@@ -1974,6 +1974,7 @@ body::after {
 
 	.game-container {
 		gap: 0.25rem;
+		flex: 0 0 auto;
 	}
 
 	.controls-info {
