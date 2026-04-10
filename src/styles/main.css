@@ -1274,8 +1274,7 @@ body::after {
 	border-radius: 10px;
 	border: 2px solid var(--color-game-green);
 	text-align: center;
-	min-width: min(400px, 92vw);
-	max-width: 92vw;
+	min-width: 400px;
 	box-shadow: 0 0 30px rgba(var(--color-game-green-rgb), 0.3), 
 	            0 0 60px rgba(var(--color-game-green-rgb), 0.1);
 }
@@ -1380,6 +1379,60 @@ body::after {
 #levelCompleteOverlay .overlay-content {
 	min-width: 360px;
 	padding: 2.25rem;
+}
+
+#settingsOverlay .overlay-content {
+	max-width: 520px;
+	width: 100%;
+	padding: 2rem 1.5rem;
+}
+
+#settingsOverlay .setting-item {
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	margin: 1rem 0;
+}
+
+/* Label: shrinks if needed, never overflows */
+#settingsOverlay .setting-item label {
+	flex: 1 1 auto;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Buttons: size to content, pinned right, never wrap text */
+#settingsOverlay .setting-item .btn-primary,
+#settingsOverlay .setting-item .btn-secondary,
+#settingsOverlay .setting-item .btn-danger {
+	flex: 0 0 auto;
+	width: auto;
+	white-space: nowrap;
+	margin-left: auto;
+}
+
+/* Sliders: fixed width, never grow/shrink */
+#settingsOverlay .setting-item input[type="range"],
+#settingsOverlay .volume-slider {
+	flex: 0 0 130px;
+	width: 130px;
+	max-width: 130px;
+}
+
+/* Volume percentage: fixed width, right-aligned */
+#settingsOverlay .volume-value {
+	flex: 0 0 40px;
+	text-align: right;
+	min-width: unset;
+}
+
+/* Checkboxes: fixed size, no grow */
+#settingsOverlay .setting-item input[type="checkbox"],
+#settingsOverlay .toggle-checkbox {
+	flex: 0 0 auto;
+	margin-left: auto;
 }
 
 .level-complete-reason {
@@ -1950,7 +2003,9 @@ body::after {
 	}
 	
 	.overlay-content {
-		min-width: 300px;
+		min-width: unset;
+		width: 92vw;
+		max-width: 92vw;
 		padding: 2rem;
 	}
 
