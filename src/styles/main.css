@@ -1981,7 +1981,7 @@ body::after {
 	}
 
 	#gameCanvas {
-		max-height: 58dvh;
+		max-width: 100%;
 	}
 	
 	.controls-keys .controls-text {
