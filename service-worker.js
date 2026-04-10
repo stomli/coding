@@ -96,10 +96,22 @@ self.addEventListener('install', (event) => {
 
 	event.waitUntil(
 		caches.open(CACHE_NAME).then((cache) => {
+			// Use cache:'reload' to bypass the browser's HTTP cache when pre-caching.
+			// Without this, assets with long max-age/immutable Cache-Control headers
+			// (e.g. CSS/JS served with max-age=31536000) are returned from the stale
+			// browser HTTP cache instead of fetched fresh — meaning a new SW version
+			// would cache the old files.
 			const cacheAll = CORE_ASSETS.map((asset) => {
-				return cache.add(asset).catch((err) => {
-					console.warn('[ServiceWorker] Failed to cache asset:', asset, err);
-				});
+				return fetch(new Request(asset, { cache: 'reload' }))
+					.then((response) => {
+						if (response.ok) {
+							return cache.put(asset, response);
+						}
+						console.warn('[ServiceWorker] Non-ok response for asset:', asset, response.status);
+					})
+					.catch((err) => {
+						console.warn('[ServiceWorker] Failed to cache asset:', asset, err);
+					});
 			});
 
 			return Promise.all(cacheAll);
