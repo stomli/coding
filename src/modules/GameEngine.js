@@ -2932,8 +2932,8 @@ class GameEngineClass {
 		}
 
 		title.textContent = isLevelOneModeIntro
-			? `${this.modeConfig?.name || this.gameMode}: Level 1 Briefing`
-			: `Level ${this.level} Briefing`;
+			? `${this.modeConfig?.name || this.gameMode}: Level 1`
+			: `Level ${this.level}`;
 
 		const hideCheckbox = document.getElementById('hideLevelChangesCheckbox');
 		if (hideCheckbox) {

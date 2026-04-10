@@ -14,6 +14,7 @@ import AudioManager from './modules/AudioManager.js';
 import ParticleSystem from './modules/ParticleSystem.js';
 import WeatherBackground from './modules/WeatherBackground.js';
 import PlayerManager from './modules/PlayerManager.js';
+import ConfigManager from './modules/ConfigManager.js';
 import AnalyticsManager from './modules/AnalyticsManager.js';
 import AdManager from './modules/AdManager.js';
 import MonetizationManager from './modules/MonetizationManager.js';
@@ -695,6 +696,10 @@ function showSettingsOverlay() {
 		if (hintsToggle) hintsToggle.checked = settings.hintsEnabled !== false;
 		
 		// Update value displays removed — percentage spans no longer in DOM
+
+		const buildEl = document.getElementById('settingsBuildVersion');
+		if (buildEl) buildEl.textContent = ConfigManager.get('buildVersion') ?? '';
+
 		overlay.classList.remove('hidden');
 	}
 }

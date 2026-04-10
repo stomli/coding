@@ -635,9 +635,9 @@ body::after {
 	}
 
 	.game-logo {
-		width: min(78%, 420px);
-		max-width: 420px;
-		max-height: min(28vh, 320px);
+		width: min(78%, 560px);
+		max-width: 560px;
+		max-height: min(36vh, 420px);
 	}
 }
 
@@ -1281,7 +1281,7 @@ body::after {
 
 .overlay-content h2 {
 	font-size: 2.5rem;
-	margin-bottom: 1.5rem;
+	margin-bottom: 1.0rem;
 	background: linear-gradient(135deg, var(--color-game-green), var(--color-cyan));
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -1387,6 +1387,32 @@ body::after {
 	max-width: min(520px, calc(100vw - 2rem));
 }
 
+#settingsOverlay .overlay-content h2 {
+	font-size: 1.25rem;
+	margin-bottom: 1rem;
+}
+
+.settings-footer {
+	margin-top: 0.75rem;
+	padding-top: 0.5rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	text-align: center;
+	font-size: 0.75rem;
+	color: rgba(255, 255, 255, 0.4);
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.settings-footer a {
+	color: rgba(255, 255, 255, 0.55);
+	text-decoration: none;
+}
+
+.settings-footer a:hover {
+	color: var(--color-game-green);
+}
+
 .level-complete-reason {
 	font-size: 1.2rem;
 	color: var(--color-game-green);
@@ -1401,6 +1427,10 @@ body::after {
 	height: 90vh;
 	display: flex;
 	flex-direction: column;
+}
+
+.level-changes-content h2 {
+	font-size: 1.875rem;
 }
 
 .level-changes-list {
@@ -1583,7 +1613,7 @@ body::after {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin: 1.5rem 0;
+	margin: 1.25rem 0;
 	gap: 1rem;
 }
 
@@ -1951,7 +1981,7 @@ body::after {
 		min-width: unset;
 		width: 92vw;
 		max-width: 92vw;
-		padding: 2rem;
+		padding: 1.5rem;
 	}
 
 	#settingsOverlay .overlay-content {
