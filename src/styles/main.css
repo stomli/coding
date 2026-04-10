@@ -1988,6 +1988,27 @@ body::after {
 		padding: 1.25rem 1rem;
 	}
 
+	.settings-options {
+		margin: 0.5rem 0;
+	}
+
+	.setting-item {
+		margin: 0.75rem 0;
+		gap: 0.5rem;
+	}
+
+	.setting-danger {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+	}
+
+	.setting-item .btn-primary,
+	.setting-item .btn-secondary,
+	.setting-item .btn-danger {
+		font-size: 0.8rem !important;
+		padding: 0.4rem 0.75rem !important;
+	}
+
 	#levelCompleteOverlay .overlay-content {
 		min-width: 300px;
 		padding: 1.75rem;
