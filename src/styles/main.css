@@ -1381,58 +1381,10 @@ body::after {
 	padding: 2.25rem;
 }
 
+/* Settings overlay — constrain width so it doesn't overflow viewport */
 #settingsOverlay .overlay-content {
-	max-width: 520px;
-	width: 100%;
-	padding: 2rem 1.5rem;
-}
-
-#settingsOverlay .setting-item {
-	flex-direction: row;
-	flex-wrap: nowrap;
-	align-items: center;
-	margin: 1rem 0;
-}
-
-/* Label: shrinks if needed, never overflows */
-#settingsOverlay .setting-item label {
-	flex: 1 1 auto;
-	min-width: 0;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-/* Buttons: size to content, pinned right, never wrap text */
-#settingsOverlay .setting-item .btn-primary,
-#settingsOverlay .setting-item .btn-secondary,
-#settingsOverlay .setting-item .btn-danger {
-	flex: 0 0 auto;
-	width: auto;
-	white-space: nowrap;
-	margin-left: auto;
-}
-
-/* Sliders: fixed width, never grow/shrink */
-#settingsOverlay .setting-item input[type="range"],
-#settingsOverlay .volume-slider {
-	flex: 0 0 130px;
-	width: 130px;
-	max-width: 130px;
-}
-
-/* Volume percentage: fixed width, right-aligned */
-#settingsOverlay .volume-value {
-	flex: 0 0 40px;
-	text-align: right;
-	min-width: unset;
-}
-
-/* Checkboxes: fixed size, no grow */
-#settingsOverlay .setting-item input[type="checkbox"],
-#settingsOverlay .toggle-checkbox {
-	flex: 0 0 auto;
-	margin-left: auto;
+	min-width: min(400px, calc(100vw - 2rem));
+	max-width: min(520px, calc(100vw - 2rem));
 }
 
 .level-complete-reason {
@@ -1695,14 +1647,6 @@ body::after {
 .setting-item .btn-danger {
 	font-size: 0.95rem;
 	padding: 0.5rem 1.2rem;
-}
-
-#volumeValue,
-.volume-value {
-	min-width: 50px;
-	text-align: right;
-	color: var(--color-game-green);
-	font-weight: bold;
 }
 
 /* ============================================
@@ -2007,39 +1951,6 @@ body::after {
 		width: 92vw;
 		max-width: 92vw;
 		padding: 2rem;
-	}
-
-	/* Settings: stack label above control on narrow screens */
-	.settings-options {
-		margin: 1rem 0;
-	}
-
-	.setting-item {
-		flex-direction: column;
-		align-items: flex-start;
-		margin: 1rem 0;
-		gap: 0.5rem;
-	}
-
-	.setting-item label {
-		min-width: unset;
-		font-size: 1rem;
-	}
-
-	.setting-item input[type="range"],
-	.volume-slider {
-		max-width: 100%;
-		width: 100%;
-	}
-
-	.setting-item input[type="checkbox"],
-	.toggle-checkbox {
-		align-self: flex-start;
-	}
-
-	.setting-item .btn-secondary,
-	.setting-item .btn-danger {
-		width: 100%;
 	}
 
 	#levelCompleteOverlay .overlay-content {

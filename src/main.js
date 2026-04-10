@@ -692,11 +692,7 @@ function showSettingsOverlay() {
 		const hintsToggle = document.getElementById('hintsToggle');
 		if (hintsToggle) hintsToggle.checked = settings.hintsEnabled !== false;
 		
-		// Update value displays
-		updateVolumeDisplay('masterVolumeValue', settings.masterVolume * 100);
-		updateVolumeDisplay('sfxVolumeValue', settings.sfxVolume * 100);
-		updateVolumeDisplay('musicVolumeValue', settings.musicVolume * 100);
-		
+		// Update value displays removed — percentage spans no longer in DOM
 		overlay.classList.remove('hidden');
 	}
 }
@@ -708,16 +704,6 @@ function hideSettingsOverlay() {
 	const overlay = document.getElementById('settingsOverlay');
 	if (overlay) {
 		overlay.classList.add('hidden');
-	}
-}
-
-/**
- * Update volume display percentage
- */
-function updateVolumeDisplay(elementId, value) {
-	const display = document.getElementById(elementId);
-	if (display) {
-		display.textContent = Math.round(value) + '%';
 	}
 }
 
@@ -752,7 +738,6 @@ function setupSettingsControls() {
 		masterSlider.addEventListener('input', (e) => {
 			const value = e.target.value / 100;
 			AudioManager.setMasterVolume(value);
-			updateVolumeDisplay('masterVolumeValue', e.target.value);
 			// Save to current player's settings
 			PlayerManager.updateSettings({ masterVolume: value });
 		});
@@ -764,7 +749,6 @@ function setupSettingsControls() {
 		sfxSlider.addEventListener('input', (e) => {
 			const value = e.target.value / 100;
 			AudioManager.setSFXVolume(value);
-			updateVolumeDisplay('sfxVolumeValue', e.target.value);
 			// Save to current player's settings
 			PlayerManager.updateSettings({ sfxVolume: value });
 		});
@@ -781,7 +765,6 @@ function setupSettingsControls() {
 		musicSlider.addEventListener('input', (e) => {
 			const value = e.target.value / 100;
 			AudioManager.setMusicVolume(value);
-			updateVolumeDisplay('musicVolumeValue', e.target.value);
 			// Save to current player's settings
 			PlayerManager.updateSettings({ musicVolume: value });
 		});
