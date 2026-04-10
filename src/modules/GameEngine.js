@@ -2659,20 +2659,25 @@ class GameEngineClass {
 		}
 
 		entries.push({
+			title: 'What Changed From Last Level',
+			description: this._describeLevelDelta(currentProfile, previousProfile, {
+				newColorNames,
+				newShapeCount: newShapes.length,
+				newSpecialNames,
+				isLevelOneModeIntro
+			}),
+			iconClass: 'speed'
+		});
+
+		entries.push({
 			title: 'Available Colors',
-			description: this._buildAvailabilityDescription(
-				`Colors in play: ${this._formatNaturalList(colorNames)}.`,
-				newColorNames.length > 0 ? `New this level: ${this._formatNaturalList(newColorNames)}.` : ''
-			),
+			description: newColorNames.length > 0 ? `New this level: ${this._formatNaturalList(newColorNames)}.` : '',
 			colorChips: currentProfile.colors
 		});
 
 		entries.push({
 			title: 'Available Pieces',
-			description: this._buildAvailabilityDescription(
-				`${currentProfile.shapes.length} piece layouts are in rotation.`,
-				newShapes.length > 0 ? `${newShapes.length} new layout${newShapes.length === 1 ? ' is' : 's are'} highlighted above.` : ''
-			),
+			description: newShapes.length > 0 ? `${newShapes.length} new layout${newShapes.length === 1 ? ' is' : 's are'} highlighted above.` : '',
 			pieceShapes: currentProfile.shapes,
 			newPieceShapes: newShapes,
 			iconClass: 'shape'
@@ -2684,17 +2689,6 @@ class GameEngineClass {
 				? specialDescriptions
 				: 'No special orbs are active yet. New specials unlock in later levels.',
 			specialTypes: currentProfile.specialTypes
-		});
-
-		entries.push({
-			title: 'What Changed From Last Level',
-			description: this._describeLevelDelta(currentProfile, previousProfile, {
-				newColorNames,
-				newShapeCount: newShapes.length,
-				newSpecialNames,
-				isLevelOneModeIntro
-			}),
-			iconClass: 'speed'
 		});
 
 		return entries.slice(0, 5);
@@ -2953,6 +2947,8 @@ class GameEngineClass {
 			descEl.className = 'level-changes-item-description';
 			descEl.textContent = entry.description;
 
+			card.appendChild(titleEl);
+
 			if (entry.colorChips && entry.colorChips.length > 0) {
 				const chipRow = document.createElement('div');
 				chipRow.className = 'level-changes-chip-row';
@@ -3000,8 +2996,7 @@ class GameEngineClass {
 				card.appendChild(specialRow);
 			}
 
-			card.appendChild(titleEl);
-			card.appendChild(descEl);
+			if (entry.description) card.appendChild(descEl);
 			list.appendChild(card);
 		});
 
