@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		
 		// Initialize the game engine
 		await GameEngine.initialize();
+		// Expose GameEngine globally for PWA update logic
+		window.GameEngine = GameEngine;
 		
 		// Initialize ad manager (non-intrusive, natural breaks only)
 		AdManager.initialize();

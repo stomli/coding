@@ -167,13 +167,18 @@ class PWAManagerClass {
 			// auto-reload — this is the most reliable way to ensure users get
 			// fresh assets on mobile PWA where the update banner can be missed.
 			let swControllerChanging = false;
-			navigator.serviceWorker.addEventListener('controllerchange', () => {
-				if (swControllerChanging) return; // guard against double-fire
-				swControllerChanging = true;
-				console.log('[PWA] Controller changed — reloading for new version');
-				EventEmitter.emit(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD);
-				window.location.reload();
-			});
+			   navigator.serviceWorker.addEventListener('controllerchange', () => {
+				   if (swControllerChanging) return; // guard against double-fire
+				   swControllerChanging = true;
+				   // Block reload if a game is in progress
+				   if (window.GameEngine && window.GameEngine.state === CONSTANTS.GAME_STATES.PLAYING) {
+					   alert('A new version is available, but the update will only apply after you finish or pause your current game.');
+					   return;
+				   }
+				   console.log('[PWA] Controller changed — reloading for new version');
+				   EventEmitter.emit(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD);
+				   window.location.reload();
+			   });
 
 		} catch (error) {
 			// SW registration failure is non-fatal — game still works, just no offline support
@@ -301,15 +306,20 @@ class PWAManagerClass {
 		const reloadBtn  = document.getElementById('pwaUpdateButton');
 		const dismissBtn = document.getElementById('pwaUpdateDismiss');
 
-		if (reloadBtn) {
-			reloadBtn.addEventListener('click', () => {
-				// Give the game a chance to persist any in-progress Zen save before
-				// the page is torn down. EventEmitter calls are synchronous and
-				// localStorage.setItem is synchronous, so no delay is needed.
-				EventEmitter.emit(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD);
-				window.location.reload();
-			});
-		}
+		   if (reloadBtn) {
+			   reloadBtn.addEventListener('click', () => {
+				   // Block reload if a game is in progress
+				   if (window.GameEngine && window.GameEngine.state === CONSTANTS.GAME_STATES.PLAYING) {
+					   alert('A new version is available, but the update will only apply after you finish or pause your current game.');
+					   return;
+				   }
+				   // Give the game a chance to persist any in-progress Zen save before
+				   // the page is torn down. EventEmitter calls are synchronous and
+				   // localStorage.setItem is synchronous, so no delay is needed.
+				   EventEmitter.emit(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD);
+				   window.location.reload();
+			   });
+		   }
 
 		if (dismissBtn) {
 			dismissBtn.addEventListener('click', () => {
