@@ -142,7 +142,8 @@ class AdManagerClass {
 		this.gameOverCount++;
 		const frequency = ConfigManager.get('monetization.ads.displayRules.interstitialFrequency', 3);
 
-		if (this.gameOverCount % frequency === 0) {
+		// On localhost, show on every game over so the skip-button flow is testable
+		if (this._isDev() || this.gameOverCount % frequency === 0) {
 			this.showInterstitial();
 		}
 	}
@@ -156,7 +157,8 @@ class AdManagerClass {
 		this.levelCompleteCount++;
 		const frequency = ConfigManager.get('monetization.ads.displayRules.levelAdFrequency', 5);
 
-		if (this.levelCompleteCount % frequency === 0) {
+		// On localhost, show on every level complete so the skip-button flow is testable
+		if (this._isDev() || this.levelCompleteCount % frequency === 0) {
 			this.showInterstitial();
 		}
 	}
@@ -172,16 +174,45 @@ class AdManagerClass {
 	}
 
 	/**
-	 * Check whether an interstitial can be shown based on timing rules
+	 * Returns true when running on a local development server.
+	 * Used to bypass frequency caps and cooldowns for easier testing.
+	 * @private
+	 * @returns {boolean}
+	 */
+	_isDev() {
+		const h = window.location.hostname;
+		return h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
+	}
+
+	/**
+	 * Check whether an interstitial can be shown based on timing rules.
+	 * On localhost the 5-minute cooldown is skipped so the overlay can
+	 * be reached and the skip-button flow tested immediately.
 	 * @returns {boolean}
 	 */
 	canShowInterstitial() {
 		if (!this.adsEnabled || this.isAdFree()) return false;
 
+		// Bypass cooldown on local dev so the overlay is easy to test
+		if (this._isDev()) return true;
+
 		const minInterval = ConfigManager.get('monetization.ads.displayRules.interstitialMinInterval', 300000);
 		const elapsed = Date.now() - this.lastInterstitialTime;
 
 		return elapsed >= minInterval;
+	}
+
+	/**
+	 * Force-show an interstitial immediately, bypassing all frequency and
+	 * timing guards. Useful for manual testing from the browser console:
+	 *   AdManager.forceShowInterstitial()
+	 * @returns {void}
+	 */
+	forceShowInterstitial() {
+		const skipDelay = ConfigManager.get('monetization.ads.displayRules.skipDelay', 5000);
+		this._createInterstitialOverlay(skipDelay);
+		this.lastInterstitialTime = Date.now();
+		EventEmitter.emit(CONSTANTS.EVENTS.AD_INTERSTITIAL_REQUESTED);
 	}
 
 	/**

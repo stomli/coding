@@ -139,15 +139,14 @@ body::after {
 	right: 15%;
 	width: 80px;
 	height: 80px;
-	background: radial-gradient(circle at 30% 30%, #fff 0%, #e8e8e8 100%);
-	border-radius: 50%;
-	box-shadow: 0 0 40px rgba(255, 255, 255, 0.4), 0 0 80px rgba(255, 255, 255, 0.2);
+	/* Phase shape is drawn directly on a <canvas> — no background/border-radius needed */
 	animation: moonGlow 6s ease-in-out infinite;
 }
 
 @keyframes moonGlow {
-	0%, 100% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.4), 0 0 80px rgba(255, 255, 255, 0.2); }
-	50% { box-shadow: 0 0 60px rgba(255, 255, 255, 0.6), 0 0 120px rgba(255, 255, 255, 0.3); }
+	/* Use filter:drop-shadow so the glow follows the canvas drawing, not the element box */
+	0%, 100% { filter: drop-shadow(0 0 6px  rgba(240, 240, 200, 0.45)); }
+	50%      { filter: drop-shadow(0 0 18px rgba(240, 240, 200, 0.8));  }
 }
 
 /* Stars */
@@ -2093,9 +2092,11 @@ body::after {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
-	padding: 1.5rem;
+	/* No justify-content: center — it clips button from bottom when content overflows.
+	   Instead the ad container flexes to fill space and skip button is absolute. */
+	padding: 1rem 1.5rem 5rem; /* bottom padding reserves space for the absolute skip button */
 	box-sizing: border-box;
+	overflow: hidden;
 }
 
 .interstitial-label {
@@ -2104,20 +2105,20 @@ body::after {
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
 	margin-bottom: 0.75rem;
+	flex-shrink: 0;
 }
 
 .interstitial-ad-container {
 	width: 100%;
 	max-width: 600px;
-	flex: 1;
-	max-height: 80vh;
+	flex: 1 1 auto;
+	min-height: 0; /* allows the browser to shrink below content size */
 	background: #222;
 	border-radius: 8px;
 	overflow: hidden;
 	display: flex;
 	align-items: stretch;
 	justify-content: center;
-	min-height: 250px;
 }
 
 .interstitial-ad-container .adsbygoogle {
@@ -2126,8 +2127,12 @@ body::after {
 	height: 100% !important;
 }
 
+/* Skip button is positioned absolutely so it is ALWAYS visible */
 .skip-ad-button {
-	margin-top: 1.25rem;
+	position: absolute;
+	bottom: 1.25rem;
+	left: 50%;
+	transform: translateX(-50%);
 	padding: 0.75rem 1.5rem;
 	font-size: 1rem;
 	background: var(--color-ad-accent);
@@ -2136,6 +2141,7 @@ body::after {
 	border-radius: 4px;
 	cursor: pointer;
 	font-weight: bold;
+	white-space: nowrap;
 	transition: opacity 0.2s;
 }
 

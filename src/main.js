@@ -54,6 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		
 		// Initialize ad manager (non-intrusive, natural breaks only)
 		AdManager.initialize();
+		// Expose globally so console can call AdManager.forceShowInterstitial()
+		window.AdManager = AdManager;
 		
 		// Initialize monetization (supporter button, license key activation)
 		MonetizationManager.initialize();
