@@ -93,6 +93,13 @@ class AnalyticsManager {
 		try {
 			this.enabled = true;
 			this.debug = options.debug || false;
+			this._buildVersion = options.buildVersion || null;
+
+			// Set build version as a persistent user property so every
+			// session is tagged and errors can be correlated to a release.
+			if (this._buildVersion) {
+				gtag('set', 'user_properties', { build_version: this._buildVersion });
+			}
 
 			// Disable GA4 enhanced measurement events that generate noise.
 			// scroll, click, outbound clicks etc. are meaningless for a game —
@@ -109,6 +116,8 @@ class AnalyticsManager {
 			if (this.debug) {
 				console.log('AnalyticsManager: Initialized with', measurementId);
 			}
+
+			this.trackGlobalErrors();
 		} catch (error) {
 			console.error('AnalyticsManager: Failed to initialize', error);
 		}
@@ -267,8 +276,87 @@ class AnalyticsManager {
 		this.track('Setting Changed', { setting, value });
 	}
 
+	trackGamePaused(trigger = 'manual') {
+		this.track('Game Paused', { trigger });
+	}
+
+	trackGameResumed(trigger = 'manual') {
+		this.track('Game Resumed', { trigger });
+	}
+
+	trackGameRestored(mode) {
+		this.track('Game Restored', { game_mode: mode });
+	}
+
 	trackError(errorType, message, context = {}) {
-		this.track('Error Occurred', { error_type: errorType, message, ...context });
+		this.track('Error Occurred', {
+			error_type: errorType,
+			message,
+			build_version: this._buildVersion ?? undefined,
+			...context
+		});
+	}
+
+	/**
+	 * Attach global handlers for uncaught exceptions and unhandled promise
+	 * rejections. Deduplicates bursts from the same source line within a
+	 * short window so one broken loop doesn't flood GA4.
+	 * Called automatically by init().
+	 */
+	trackGlobalErrors() {
+		if (!this.enabled) return;
+
+		// Track at most one identical error per 5 s to avoid quota flooding
+		const _seen = new Map();
+		const _shouldSend = (key) => {
+			const now = Date.now();
+			if (_seen.has(key) && now - _seen.get(key) < 5000) return false;
+			_seen.set(key, now);
+			return true;
+		};
+
+		let _inHandler = false;
+
+		window.addEventListener('error', (event) => {
+			if (_inHandler) return;
+			_inHandler = true;
+			try {
+				const key = `${event.filename}:${event.lineno}:${event.message}`;
+				if (_shouldSend(key)) {
+					this.trackError(
+						'uncaught_exception',
+						String(event.message).substring(0, 150),
+						{
+							source: event.filename ? String(event.filename).split('/').pop() : undefined,
+							line: event.lineno ?? undefined,
+							col: event.colno ?? undefined,
+						}
+					);
+				}
+			} finally {
+				_inHandler = false;
+			}
+		});
+
+		window.addEventListener('unhandledrejection', (event) => {
+			if (_inHandler) return;
+			_inHandler = true;
+			try {
+				const reason = event.reason;
+				const message = reason instanceof Error
+					? reason.message
+					: String(reason);
+				const key = `unhandledrejection:${message}`;
+				if (_shouldSend(key)) {
+					this.trackError(
+						'unhandled_rejection',
+						message.substring(0, 150)
+					);
+				}
+			} finally {
+				_inHandler = false;
+			}
+		});
 	}
 
 	/**

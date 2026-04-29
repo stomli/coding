@@ -332,8 +332,8 @@ class GameEngineClass {
 		// Restart
 		EventEmitter.on(CONSTANTS.EVENTS.RESTART, () => this.restart());
 		
-		// PWA update banner "Reload" clicked — persist Zen save before the page tears down
-		EventEmitter.on(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD, () => this.saveZenState());
+		// PWA update banner "Reload" clicked — persist saves before the page tears down
+		EventEmitter.on(CONSTANTS.EVENTS.PWA_BEFORE_RELOAD, () => { this.saveZenState(); this.savePuzzleState(); });
 		
 		// Cascade complete - show bonus floating text
 		EventEmitter.on(CONSTANTS.EVENTS.CASCADE_COMPLETE, (data) => {
@@ -627,8 +627,9 @@ class GameEngineClass {
 		this.pendingLevelChangesOverlay = false;
 		this._hideLevelChangesOverlay();
 		
-		// Clear any existing Zen save — starting fresh
+		// Clear any existing saves — starting fresh
 		this.clearZenState();
+		this.clearPuzzleState();
 		
 		// Set game mode in PieceFactory for mode-specific spawn rates
 		PieceFactory.setGameMode(this.gameMode);
@@ -1079,9 +1080,9 @@ class GameEngineClass {
 			}
 		}
 		
-		// Auto-save Zen state after each piece settles.  saveZenState() is a no-op
-		// for non-Zen modes, so calling it unconditionally here is safe.
+		// Auto-save after each piece settles. Both methods are no-ops for other modes.
 		this.saveZenState();
+		this.savePuzzleState();
 		
 		// Blocker flood failsafe: if too many blockers, force explosive on next interval
 		this._checkBlockerFailsafe();
@@ -1193,9 +1194,26 @@ class GameEngineClass {
 		match.positions.forEach(pos => {
 			matchedPositions.add(`${pos.row},${pos.col}`);
 		});
-	});	// Process special balls FIRST (priority order)
-	// 1. Process explosions
-	const explodedPositions = this.grid.processExplosions(matches);	
+	});	// Process special balls in priority order:
+	// 1. Painters fire FIRST — ensures a painter can't be silently destroyed by an
+	//    explosion in the same match before it gets a chance to paint its line.
+	const paintedPositions = this.grid.processPainters(matches);
+
+	console.log(`🎨 processPainters returned ${paintedPositions.length} painted positions`);
+
+	// If any painting happened, render the color changes and pause briefly so
+	// the player can see which orbs were repainted before the clear animation begins.
+	if (paintedPositions.length > 0) {
+		const paintingDuration = ConfigManager.get('animations.paintingDuration', 400);
+		if (paintingDuration > 0) {
+			this.render();
+			await this._delay(paintingDuration);
+		}
+	}
+
+	// 2. Process explosions (after painters, so a painter isn't destroyed first)
+	const explodedPositions = this.grid.processExplosions(matches);
+
 	// Count exploded balls NOT already in matches
 	let explodedNotInMatches = 0;
 	if (explodedPositions.length > 0) {
@@ -1260,11 +1278,6 @@ class GameEngineClass {
 		this.floatingTextManager.add(`${explodedPositions.length}`, centerX, centerY, 1500, '#FFD700');
 	}
 	
-	// 2. Process painters (paint lines before clearing)
-	const paintedPositions = this.grid.processPainters(matches);
-	
-	console.log(`🎨 processPainters returned ${paintedPositions.length} painted positions`);
-	
 	// Track positions of painters that triggered (they should always be cleared)
 	const painterPositions = new Set();
 	for (const match of matches) {
@@ -1318,9 +1331,8 @@ class GameEngineClass {
 				});
 			});
 			
-			// Process special balls in the new matches (but skip already-processed painters)
-			const iterationExplosions = this.grid.processExplosions(matchesToClear);
-			
+			// Process painters first (same reason as the pre-loop step: painters must
+			// fire before explosions so they aren't silently destroyed first)
 			// For painters, only process ones we haven't seen before
 			const newPainterMatches = matchesToClear.map(match => ({
 				...match,
@@ -1333,6 +1345,9 @@ class GameEngineClass {
 			})).filter(match => match.positions.length >= 3); // Keep matches with 3+ positions
 			
 			const iterationPaintings = this.grid.processPainters(newPainterMatches);
+
+			// Process explosions after painters (same priority rule)
+			const iterationExplosions = this.grid.processExplosions(matchesToClear);
 			
 			console.log(`💥 Iteration ${iterationCount}: ${iterationExplosions.length} explosions, ${iterationPaintings.length} paintings`);
 			
@@ -1775,8 +1790,11 @@ class GameEngineClass {
 				saveExitBtn.classList.toggle('hidden', this.gameMode !== 'ZEN');
 			}
 			
-			// Auto-save Zen state on every pause
+			// Auto-save on every pause
 			this.saveZenState();
+			this.savePuzzleState();
+
+			AnalyticsManager.trackGamePaused(document.hidden ? 'visibility' : 'manual');
 		}
 	}
 	
@@ -1790,8 +1808,8 @@ class GameEngineClass {
 		if (isPaused) {
 			this.state = CONSTANTS.GAME_STATES.PLAYING;
 			
-			// Resume level timer
-			LevelManager.startTimer();
+			// Resume level timer (preserves remaining time)
+			LevelManager.resumeTimer();
 			
 			// Hide pause overlay
 			const pauseOverlay = document.getElementById('pauseOverlay');
@@ -1804,6 +1822,8 @@ class GameEngineClass {
 			
 			// Restart game loop
 			this._gameLoop();
+
+			AnalyticsManager.trackGameResumed('manual');
 		}
 	}
 	
@@ -1812,8 +1832,9 @@ class GameEngineClass {
 	 * @returns {void}
 	 */
 	restart() {
-		// Clear Zen save — deliberate restart
+		// Clear saves — deliberate restart
 		this.clearZenState();
+		this.clearPuzzleState();
 		
 		// Cancel current game loop
 		if (this.animationFrameId) {
@@ -2029,6 +2050,193 @@ class GameEngineClass {
 			// Ignore
 		}
 	}
+
+	// ─── Puzzle persistence ───────────────────────────────────────────────────
+
+	/** @returns {string} localStorage key for this player's active Puzzle save */
+	_puzzleSaveKey() {
+		const player = PlayerManager.getCurrentPlayerData();
+		return `${CONSTANTS.STORAGE_KEYS.PUZZLE_SAVE_PREFIX}${player.name}`;
+	}
+
+	/**
+	 * Save current Puzzle game state to localStorage.
+	 * No-op when mode is not PUZZLE.
+	 */
+	savePuzzleState() {
+		if (this.gameMode !== 'PUZZLE') return;
+
+		const state = {
+			version: 1,
+			difficulty: this.difficulty,
+			level: this.level,
+			grid: this.grid.serialize(),
+			currentPiece: this._serializePiece(this.currentPiece),
+			nextPiece: this._serializePiece(this.nextPiece),
+			score: ScoreManager.score,
+			matchStreak: ScoreManager.matchStreak,
+			piecesDropped: PieceFactory.piecesDropped,
+			piecesSinceLastExplosive: PieceFactory.piecesSinceLastExplosive,
+			piecesUsed: PuzzleManager.piecesUsed,
+			rngState: PieceFactory.getRngState(),
+			dropInterval: this.dropInterval,
+			savedAt: Date.now()
+		};
+
+		try {
+			localStorage.setItem(this._puzzleSaveKey(), JSON.stringify(state));
+		} catch (e) {
+			console.warn('GameEngine: Failed to save Puzzle state', e);
+		}
+	}
+
+	/**
+	 * Check if a Puzzle save exists for the current player.
+	 * @returns {boolean}
+	 */
+	hasPuzzleSave() {
+		try {
+			return localStorage.getItem(this._puzzleSaveKey()) !== null;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Load and resume a saved Puzzle game.
+	 * @returns {boolean} True if load succeeded
+	 */
+	loadPuzzleState() {
+		let raw;
+		try {
+			raw = localStorage.getItem(this._puzzleSaveKey());
+		} catch (e) {
+			return false;
+		}
+		if (!raw) return false;
+
+		let state;
+		try {
+			state = JSON.parse(raw);
+		} catch (e) {
+			this.clearPuzzleState();
+			return false;
+		}
+
+		// Restore engine state
+		this.difficulty = state.difficulty;
+		this.level = state.level;
+		this.gameMode = 'PUZZLE';
+		this.modeConfig = CONSTANTS.GAME_MODE_CONFIG['PUZZLE'];
+		this.activeProgressionState = ConfigManager.getProgressionState('PUZZLE', this.difficulty, this.level);
+
+		PieceFactory.setGameMode('PUZZLE');
+		if (this.activeProgressionState) {
+			PieceFactory.setProgressionOverrides({
+				colors: this.activeProgressionState.colors,
+				shapes: this.activeProgressionState.pieces,
+				specialTypes: this.activeProgressionState.specials
+			});
+		} else {
+			PieceFactory.clearProgressionOverrides();
+		}
+
+		// Re-seed the RNG from the original seed, then restore its precise position
+		const seed = PuzzleManager.getSeed(this.level, this.difficulty);
+		PieceFactory.setSeed(seed);
+		if (state.rngState != null) {
+			PieceFactory.setRngState(state.rngState);
+		}
+
+		LevelManager.setLevel(this.level);
+		LevelManager.stopTimer();
+
+		// Restore PuzzleManager
+		PuzzleManager.initialize(this.level, this.difficulty);
+		PuzzleManager.piecesUsed = state.piecesUsed || 0;
+		PuzzleManager._emitUpdate();
+
+		// Clear and restore grid
+		this.grid.deserialize(state.grid);
+
+		// Restore pieces
+		this.currentPiece = this._deserializePiece(state.currentPiece);
+		this.nextPiece = this._deserializePiece(state.nextPiece);
+
+		// Restore score
+		ScoreManager.initialize(this.difficulty, this.level, 'PUZZLE');
+		ScoreManager.score = state.score;
+		ScoreManager.matchStreak = state.matchStreak || 0;
+
+		GoalManager.reset();
+		MissionManager.reset();
+		HintManager.initialize(this.difficulty);
+
+		// Restore PieceFactory counters
+		PieceFactory.piecesDropped = state.piecesDropped || 0;
+		PieceFactory.piecesSinceLastExplosive = state.piecesSinceLastExplosive || 0;
+
+		// Restore drop speed and modifiers
+		this.dropInterval = state.dropInterval || this.activeProgressionState?.dropIntervalMs || Math.max(200, 1000 - (this.difficulty * 150));
+		this.basedropInterval = this.dropInterval;
+		const modifiers = ConfigManager.getModifiers('PUZZLE', this.difficulty);
+		this.lockDelay = this.activeProgressionState?.lockDelayMs ?? modifiers.lockDelay;
+		ScoreManager.setDiagonalMultiplier(this.activeProgressionState?.diagonalScoreMultiplier ?? modifiers.diagonalScoreMultiplier);
+		PieceFactory.setPainterSpawnMultiplier(this.activeProgressionState?.painterSpawnMultiplier ?? modifiers.painterSpawnMultiplier);
+
+		// Reset timers
+		this.dropTimer = 0;
+		this.lockTimer = 0;
+		this.isLocking = false;
+		this.lastUpdateTime = performance.now();
+
+		// Update HUD
+		const modeDisplay = document.getElementById('modeDisplay');
+		if (modeDisplay) modeDisplay.textContent = 'Puzzle';
+		const difficultyDisplay = document.getElementById('difficultyDisplay');
+		if (difficultyDisplay) difficultyDisplay.textContent = this.difficulty;
+		const levelDisplay = document.getElementById('levelDisplay');
+		if (levelDisplay) levelDisplay.textContent = this.level;
+		const timerElement = document.querySelector('.hud-item.timer');
+		if (timerElement) timerElement.style.display = '';
+		const clockElement = document.querySelector('.hud-item.clock');
+		if (clockElement) clockElement.style.display = 'none';
+
+		this._updateAvailableColorsDisplay();
+
+		// Emit score to update HUD
+		const bestScore = PlayerManager.getLevelBestScore(this.difficulty, this.level, 'PUZZLE') || 0;
+		EventEmitter.emit(CONSTANTS.EVENTS.SCORE_UPDATE, {
+			score: ScoreManager.score,
+			bestScore,
+			points: 0,
+			matchStreak: ScoreManager.matchStreak
+		});
+
+		// Clear the save now that we've loaded it
+		this.clearPuzzleState();
+
+		AnalyticsManager.trackGameRestored('PUZZLE');
+
+		// Start playing
+		this.state = CONSTANTS.GAME_STATES.PLAYING;
+		StatisticsTracker.reset(this.level, PieceFactory.getAvailableColors(this.level));
+		this.render();
+		this._gameLoop();
+
+		return true;
+	}
+
+	/**
+	 * Clear saved Puzzle state for current player.
+	 */
+	clearPuzzleState() {
+		try {
+			localStorage.removeItem(this._puzzleSaveKey());
+		} catch (e) {
+			// Ignore
+		}
+	}
 	
 	/**
 	 * Save current Zen game and return to menu
@@ -2199,8 +2407,9 @@ class GameEngineClass {
 			this.renderer.canvas.classList.remove('canvas-warning', 'canvas-urgent');
 		}
 		
-		// Clear Zen save — game ended naturally
+		// Clear saves — game ended naturally
 		this.clearZenState();
+		this.clearPuzzleState();
 		
 		// In PUZZLE mode, breach is not a failure — grid full still counts as completion
 		const wasBreach = reason === 'breach';

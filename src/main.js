@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 		// Initialize analytics
 		if (ANALYTICS_CONFIG.enabled && ANALYTICS_CONFIG.measurementId) {
 			AnalyticsManager.init(ANALYTICS_CONFIG.measurementId, {
-				debug: ANALYTICS_CONFIG.debug
+				debug: ANALYTICS_CONFIG.debug,
+				buildVersion: ConfigManager.get('buildVersion') ?? null
 			});
 			AnalyticsManager.trackViewport();
 			AnalyticsManager.trackButtonClicks();
@@ -128,12 +129,10 @@ function setupVisibilityHandlers() {
 		}
 	});
 
-	// Persist Zen state on any page unload, regardless of current game state.
-	// saveZenState() is a no-op when the game mode is not ZEN, so this is safe
-	// to call unconditionally. The explicit PLAYING check below still handles
-	// pausing the loop so the animation frame is cancelled cleanly.
+	// Persist game state on any page unload. Both methods are no-ops for other modes.
 	window.addEventListener('beforeunload', () => {
 		GameEngine.saveZenState();
+		GameEngine.savePuzzleState();
 		if (GameEngine.state === CONSTANTS.GAME_STATES.PLAYING) {
 			GameEngine.pause();
 		}
@@ -214,8 +213,22 @@ function setupMenuListeners() {
 			await AudioManager.startMusic();
 			
 			showScreen('gameScreen');
-			AnalyticsManager.track('Zen Game Resumed');
+			AnalyticsManager.trackGameRestored('ZEN');
 			GameEngine.loadZenState();
+		});
+	}
+
+	// Continue saved Puzzle game
+	const continuePuzzleBtn = document.getElementById('continuePuzzleButton');
+	if (continuePuzzleBtn) {
+		continuePuzzleBtn.addEventListener('click', async () => {
+			AudioManager.initialize();
+			await AudioManager.resume();
+			AudioManager.playClick();
+			await AudioManager.startMusic();
+
+			showScreen('gameScreen');
+			GameEngine.loadPuzzleState();
 		});
 	}
 
@@ -244,6 +257,10 @@ function updateContinueButton() {
 	const continueBtn = document.getElementById('continueButton');
 	if (continueBtn) {
 		continueBtn.classList.toggle('hidden', !GameEngine.hasZenSave());
+	}
+	const continuePuzzleBtn = document.getElementById('continuePuzzleButton');
+	if (continuePuzzleBtn) {
+		continuePuzzleBtn.classList.toggle('hidden', !GameEngine.hasPuzzleSave());
 	}
 }
 

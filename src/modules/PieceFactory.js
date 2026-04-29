@@ -70,6 +70,27 @@ class PieceFactoryClass {
 	}
 
 	/**
+	 * Return the current internal state of the seeded RNG so it can be
+	 * snapshotted and later restored exactly via setRngState().
+	 * Returns null when no seeded RNG is active.
+	 * @returns {Number|null}
+	 */
+	getRngState() {
+		return this._rng ? this._rng._state : null;
+	}
+
+	/**
+	 * Restore the seeded RNG to a previously snapshotted state.
+	 * No-op if no seeded RNG is active.
+	 * @param {Number} state
+	 */
+	setRngState(state) {
+		if (this._rng && state != null) {
+			this._rng._state = state;
+		}
+	}
+
+	/**
 	 * Internal random int — delegates to seeded RNG when set.
 	 * @param {Number} min
 	 * @param {Number} max

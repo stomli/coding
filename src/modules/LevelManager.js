@@ -51,6 +51,13 @@ class LevelManagerClass {
 	}
 
 	/**
+	 * Resume level timer from where it was stopped (preserves elapsed time)
+	 */
+	resumeTimer() {
+		this.timerRunning = true;
+	}
+
+	/**
 	 * Update timer (call each frame)
 	 * @param {Number} deltaTime - Time elapsed since last frame in seconds
 	 * @returns {Boolean} True if time is up

@@ -237,6 +237,7 @@ const CONSTANTS = {
 		UNLOCKED_LEVELS: 'ballDropGame_unlockedLevels',
 		SETTINGS: 'ballDropGame_settings',
 		ZEN_SAVE_PREFIX: 'orbfall_zen_',
+		PUZZLE_SAVE_PREFIX: 'orbfall_puzzle_',
 		PLAYERS: 'ballMatcher_players',
 		CURRENT_PLAYER: 'ballMatcher_currentPlayer',
 		LEVEL_UNLOCKS: 'ballDrop_unlockedLevels',

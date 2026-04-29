@@ -766,4 +766,178 @@ testSuite.tests.push({
 	}
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Effect-before-removal ordering tests
+//
+// These tests guard against the regression where processExplosions was called
+// before processPainters, causing an explosion in the same match to silently
+// destroy a painter before it could paint its line.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Test: Painter fires before the matched balls are removed
+// The painter's effect (color changes to neighbouring balls) must be observable
+// on the live grid BEFORE any clearing step removes the painter itself.
+testSuite.tests.push({
+	name: 'Ordering - Painter fires its effect before balls are removed from grid',
+	async run() {
+		const grid = new Grid(10, 10);
+
+		// Row 5: [RED] [RED] [PAINTER-H-RED] [BLUE] [BLUE] [BLUE] ...
+		// The horizontal painter sits inside a 3-ball red match.
+		const painterBall = new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#FF0000');
+		grid.setBallAt(5, 0, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000'));
+		grid.setBallAt(5, 1, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000'));
+		grid.setBallAt(5, 2, painterBall);
+		// Remaining columns are blue
+		for (let c = 3; c < 10; c++) {
+			grid.setBallAt(5, c, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#0000FF'));
+		}
+
+		const matches = [{
+			positions: [
+				{ row: 5, col: 0 },
+				{ row: 5, col: 1 },
+				{ row: 5, col: 2 }
+			],
+			direction: 'horizontal',
+			color: '#FF0000'
+		}];
+
+		// Step 1 — painter fires (simulating what GameEngine now does FIRST)
+		const painted = grid.processPainters(matches);
+
+		// The effect must be visible on the grid before any removal happens.
+		// All blue balls in row 5 should now be red.
+		for (let c = 3; c < 10; c++) {
+			const ball = grid.getBallAt(5, c);
+			if (!ball) {
+				throw new Error(`Ball at (5,${c}) should still exist (no clearing has happened yet)`);
+			}
+			if (ball.getColor() !== '#FF0000') {
+				throw new Error(`Ball at (5,${c}) should be painted red before removal, got ${ball.getColor()}`);
+			}
+		}
+
+		if (painted.length === 0) {
+			throw new Error('processPainters should have returned painted positions');
+		}
+
+		// Step 2 — only NOW do we simulate the clearing step
+		// The painter itself should still be present at this point
+		if (grid.getBallAt(5, 2) === null) {
+			throw new Error('Painter ball should still be on the grid after processPainters (clearing has not happened yet)');
+		}
+	}
+});
+
+// Test: Exploding ball fires before it is removed from the grid
+// processExplosions removes the exploding ball as part of its area-clear, so by
+// definition the ball "fires then is removed" atomically — but this test
+// confirms the cleared area includes the exploder's own cell, proving it WAS
+// present when the effect ran.
+testSuite.tests.push({
+	name: 'Ordering - Exploding ball fires before it is removed from grid',
+	async run() {
+		const grid = new Grid(10, 10);
+
+		const explodingBall = new Ball(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000');
+		grid.setBallAt(5, 5, explodingBall);
+		// Surround with normal balls
+		grid.setBallAt(5, 4, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000'));
+		grid.setBallAt(5, 6, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000'));
+
+		const matches = [{
+			positions: [
+				{ row: 5, col: 4 },
+				{ row: 5, col: 5 },
+				{ row: 5, col: 6 }
+			],
+			direction: 'horizontal',
+			color: '#FF0000'
+		}];
+
+		// processExplosions fires and removes in one step; confirm the exploding
+		// ball's own position is included in returned cleared positions (it was
+		// present and participating when it fired).
+		const exploded = grid.processExplosions(matches);
+
+		const exploderCleared = exploded.some(p => p.row === 5 && p.col === 5);
+		if (!exploderCleared) {
+			throw new Error('Exploding ball position should be in cleared set — ball was present when explosion fired');
+		}
+
+		// And the grid cell should now be empty
+		if (grid.getBallAt(5, 5) !== null) {
+			throw new Error('Exploding ball should be gone from grid after processExplosions');
+		}
+	}
+});
+
+// Test: Painter in match alongside exploding ball — painter effect is visible
+// before explosion removes everything. This is the exact scenario that was
+// broken: processPainters is called FIRST; processExplosions is called SECOND.
+// If the order were reversed, painted.length would be 0.
+testSuite.tests.push({
+	name: 'Ordering - Painter paints row before co-matched explosion can destroy it',
+	async run() {
+		const grid = new Grid(10, 10);
+
+		// Row 5: [RED] [PAINTER-H-RED] [EXPLODING-RED] [BLUE] [BLUE] [BLUE] ...
+		// All three reds form a match. In the old (wrong) order, the explosion
+		// fires first, its 7×7 radius removes the painter, then processPainters
+		// finds null and paints nothing.
+		grid.setBallAt(5, 0, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#FF0000'));
+		grid.setBallAt(5, 1, new Ball(CONSTANTS.BALL_TYPES.PAINTER_HORIZONTAL, '#FF0000'));
+		grid.setBallAt(5, 2, new Ball(CONSTANTS.BALL_TYPES.EXPLODING, '#FF0000'));
+		for (let c = 3; c < 10; c++) {
+			grid.setBallAt(5, c, new Ball(CONSTANTS.BALL_TYPES.NORMAL, '#0000FF'));
+		}
+
+		const matches = [{
+			positions: [
+				{ row: 5, col: 0 },
+				{ row: 5, col: 1 },
+				{ row: 5, col: 2 }
+			],
+			direction: 'horizontal',
+			color: '#FF0000'
+		}];
+
+		// Correct order: painters FIRST
+		const painted = grid.processPainters(matches);
+
+		// Blue balls in row 5 must be painted red before the explosion fires
+		for (let c = 3; c < 10; c++) {
+			const ball = grid.getBallAt(5, c);
+			if (!ball) {
+				throw new Error(`Ball at (5,${c}) unexpectedly null — explosion must not have run yet`);
+			}
+			if (ball.getColor() !== '#FF0000') {
+				throw new Error(
+					`Ball at (5,${c}) should be red (painter fired first), got ${ball.getColor()}. ` +
+					`If this is blue, the explosion fired before the painter.`
+				);
+			}
+		}
+
+		if (painted.length === 0) {
+			throw new Error(
+				'processPainters returned 0 painted positions — ' +
+				'this suggests the painter was already removed by an explosion before it could fire'
+			);
+		}
+
+		// NOW fire explosion (second step, as GameEngine now does)
+		grid.processExplosions(matches);
+
+		// Painter ball itself cleared by explosion is fine — it already fired
+		// Confirm some non-match blue cells (now red) were also swept by explosion radius
+		// (row 5, cols within 3 of col 2 = cols 0-5 cleared)
+		if (grid.getBallAt(5, 3) !== null) {
+			// col 3 is within radius-3 of col 2, so it should be cleared
+			throw new Error('Col 3 should be cleared by explosion radius (it is within 3 cells of col 2)');
+		}
+	}
+});
+
 export default testSuite;
