@@ -1,5 +1,5 @@
 {
-	"buildVersion": "orbfall-v26.0411.0156",
+	"buildVersion": "orbfall-v26.0428.0176",
 	"game": {
 		"gridRows": 22,
 		"gridCols": 15,
@@ -1146,6 +1146,10 @@
 				"interstitialMinInterval": 300000,
 				"skipDelay": 5000
 			}
+		},
+		"houseAds": {
+			"enabled": true,
+			"onlyHouseAds": true
 		},
 		"lemonsqueezy": {
 			"enabled": true,

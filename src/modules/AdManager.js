@@ -26,6 +26,7 @@ import { EventEmitter } from '../utils/EventEmitter.js';
 import { CONSTANTS } from '../utils/Constants.js';
 import { ConfigManager } from './ConfigManager.js';
 import { SubscriptionSet } from '../utils/SubscriptionSet.js';
+import { HouseAdManager } from './HouseAdManager.js';
 
 /**
  * @typedef {Object} AdDisplayRules
@@ -80,7 +81,12 @@ class AdManagerClass {
 			return;
 		}
 
-		this.loadAdScript();
+		// House-ads-only mode: skip AdSense script but still wire up event
+		// listeners so frequency caps and cooldowns function normally.
+		const houseOnly = ConfigManager.get('monetization.houseAds.onlyHouseAds', false);
+		if (!houseOnly) {
+			this.loadAdScript();
+		}
 		this._setupEventListeners();
 		this.initialized = true;
 	}
@@ -142,8 +148,7 @@ class AdManagerClass {
 		this.gameOverCount++;
 		const frequency = ConfigManager.get('monetization.ads.displayRules.interstitialFrequency', 3);
 
-		// On localhost, show on every game over so the skip-button flow is testable
-		if (this._isDev() || this.gameOverCount % frequency === 0) {
+		if (this.gameOverCount % frequency === 0) {
 			this.showInterstitial();
 		}
 	}
@@ -157,8 +162,7 @@ class AdManagerClass {
 		this.levelCompleteCount++;
 		const frequency = ConfigManager.get('monetization.ads.displayRules.levelAdFrequency', 5);
 
-		// On localhost, show on every level complete so the skip-button flow is testable
-		if (this._isDev() || this.levelCompleteCount % frequency === 0) {
+		if (this.levelCompleteCount % frequency === 0) {
 			this.showInterstitial();
 		}
 	}
@@ -231,6 +235,21 @@ class AdManagerClass {
 	}
 
 	/**
+	 * Returns true when a house ad should be shown instead of the configured
+	 * ad provider. This is triggered when the device is offline, the provider
+	 * is explicitly set to 'house', or the houseAdsOnly flag is enabled.
+	 * @private
+	 * @returns {boolean}
+	 */
+	_shouldUseHouseAd() {
+		if (!navigator.onLine) return true;
+		const provider = ConfigManager.get('monetization.ads.provider', 'adsense');
+		if (provider === 'house') return true;
+		if (ConfigManager.get('monetization.houseAds.onlyHouseAds', false)) return true;
+		return false;
+	}
+
+	/**
 	 * Create and display the interstitial overlay DOM element
 	 * @param {number} skipDelay - Milliseconds before skip is enabled
 	 * @private
@@ -241,10 +260,12 @@ class AdManagerClass {
 		overlay.id = 'interstitial-overlay';
 		overlay.className = 'interstitial-overlay';
 
+		const useHouseAd = this._shouldUseHouseAd();
+
 		// Ad label (transparency per constitution)
 		const label = document.createElement('div');
 		label.className = 'interstitial-label';
-		label.textContent = 'Advertisement';
+		label.textContent = useHouseAd ? 'Brought to you by' : 'Advertisement';
 		overlay.appendChild(label);
 
 		// Ad container
@@ -253,9 +274,11 @@ class AdManagerClass {
 
 		const adSenseId = ConfigManager.get('monetization.ads.adSenseId', '');
 		const slotId = ConfigManager.get('monetization.ads.slotIds.interstitial', '');
+		const showAdSense = !useHouseAd && adSenseId && slotId && slotId !== 'XXXXXXXXXX';
 
-		const showAd = adSenseId && slotId && slotId !== 'XXXXXXXXXX';
-		if (showAd) {
+		if (useHouseAd) {
+			adContainer.appendChild(HouseAdManager.renderAdElement());
+		} else if (showAdSense) {
 			const ins = document.createElement('ins');
 			ins.className = 'adsbygoogle';
 			ins.style.display = 'block';
@@ -271,7 +294,10 @@ class AdManagerClass {
 
 		overlay.appendChild(adContainer);
 
-		// Skip button with countdown
+		// Emit tracking event so AnalyticsManager can record the impression
+		const adType = useHouseAd ? 'house' : 'adsense';
+		const adId = useHouseAd ? (adContainer.querySelector('[data-house-ad-id]')?.dataset?.houseAdId ?? 'house') : 'adsense';
+		EventEmitter.emit(CONSTANTS.EVENTS.AD_SHOWN, { type: adType, provider: adType, adId });
 		const skipButton = document.createElement('button');
 		skipButton.className = 'skip-ad-button';
 		skipButton.disabled = true;
@@ -303,7 +329,7 @@ class AdManagerClass {
 
 		// push() must be called AFTER the <ins> is in the DOM so AdSense can
 		// measure the container and fire the ad request.
-		if (showAd) {
+		if (showAdSense) {
 			try {
 				(window.adsbygoogle = window.adsbygoogle || []).push({});
 			} catch (_e) {

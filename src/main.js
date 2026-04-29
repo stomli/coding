@@ -57,6 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 		AdManager.initialize();
 		// Expose globally so console can call AdManager.forceShowInterstitial()
 		window.AdManager = AdManager;
+
+		// Track ad impressions
+		EventEmitter.on(CONSTANTS.EVENTS.AD_SHOWN, ({ type, provider, adId } = {}) => {
+			AnalyticsManager.track('Ad Shown', { ad_type: type, ad_provider: provider, ad_id: adId });
+		});
 		
 		// Initialize monetization (supporter button, license key activation)
 		MonetizationManager.initialize();

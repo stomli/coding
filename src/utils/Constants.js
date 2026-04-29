@@ -190,6 +190,7 @@ const CONSTANTS = {
 		PAUSE: 'pauseEvent',
 		RESTART: 'restartEvent',
 		AD_INTERSTITIAL_REQUESTED: 'adInterstitialRequestedEvent',
+		AD_SHOWN: 'adShownEvent',
 		AD_FREE_ACTIVATED: 'adFreeActivatedEvent',
 		PWA_INSTALLED: 'pwaInstalledEvent',
 		PWA_ONLINE: 'pwaOnlineEvent',
