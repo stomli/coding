@@ -81,6 +81,9 @@ const CORE_ASSETS = [
 	'/src/img/icon-512.png',
 	'/src/img/icon-512-maskable.png',
 	'/src/img/Logotrans.png',
+	'/src/img/house-ads/gusto4tech-logo-sm.png',
+	'/src/img/house-ads/thecomicsplace-logo.png',
+	'/src/img/house-ads/venturemechanics-logo.png',
 ];
 
 /**
