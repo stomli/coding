@@ -624,6 +624,14 @@ body::after {
 	margin-right: auto;
 }
 
+@media (min-width: 600px) {
+	.game-logo {
+		width: min(82%, 480px);
+		max-width: 480px;
+		max-height: min(38vh, 380px);
+	}
+}
+
 @media (min-width: 1024px) {
 	.menu-container {
 		max-width: 700px;
