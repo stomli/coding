@@ -195,82 +195,112 @@ class WeatherBackgroundClass {
 	}
 	
 	/**
-	 * Add moon element with current phase
+	 * Add moon element with current phase, drawn on a <canvas> using the
+	 * correct terminator-ellipse geometry for all 8 phases.
 	 */
 	addMoon(container) {
-		const moon = document.createElement('div');
-		moon.className = 'weather-moon';
-		
-		// Calculate moon phase using a known reference new moon (Jan 6, 2000 18:14 UTC)
-		// and the mean synodic period of 29.53058867 days.
+		const SIZE   = 80;  // canvas pixels — matches CSS width/height
+		const MOON_R = 30;  // moon disc radius (leaves 10 px margin for glow)
+		const cx = SIZE / 2;
+		const cy = SIZE / 2;
+
+		const canvas = document.createElement('canvas');
+		canvas.width  = SIZE;
+		canvas.height = SIZE;
+		canvas.className = 'weather-moon';
+
+		// ── Phase calculation ──────────────────────────────────────────────
 		const KNOWN_NEW_MOON = Date.UTC(2000, 0, 6, 18, 14, 0);
-		const SYNODIC_DAYS = 29.53058867;
-		const elapsed = (Date.now() - KNOWN_NEW_MOON) / (1000 * 60 * 60 * 24);
+		const SYNODIC_DAYS   = 29.53058867;
+		const elapsed  = (Date.now() - KNOWN_NEW_MOON) / (1000 * 60 * 60 * 24);
 		const cyclePos = ((elapsed % SYNODIC_DAYS) + SYNODIC_DAYS) % SYNODIC_DAYS;
-		const phase = Math.floor((cyclePos / SYNODIC_DAYS) * 8); // 0-7 phases
-		moon.setAttribute('data-phase', phase);
+		const frac  = cyclePos / SYNODIC_DAYS; // 0 = new moon, 0.5 = full moon
+		const angle = frac * 2 * Math.PI;
+		const illum = (1 - Math.cos(angle)) / 2; // 0 = new, 1 = full
+		canvas.setAttribute('data-phase', Math.floor(frac * 8));
 
-		// Apply phase shadow overlay using a pseudo-element trick via inline style.
-		// We use a dark inset box-shadow on a ::before overlay to mask the unlit portion.
-		// Phases: 0=new, 1=waxing crescent, 2=first quarter, 3=waxing gibbous,
-		//         4=full,  5=waning gibbous,  6=last quarter,  7=waning crescent
-		//
-		// Strategy: place a dark overlay circle whose horizontal offset represents
-		// how much of the moon is in shadow.  Negative X = shadow from left (waning),
-		// positive X = shadow from right (waxing).
-		//
-		// moonRadius = 40px (half of 80px).  The shadow circle matches that size.
-		// offset range: -80px (fully lit from right) to +80px (fully lit from left).
-		const MOON_R = 40; // px — half of the 80px element
-		const applyMoonPhase = (el, p) => {
-			// Fraction of cycle: 0 = new moon, 0.5 = full moon
-			const frac = cyclePos / SYNODIC_DAYS; // 0..1
-			const angle = frac * 2 * Math.PI; // radians, 0 = new, π = full
+		// ── Rendering ─────────────────────────────────────────────────────
+		const ctx = canvas.getContext('2d');
 
-			// Illumination fraction (0 = new, 1 = full)
-			const illum = (1 - Math.cos(angle)) / 2;
+		if (illum < 0.02) {
+			// New moon — barely visible atmosphere ring
+			ctx.beginPath();
+			ctx.arc(cx, cy, MOON_R, 0, Math.PI * 2);
+			ctx.fillStyle = 'rgba(80,90,120,0.2)';
+			ctx.fill();
+			container.appendChild(canvas);
+			return;
+		}
 
-			if (illum < 0.02) {
-				// New moon — nearly invisible
-				el.style.opacity = '0.08';
-				el.style.boxShadow = 'none';
-				return;
-			}
-			if (illum > 0.98) {
-				// Full moon — no overlay needed, default CSS applies
-				el.style.opacity = '1';
-				return;
-			}
+		// Dark disc base
+		ctx.beginPath();
+		ctx.arc(cx, cy, MOON_R, 0, Math.PI * 2);
+		ctx.fillStyle = '#0d1220';
+		ctx.fill();
 
-			// Amount of horizontal shift for the shadow disc:
-			// Waxing (frac < 0.5): shadow covers left side → positive offsetX
-			// Waning (frac > 0.5): shadow covers right side → negative offsetX
-			// At quarter (frac=0.25 / 0.75) shadow edge sits at centre (offset = 0).
-			// At new moon (frac→0) shadow covers entire disc (offset = MOON_R).
-			// At full moon (frac→0.5) shadow is gone (offset = -MOON_R).
-			let offsetX;
-			const halfCycle = frac < 0.5;
-			if (halfCycle) {
-				// Waxing: 0→0.5 maps offsetX from +MOON_R → -MOON_R
-				offsetX = MOON_R - frac * 4 * MOON_R;
+		// ── Terminator geometry ───────────────────────────────────────────
+		// terminatorX is the x-radius of the terminator ellipse:
+		//   +MOON_R at new moon  (thin crescent visible)
+		//       0  at quarter    (terminator is a straight vertical line)
+		//   -MOON_R at full moon  (entire disc is lit)
+		// Sign change at the quarter phases drives crescent ↔ gibbous.
+		const terminatorX = MOON_R * Math.cos(angle);
+		const isWaxing    = frac < 0.5; // light on right for waxing, left for waning
+
+		// Trace the lit-area path:
+		//   - Waxing: right semicircle (CW) + terminator ellipse bottom→top
+		//   - Waning: left  semicircle (CCW) + terminator ellipse bottom→top
+		// Crescent  (terminatorX ≥ 0): ellipse on the lit side  → CW(waxing) / CCW(waning)
+		// Gibbous   (terminatorX < 0): ellipse on the dark side → CCW(waxing) / CW(waning)
+		const absT = Math.max(Math.abs(terminatorX), 0.01); // guard against degenerate 0-radius
+
+		const traceLitPath = () => {
+			if (isWaxing) {
+				ctx.arc(cx, cy, MOON_R, -Math.PI / 2, Math.PI / 2, false); // right semicircle CW
+				if (terminatorX >= 0) {
+					// Crescent: terminator CW (from bottom through right side of ellipse to top)
+					ctx.ellipse(cx, cy, absT, MOON_R, 0, Math.PI / 2, -Math.PI / 2, false);
+				} else {
+					// Gibbous: terminator CCW (from bottom through left side of ellipse to top)
+					ctx.ellipse(cx, cy, absT, MOON_R, 0, Math.PI / 2, -Math.PI / 2, true);
+				}
 			} else {
-				// Waning: 0.5→1 maps offsetX from -MOON_R → +MOON_R
-				offsetX = -MOON_R + (frac - 0.5) * 4 * MOON_R;
+				ctx.arc(cx, cy, MOON_R, -Math.PI / 2, Math.PI / 2, true); // left semicircle CCW
+				if (terminatorX <= 0) {
+					// Gibbous: terminator CW
+					ctx.ellipse(cx, cy, absT, MOON_R, 0, Math.PI / 2, -Math.PI / 2, false);
+				} else {
+					// Crescent: terminator CCW
+					ctx.ellipse(cx, cy, absT, MOON_R, 0, Math.PI / 2, -Math.PI / 2, true);
+				}
 			}
-
-			// Dark overlay via an inset box-shadow with spread matching the disc.
-			// We wrap the moon in a container that clips overflow so the shadow
-			// doesn't bleed outside the circle.
-			el.style.overflow = 'hidden';
-			// Inner shadow trick: a large inset shadow shifted horizontally
-			const shadowColor = 'rgba(10, 15, 40, 0.92)';
-			const spread = MOON_R; // covers half the disc at quarter phase
-			el.style.boxShadow = `inset ${offsetX}px 0 0 ${spread}px ${shadowColor}, 0 0 40px rgba(255,255,255,0.4), 0 0 80px rgba(255,255,255,0.2)`;
 		};
 
-		applyMoonPhase(moon, phase);
-		
-		container.appendChild(moon);
+		// Fill the lit area
+		ctx.beginPath();
+		traceLitPath();
+		ctx.closePath();
+		ctx.fillStyle = '#f0efdf';
+		ctx.fill();
+
+		// Sphere shading gradient clipped to the lit area
+		ctx.save();
+		ctx.beginPath();
+		traceLitPath();
+		ctx.closePath();
+		ctx.clip();
+		const shading = ctx.createRadialGradient(
+			cx - MOON_R * 0.3, cy - MOON_R * 0.3, 0,
+			cx, cy, MOON_R
+		);
+		shading.addColorStop(0,   'rgba(255,255,255,0.28)');
+		shading.addColorStop(0.5, 'rgba(255,255,255,0)');
+		shading.addColorStop(1,   'rgba(0,0,0,0.22)');
+		ctx.fillStyle = shading;
+		ctx.fillRect(0, 0, SIZE, SIZE);
+		ctx.restore();
+
+		container.appendChild(canvas);
 	}
 	
 	/**
