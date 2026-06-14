@@ -537,11 +537,13 @@ body::after {
    Menu Screen
    ============================================ */
 .menu-container {
+	width: 100%;
 	text-align: center;
 	padding: 0.5rem;
 	max-height: 100vh;
 	overflow-y: auto;
 	margin: 0 auto;
+	box-sizing: border-box;
 }
 
 .game-logo {
@@ -584,33 +586,76 @@ body::after {
 	color: var(--color-text-muted);
 }
 
-/* Difficulty Selector */
-.difficulty-buttons {
+/* ── Horizontal-Scroll Pickers (Difficulty / Mode / Level) ── */
+.picker-header {
 	display: flex;
-	gap: 0.75rem;
-	justify-content: center;
-	flex-wrap: wrap;
-	margin-bottom: 0.5rem;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.5rem;
 }
 
-.difficulty-btn {
+.picker-header .setup-label {
+	margin: 0.25rem 0 0.15rem;
+}
+
+.info-btn {
+	flex-shrink: 0;
+	width: 1.4rem;
+	height: 1.4rem;
+	padding: 0;
+	border-radius: 50%;
+	border: 2px solid var(--color-border);
+	background: linear-gradient(135deg, var(--color-surface), var(--color-surface-mid));
+	color: #ffffff;
+	font-size: 0.75rem;
+	font-weight: bold;
+	line-height: 1;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.3s ease;
+	margin-bottom: 0.2rem;
+}
+
+.info-btn:hover {
+	border-color: var(--color-game-green);
+	box-shadow: 0 0 12px rgba(var(--color-game-green-rgb), 0.3);
+}
+
+.picker-row {
+	display: flex;
+	gap: 0.6rem;
+	overflow-x: auto;
+	scroll-snap-type: x proximity;
+	-webkit-overflow-scrolling: touch;
+	padding: 0.2rem 0.1rem 0.6rem;
+	margin-bottom: 0.25rem;
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-game-green) transparent;
+}
+
+.picker-row > button {
+	flex-shrink: 0;
+	scroll-snap-align: start;
 	padding: 0.4rem 0.9rem;
 	font-size: 0.85rem;
 	border: 2px solid var(--color-border);
 	background: linear-gradient(135deg, var(--color-surface), var(--color-surface-mid));
 	color: #ffffff;
 	cursor: pointer;
-	transition: all 0.3s ease;
 	border-radius: 5px;
+	transition: all 0.3s ease;
+	white-space: nowrap;
 }
 
-.difficulty-btn:hover {
+.picker-row > button:hover:not(.locked) {
 	background: linear-gradient(135deg, var(--color-surface-hover), var(--color-surface-hover-dark));
 	border-color: var(--color-game-green);
 	box-shadow: 0 0 15px rgba(var(--color-game-green-rgb), 0.3);
 }
 
-.difficulty-btn.selected {
+.picker-row > button.selected {
 	background: linear-gradient(135deg, var(--color-game-green), var(--color-game-green-dark));
 	color: var(--color-surface-dark);
 	border-color: var(--color-game-green);
@@ -619,6 +664,8 @@ body::after {
 
 /* Game Setup */
 .game-setup {
+	width: 100%;
+	box-sizing: border-box;
 	margin-bottom: 0.5rem;
 	max-width: 500px;
 	margin-left: auto;
@@ -656,65 +703,18 @@ body::after {
 	letter-spacing: 0.1em;
 	color: #ffffff;
 	margin: 0.25rem 0 0.15rem;
+	text-align: left;
 }
 
-.mode-buttons {
-	display: flex;
-	gap: 0.75rem;
-	justify-content: center;
-	flex-wrap: wrap;
-	margin-bottom: 0.5rem;
-}
-
-.mode-btn {
-	padding: 0.4rem 0.9rem;
-	font-size: 0.85rem;
-	border: 2px solid var(--color-border);
-	background: linear-gradient(135deg, var(--color-surface), var(--color-surface-mid));
-	color: #ffffff;
-	cursor: pointer;
-	border-radius: 5px;
-	transition: all 0.3s ease;
-}
-
-.mode-btn:hover {
-	background: linear-gradient(135deg, var(--color-surface-hover), var(--color-surface-hover-dark));
-	border-color: var(--color-game-green);
-	box-shadow: 0 0 15px rgba(var(--color-game-green-rgb), 0.3);
-	transform: translateY(-2px);
-}
-
-.mode-btn.selected {
-	background: linear-gradient(135deg, var(--color-game-green), var(--color-game-green-dark));
-	color: var(--color-surface-dark);
-	border-color: var(--color-game-green);
-	box-shadow: 0 0 20px rgba(var(--color-game-green-rgb), 0.5);
-}
-
-/* Level Grid */
-.level-grid {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 0.5rem;
-	width: 100%;
-	margin: 0 auto 0.5rem;
-}
-
+/* Level Picker */
 .level-btn {
 	padding: 0;
-	font-size: 0.85rem;
 	width: 3.2rem;
 	height: 2.1rem;
 	box-sizing: border-box;
 	position: relative;
 	text-align: center;
-	border: 2px solid var(--color-border);
-	background: linear-gradient(135deg, var(--color-surface), var(--color-surface-mid));
 	color: var(--color-game-green);
-	cursor: pointer;
-	transition: all 0.3s ease;
-	border-radius: 5px;
 }
 
 .level-btn .level-number {
@@ -738,19 +738,6 @@ body::after {
 	border-color: #333333;
 	opacity: 0.5;
 	background: linear-gradient(135deg, #2a2a2e, #1a1a28);
-}
-
-.level-btn:not(.locked):hover {
-	background: linear-gradient(135deg, var(--color-surface-hover), var(--color-surface-hover-dark));
-	border-color: var(--color-game-green);
-	box-shadow: 0 0 15px rgba(var(--color-game-green-rgb), 0.3);
-}
-
-.level-btn.selected {
-	background: linear-gradient(135deg, var(--color-game-green), var(--color-game-green-dark));
-	color: var(--color-black);
-	border-color: var(--color-game-green);
-	box-shadow: 0 0 20px rgba(var(--color-game-green-rgb), 0.6);
 }
 
 .level-btn.completed {
@@ -777,6 +764,11 @@ body::after {
 	gap: 0.75rem;
 	justify-content: center;
 	margin-bottom: 1rem;
+}
+
+.menu-actions .btn-primary,
+.menu-actions .btn-secondary {
+	padding: 0.405rem 0.972rem;
 }
 
 .menu-legal {
@@ -1418,6 +1410,35 @@ body::after {
 	font-style: italic;
 }
 
+/* Difficulty / Mode Info Popup */
+.info-popup-content {
+	width: min(480px, calc(100vw - 2rem));
+	max-width: 480px;
+	height: 80vh;
+	display: flex;
+	flex-direction: column;
+	text-align: left;
+}
+
+.info-popup-content h2 {
+	font-size: 1.875rem;
+}
+
+.info-popup-list {
+	display: grid;
+	gap: 0.6rem;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	margin-bottom: 1rem;
+	padding-right: 0.25rem;
+}
+
+.info-popup-item.current {
+	border-color: var(--color-game-green);
+	box-shadow: 0 0 14px rgba(var(--color-game-green-rgb), 0.25);
+}
+
 .level-changes-content {
 	width: min(520px, calc(100vw - 2rem));
 	min-width: 380px;
@@ -1857,33 +1878,25 @@ body::after {
 		max-height: min(34vh, 340px);
 	}
 	
-	.difficulty-buttons {
-		gap: 0.5rem;
+	.picker-row {
+		gap: 0.4rem;
 	}
-	
-	.difficulty-btn {
+
+	.picker-row > button {
 		padding: 0.4rem 0.8rem;
 		font-size: 0.85rem;
 	}
-	
-	.mode-buttons {
-		grid-template-columns: 1fr;
-		gap: 0.5rem;
-	}
-	
-	.mode-btn {
-		padding: 0.4rem 0.8rem;
-	}
-	
-	.level-grid {
-		gap: 0.4rem;
-	}
-	
+
 	.btn-primary,
 	.btn-secondary,
 	.btn-danger {
 		padding: 0.6rem 1.2rem;
 		font-size: 0.9rem;
+	}
+
+	.menu-actions .btn-primary,
+	.menu-actions .btn-secondary {
+		padding: 0.486rem 0.972rem;
 	}
 	
 	.hud {

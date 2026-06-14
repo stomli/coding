@@ -25,6 +25,18 @@ import ShareManager from './modules/ShareManager.js';
 import { ANALYTICS_CONFIG } from './config/analytics.config.js';
 
 /**
+ * Descriptions for each difficulty level, shown in the "(?)" info popup
+ * @type {Array<{name: String, description: String}>}
+ */
+const DIFFICULTY_INFO = [
+	{ name: 'Easy', description: 'Relaxed falling speed and the fewest blocking obstacles — great for learning the game.' },
+	{ name: 'Medium', description: 'A bit faster falling pieces with blocking obstacles appearing more often.' },
+	{ name: 'Hard', description: 'Faster falling pieces and more frequent blocking obstacles for a real challenge.' },
+	{ name: 'Expert', description: 'Quick falling pieces and frequent blocking obstacles for experienced players.' },
+	{ name: 'Master', description: 'Maximum falling speed and obstacle frequency — only for the very best.' }
+];
+
+/**
  * Initialize the game when the DOM is ready
  */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -175,12 +187,39 @@ function setupMenuListeners() {
 			selectDifficulty(difficulty);
 		});
 	});
-	
-	// Select the highest unlocked difficulty by default
+
+	// Restore last-selected mode and difficulty, falling back to defaults
 	const playerData = PlayerManager.getCurrentPlayerData();
+	const settings = PlayerManager.getSettings();
 	const unlockedDifficulties = playerData.levelProgress.unlockedDifficulties || [1];
 	const highestDifficulty = Math.max(...unlockedDifficulties);
-	selectDifficulty(highestDifficulty);
+
+	const initialMode = (settings.lastMode && CONSTANTS.GAME_MODE_CONFIG[settings.lastMode])
+		? settings.lastMode
+		: 'CLASSIC';
+	selectMode(initialMode);
+
+	const initialDifficulty = (Number.isInteger(settings.lastDifficulty) && settings.lastDifficulty >= 1 && settings.lastDifficulty <= 5)
+		? settings.lastDifficulty
+		: highestDifficulty;
+	selectDifficulty(initialDifficulty);
+
+	// "(?)" info buttons for the Difficulty and Mode pickers
+	document.querySelectorAll('.info-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			AudioManager.playClick();
+			showInfoPopup(btn.dataset.info);
+		});
+	});
+
+	const closeInfoBtn = document.getElementById('closeInfoOverlay');
+	if (closeInfoBtn) {
+		closeInfoBtn.addEventListener('click', () => {
+			AudioManager.playClick();
+			const infoOverlay = document.getElementById('infoOverlay');
+			if (infoOverlay) infoOverlay.classList.add('hidden');
+		});
+	}
 
 	// Start new game
 	if (startBtn) {
@@ -600,13 +639,81 @@ function populateLevelGrid() {
 		levelGrid.appendChild(btn);
 	}
 	
-	// If no level is selected yet, or selected level is locked, select the highest valid unlocked level
+	// If no level is selected yet, or selected level is locked, default to the
+	// next available level (lowest unlocked level not yet completed), falling
+	// back to the highest unlocked level if everything is already completed.
 	if (!selectedLevel || !unlockedLevels.includes(selectedLevel)) {
-		const highestLevel = Math.min(Math.max(...unlockedLevels), maxLevel);
-		selectLevel(highestLevel);
+		let nextLevel = null;
+		for (let level = 1; level <= maxLevel; level++) {
+			if (!unlockedLevels.includes(level)) continue;
+			const completed = selectedMode === 'PUZZLE'
+				? PlayerManager.getLevelStars(selectedDifficulty, level, (score, lvl, diff) => PuzzleManager.getStars(score, lvl, diff)) > 0
+				: PlayerManager.isLevelCompleted(selectedDifficulty, level, selectedMode);
+			if (!completed) {
+				nextLevel = level;
+				break;
+			}
+		}
+		if (nextLevel === null) {
+			nextLevel = Math.min(Math.max(...unlockedLevels), maxLevel);
+		}
+		selectLevel(nextLevel);
 	}
 
+	// Scroll the selected level into view within the horizontal picker
+	const selectedLevelBtn = levelGrid.querySelector('.level-btn.selected');
+	scrollPickerItemIntoView(selectedLevelBtn);
+
 	updateStartButton();
+}
+
+/**
+ * Scroll a picker item into view within its horizontal-scroll picker row
+ * @param {HTMLElement} btn - The picker item button to reveal
+ */
+function scrollPickerItemIntoView(btn) {
+	if (btn && typeof btn.scrollIntoView === 'function') {
+		btn.scrollIntoView({ block: 'nearest', inline: 'center' });
+	}
+}
+
+/**
+ * Show the "(?)" info popup describing all difficulty levels or game modes
+ * @param {String} type - 'difficulty' or 'mode'
+ */
+function showInfoPopup(type) {
+	const overlay = document.getElementById('infoOverlay');
+	const title = document.getElementById('infoOverlayTitle');
+	const body = document.getElementById('infoOverlayBody');
+	if (!overlay || !title || !body) return;
+
+	let items;
+	if (type === 'difficulty') {
+		title.textContent = 'Difficulty Levels';
+		items = DIFFICULTY_INFO.map((info, index) => ({
+			name: info.name,
+			description: info.description,
+			current: (index + 1) === selectedDifficulty
+		}));
+	} else if (type === 'mode') {
+		title.textContent = 'Game Modes';
+		items = Object.entries(CONSTANTS.GAME_MODE_CONFIG).map(([key, config]) => ({
+			name: config.name,
+			description: config.description,
+			current: key === selectedMode
+		}));
+	} else {
+		return;
+	}
+
+	body.innerHTML = items.map(item => `
+		<div class="level-changes-item info-popup-item${item.current ? ' current' : ''}">
+			<h3 class="level-changes-item-title">${item.name}${item.current ? ' (Selected)' : ''}</h3>
+			<p class="level-changes-item-description">${item.description}</p>
+		</div>
+	`).join('');
+
+	overlay.classList.remove('hidden');
 }
 
 /**
@@ -641,6 +748,7 @@ function selectLevel(level) {
 	levelButtons.forEach(btn => {
 		if (parseInt(btn.dataset.level) === level) {
 			btn.classList.add('selected');
+			scrollPickerItemIntoView(btn);
 		} else {
 			btn.classList.remove('selected');
 		}
@@ -661,17 +769,21 @@ function updateStartButton() {
  */
 function selectMode(mode) {
 	selectedMode = mode;
-	
+
 	// Update UI - highlight selected mode
 	const modeButtons = document.querySelectorAll('.mode-btn');
 	modeButtons.forEach(btn => {
 		if (btn.dataset.mode === mode) {
 			btn.classList.add('selected');
+			scrollPickerItemIntoView(btn);
 		} else {
 			btn.classList.remove('selected');
 		}
 	});
-	
+
+	// Remember this as the last-selected mode
+	PlayerManager.updateSettings({ lastMode: mode });
+
 	// Refresh level grid to show mode-specific unlocked levels
 	populateLevelGrid();
 }
@@ -682,20 +794,24 @@ function selectMode(mode) {
  */
 function selectDifficulty(difficulty) {
 	selectedDifficulty = difficulty;
-	
+
 	// Update UI - highlight selected difficulty
 	const difficultyButtons = document.querySelectorAll('.difficulty-btn');
 	difficultyButtons.forEach(btn => {
 		if (parseInt(btn.dataset.difficulty) === difficulty) {
 			btn.classList.add('selected');
+			scrollPickerItemIntoView(btn);
 		} else {
 			btn.classList.remove('selected');
 		}
 	});
-	
-	// Reset selected level when changing difficulty so populateLevelGrid will select the highest
+
+	// Remember this as the last-selected difficulty
+	PlayerManager.updateSettings({ lastDifficulty: difficulty });
+
+	// Reset selected level when changing difficulty so populateLevelGrid will select the next available level
 	selectedLevel = null;
-	
+
 	// Refresh level grid to update completion checkmarks for this difficulty
 	populateLevelGrid();
 }

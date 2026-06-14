@@ -87,26 +87,31 @@
 
 			<!-- Game Setup -->
 			<div class="game-setup">
-				<h2>Game Setup</h2>
-				<label class="setup-label">Difficulty</label>
-				<div class="difficulty-buttons">
+				<div class="picker-header">
+					<label class="setup-label">Difficulty</label>
+					<button type="button" class="info-btn" data-info="difficulty" aria-label="About difficulty levels">?</button>
+				</div>
+				<div class="picker-row">
 					<button class="difficulty-btn" data-difficulty="1">Easy</button>
 					<button class="difficulty-btn" data-difficulty="2">Medium</button>
 					<button class="difficulty-btn" data-difficulty="3">Hard</button>
 					<button class="difficulty-btn" data-difficulty="4">Expert</button>
 					<button class="difficulty-btn" data-difficulty="5">Master</button>
 				</div>
-				<label class="setup-label">Mode</label>
-				<div class="mode-buttons">
-					<button class="mode-btn selected" data-mode="CLASSIC" title="Clear orbs before time runs out">Classic</button>
-					<button class="mode-btn" data-mode="ZEN" title="Untimed - focus on combos">Zen</button>
-					<button class="mode-btn" data-mode="GAUNTLET" title="Start with pre-filled rows">Gauntlet</button>
-					<button class="mode-btn" data-mode="RISING_TIDE" title="Blocks rise from bottom">Rising Tide</button>
-					<button class="mode-btn" data-mode="MISSION" title="Complete sequential micro-goals">Mission</button>
-					<button class="mode-btn" data-mode="PUZZLE" title="Seeded puzzle — same pieces every time">Puzzle</button>
+				<div class="picker-header">
+					<label class="setup-label">Mode</label>
+					<button type="button" class="info-btn" data-info="mode" aria-label="About game modes">?</button>
+				</div>
+				<div class="picker-row">
+					<button class="mode-btn" data-mode="CLASSIC">Classic</button>
+					<button class="mode-btn" data-mode="ZEN">Zen</button>
+					<button class="mode-btn" data-mode="GAUNTLET">Gauntlet</button>
+					<button class="mode-btn" data-mode="RISING_TIDE">Rising Tide</button>
+					<button class="mode-btn" data-mode="MISSION">Mission</button>
+					<button class="mode-btn" data-mode="PUZZLE">Puzzle</button>
 				</div>
 				<label class="setup-label">Level</label>
-				<div id="levelGrid" class="level-grid">
+				<div id="levelGrid" class="picker-row">
 					<!-- Level buttons dynamically generated -->
 				</div>
 			</div>
@@ -116,7 +121,7 @@
 				<button id="continuePuzzleButton" class="btn-primary hidden">Continue Puzzle</button>
 				<button id="startButton" class="btn-primary">Start Game</button>
 				<button id="settingsButton" class="btn-secondary">Settings</button>
-				<a href="guide.html" class="btn-secondary" style="display: inline-block; text-decoration: none; text-align: center;">How to Play</a>
+				<a href="guide.html" class="btn-secondary" style="display: inline-block; text-decoration: none; text-align: center;">User Guide</a>
 			</div>
 			<div class="menu-legal">
 				<a href="privacy.html" class="menu-legal-link">Privacy Policy</a>
@@ -426,6 +431,17 @@
 		</div>
 	</div>
 	
+	<!-- Info Popup Overlay (Difficulty / Mode descriptions) -->
+	<div id="infoOverlay" class="overlay hidden">
+		<div class="overlay-content info-popup-content">
+			<h2 id="infoOverlayTitle">Info</h2>
+			<div id="infoOverlayBody" class="info-popup-list"></div>
+			<div class="overlay-actions">
+				<button id="closeInfoOverlay" class="btn-primary">Close</button>
+			</div>
+		</div>
+	</div>
+
 	<!-- Particle Canvas Overlay (for celebrations that need to appear above overlays) -->
 	<canvas id="particleCanvas" class="particle-overlay"></canvas>	</div>
 	
