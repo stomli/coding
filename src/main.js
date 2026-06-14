@@ -204,9 +204,7 @@ function setupMenuListeners() {
 			showScreen('gameScreen');
 		// Hide mode-specific banners (will be shown by their respective events)
 		const mb = document.getElementById('missionBanner');
-		const pb = document.getElementById('puzzleBanner');
 		if (mb) mb.classList.add('hidden');
-		if (pb) pb.classList.add('hidden');
 		// Start with selected difficulty, level, and mode
 		const playerName = PlayerManager.getCurrentPlayerData().name;
 		AnalyticsManager.trackLevelStart(selectedDifficulty, selectedLevel, selectedMode);
@@ -520,15 +518,6 @@ function setupScoreListener() {
 		}
 	});
 
-	// Puzzle mode: pieces remaining HUD
-	const puzzleBanner = document.getElementById('puzzleBanner');
-	const puzzlePiecesLeft = document.getElementById('puzzlePiecesLeft');
-
-	EventEmitter.on(CONSTANTS.EVENTS.PUZZLE_PIECES_UPDATE, (data) => {
-		if (!puzzleBanner) return;
-		puzzleBanner.classList.remove('hidden');
-		if (puzzlePiecesLeft) puzzlePiecesLeft.textContent = `${data.piecesRemaining} / ${data.pieceLimit}`;
-	});
 }
 
 /**

@@ -879,15 +879,20 @@ class GameEngineClass {
 	 * @private
 	 */
 	_updateHUD() {
-		// Update timer display
+		// Update timer display (PUZZLE mode shows a piece/turn counter instead of a timer)
 		const timerDisplay = document.getElementById('timerDisplay');
 		if (timerDisplay) {
-			const timeRemaining = LevelManager.getRemainingTime();
-			timerDisplay.textContent = LevelManager.getTimerDisplay();
-			
-			// Visual urgent: timer turns red when ≤5s (about to lose the level)
-			const urgent = timeRemaining > 0 && timeRemaining <= 5;
-			timerDisplay.classList.toggle('timer-urgent', urgent);
+			if (this.gameMode === 'PUZZLE') {
+				timerDisplay.textContent = `🧩 ${PuzzleManager.getPiecesUsed()}/${PuzzleManager.getPieceLimit()}`;
+				timerDisplay.classList.remove('timer-urgent');
+			} else {
+				const timeRemaining = LevelManager.getRemainingTime();
+				timerDisplay.textContent = LevelManager.getTimerDisplay();
+
+				// Visual urgent: timer turns red when ≤5s (about to lose the level)
+				const urgent = timeRemaining > 0 && timeRemaining <= 5;
+				timerDisplay.classList.toggle('timer-urgent', urgent);
+			}
 		}
 		
 		// Update score display

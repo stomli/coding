@@ -964,30 +964,6 @@ body::after {
 	white-space: nowrap;
 }
 
-/* ── Puzzle Mode Banner ── */
-.puzzle-banner {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
-	padding: 0.35rem 0.75rem;
-	background: linear-gradient(90deg, rgba(120, 60, 0, 0.85), rgba(30, 30, 50, 0.85));
-	border-bottom: 1px solid #cc8800;
-	font-size: 0.8rem;
-}
-
-.puzzle-banner-label {
-	color: #ffcc66;
-	font-weight: bold;
-	white-space: nowrap;
-}
-
-.puzzle-pieces-left {
-	color: #ffffff;
-	font-weight: bold;
-	white-space: nowrap;
-}
-
 /* ── Level Stars (Puzzle mode) ── */
 .level-stars {
 	display: flex;
