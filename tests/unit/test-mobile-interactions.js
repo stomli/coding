@@ -98,44 +98,58 @@ testSuite.tests.push({
 	}
 });
 
-// Test: Canvas tap on left side triggers move left
+// Test: Canvas detects swipe left for move left
 testSuite.tests.push({
-	name: 'canvas touch - Tap left side triggers move left',
+	name: 'canvas touch - Swipe left triggers move left',
 	async run() {
 		InputHandler.initialize();
-		
+
 		let moveLeftFired = false;
 		const listener = () => { moveLeftFired = true; };
 		EventEmitter.on(CONSTANTS.EVENTS.MOVE_LEFT, listener);
-		
-		// Test that InputHandler.triggerAction works for moveLeft
-		InputHandler.triggerAction('moveLeft');
-		
+
+		// Simulate swipe left gesture (positive deltaX, small deltaY)
+		const deltaX = 100; // 100px right-to-left swipe distance
+		const deltaY = 10;
+		const deltaTime = 200;
+		const isSwipeLeft = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+
+		if (isSwipeLeft) {
+			InputHandler.triggerAction('moveLeft');
+		}
+
 		EventEmitter.off(CONSTANTS.EVENTS.MOVE_LEFT, listener);
-		
+
 		if (!moveLeftFired) {
-			throw new Error('Tap on left side should trigger move left');
+			throw new Error('Swipe left should trigger move left');
 		}
 	}
 });
 
-// Test: Canvas tap on right side triggers move right
+// Test: Canvas detects swipe right for move right
 testSuite.tests.push({
-	name: 'canvas touch - Tap right side triggers move right',
+	name: 'canvas touch - Swipe right triggers move right',
 	async run() {
 		InputHandler.initialize();
-		
+
 		let moveRightFired = false;
 		const listener = () => { moveRightFired = true; };
 		EventEmitter.on(CONSTANTS.EVENTS.MOVE_RIGHT, listener);
-		
-		// Test that InputHandler.triggerAction works for moveRight
-		InputHandler.triggerAction('moveRight');
-		
+
+		// Simulate swipe right gesture (negative deltaX, small deltaY)
+		const deltaX = -100; // 100px left-to-right swipe distance
+		const deltaY = 10;
+		const deltaTime = 200;
+		const isSwipeRight = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+
+		if (isSwipeRight) {
+			InputHandler.triggerAction('moveRight');
+		}
+
 		EventEmitter.off(CONSTANTS.EVENTS.MOVE_RIGHT, listener);
-		
+
 		if (!moveRightFired) {
-			throw new Error('Tap on right side should trigger move right');
+			throw new Error('Swipe right should trigger move right');
 		}
 	}
 });
@@ -268,26 +282,6 @@ testSuite.tests.push({
 		
 		if (isSwipeDown || isSwipeUp) {
 			throw new Error('Slow movements should not be detected as swipes');
-		}
-	}
-});
-
-// Test: Tap detection requires small movement
-testSuite.tests.push({
-	name: 'canvas touch - Large movements are not taps',
-	async run() {
-		GameEngine.initialize();
-		GameEngine.start(1, 1);
-		
-		// Large horizontal movement
-		const deltaX = 50;
-		const deltaY = 10;
-		const deltaTime = 200;
-		
-		const isTap = Math.abs(deltaX) < 20 && Math.abs(deltaY) < 20 && deltaTime < 300;
-		
-		if (isTap) {
-			throw new Error('Large movements should not be detected as taps');
 		}
 	}
 });

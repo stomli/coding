@@ -212,7 +212,7 @@ class GameEngineClass {
 	}
 	
 	/**
-	 * Set up canvas touch controls for tap and swipe gestures
+	 * Set up canvas touch controls for swipe gestures
 	 * @returns {void}
 	 * @private
 	 */
@@ -264,13 +264,12 @@ class GameEngineClass {
 			const deltaY = touchEndY - touchStartY;
 			const deltaTime = touchEndTime - touchStartTime;
 			
-			// Check if it's a swipe (fast movement) vs tap (quick touch)
+			// Check if it's a swipe (fast, directional movement)
 			const isSwipeDown = deltaY > 50 && Math.abs(deltaX) < 50 && deltaTime < 300;
 			const isSwipeUp = deltaY < -50 && Math.abs(deltaX) < 50 && deltaTime < 300;
 			const isSwipeLeft = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
 			const isSwipeRight = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
-			const isTap = Math.abs(deltaX) < 20 && Math.abs(deltaY) < 20 && deltaTime < 300;
-			
+
 			if (isSwipeDown) {
 				// Swipe down - hard drop
 				InputHandler.triggerAction('drop');
@@ -283,18 +282,6 @@ class GameEngineClass {
 			} else if (isSwipeRight) {
 				// Swipe right - move piece right
 				InputHandler.triggerAction('moveRight');
-			} else if (isTap) {
-				// Tap - move left/right based on which side of canvas
-				const rect = canvas.getBoundingClientRect();
-				const canvasX = touchEndX - rect.left;
-				const canvasWidth = rect.width;
-				const centerX = canvasWidth / 2;
-				
-				if (canvasX < centerX) {
-					InputHandler.triggerAction('moveLeft');
-				} else {
-					InputHandler.triggerAction('moveRight');
-				}
 			}
 		});
 		
