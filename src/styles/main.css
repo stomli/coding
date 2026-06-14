@@ -1093,6 +1093,7 @@ body::after {
 	justify-content: center;
 	align-items: flex-start;
 	flex: 1;
+	touch-action: none;
 }
 
 /* Canvas */
@@ -1105,6 +1106,11 @@ body::after {
 	max-height: calc(100vh - 220px - env(safe-area-inset-top)); /* safety net: never overflow viewport height */
 	width: auto;
 	height: auto;
+	touch-action: none;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
 }
 
 /* Particle Canvas Overlay */
@@ -1240,6 +1246,11 @@ body::after {
 	font-size: 0.9rem;
 	margin: 0 0.25rem;
 	line-height: 1;
+	touch-action: manipulation;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .controls-info kbd .glyph-nudge {
