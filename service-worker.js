@@ -12,7 +12,7 @@
  * ============================================================================
  */
 
-const CACHE_VERSION = 'orbfall-v26.0614.0234';
+const CACHE_VERSION = 'orbfall-v26.0614.0235';
 const CACHE_NAME = CACHE_VERSION;
 
 /**

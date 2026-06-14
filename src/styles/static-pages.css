@@ -101,6 +101,30 @@ body {
 
 /* ── Back / Navigation Buttons ──────────────────────────────── */
 
+.top-nav-back {
+	position: fixed;
+	top: 12px;
+	left: 12px;
+	z-index: 100;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.5rem 1rem;
+	background: rgba(0, 0, 0, 0.35);
+	color: white;
+	text-decoration: none;
+	border-radius: 999px;
+	font-weight: bold;
+	font-size: 0.9em;
+	backdrop-filter: blur(4px);
+	transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.top-nav-back:hover {
+	opacity: 0.85;
+	transform: translateY(-1px);
+}
+
 .back-link {
 	display: inline-block;
 	margin-top: 20px;
@@ -655,6 +679,13 @@ body {
 /* ── Responsive ──────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+	.top-nav-back {
+		top: 8px;
+		left: 8px;
+		padding: 0.4rem 0.8rem;
+		font-size: 0.8em;
+	}
+
 	.header h1 {
 		font-size: 2em;
 	}
