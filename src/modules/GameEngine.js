@@ -223,52 +223,86 @@ class GameEngineClass {
 		}
 		
 		const canvas = this.renderer.canvas;
-		
+
+		const SWIPE_THRESHOLD = 30;
+
 		let touchStartX = 0;
 		let touchStartY = 0;
 		let touchStartTime = 0;
+		let dragStartPieceX = 0;
+		let isDragging = false;
 		let softDropTimer = null;
-		
+
 		canvas.addEventListener('touchstart', (e) => {
 			if (this.state !== CONSTANTS.GAME_STATES.PLAYING) return;
-			
+
 			e.preventDefault();
 			const touch = e.touches[0];
 			touchStartX = touch.clientX;
 			touchStartY = touch.clientY;
 			touchStartTime = Date.now();
-			
+			dragStartPieceX = this.currentPiece ? this.currentPiece.getPosition().x : 0;
+			isDragging = false;
+
 			// Start soft drop after holding for 200ms
 			softDropTimer = setTimeout(() => {
 				this._startSoftDrop();
 			}, 200);
 		});
-		
+
+		canvas.addEventListener('touchmove', (e) => {
+			e.preventDefault();
+			if (this.state !== CONSTANTS.GAME_STATES.PLAYING || !this.currentPiece) return;
+
+			const rect = canvas.getBoundingClientRect();
+			const cellWidth = rect.width / this.grid.cols;
+			if (!cellWidth) return;
+
+			const touch = e.touches[0];
+			const deltaX = touch.clientX - touchStartX;
+			const targetX = dragStartPieceX + Math.round(deltaX / cellWidth);
+
+			// Drag the active piece horizontally to follow the finger, one column at a time
+			let pos = this.currentPiece.getPosition();
+			while (pos.x < targetX) {
+				this._moveRight();
+				const newPos = this.currentPiece.getPosition();
+				if (newPos.x === pos.x) break; // blocked by wall/stack
+				pos = newPos;
+				isDragging = true;
+			}
+			while (pos.x > targetX) {
+				this._moveLeft();
+				const newPos = this.currentPiece.getPosition();
+				if (newPos.x === pos.x) break; // blocked by wall/stack
+				pos = newPos;
+				isDragging = true;
+			}
+		}, { passive: false });
+
 		canvas.addEventListener('touchend', (e) => {
 			if (this.state !== CONSTANTS.GAME_STATES.PLAYING) return;
-			
+
 			e.preventDefault();
 			const touch = e.changedTouches[0];
 			const touchEndX = touch.clientX;
 			const touchEndY = touch.clientY;
 			const touchEndTime = Date.now();
-			
+
 			// Clear soft drop timer and end soft drop if active
 			if (softDropTimer) {
 				clearTimeout(softDropTimer);
 				softDropTimer = null;
 			}
 			this._endSoftDrop();
-			
+
 			const deltaX = touchEndX - touchStartX;
 			const deltaY = touchEndY - touchStartY;
 			const deltaTime = touchEndTime - touchStartTime;
-			
+
 			// Check if it's a swipe (fast, directional movement)
-			const isSwipeDown = deltaY > 50 && Math.abs(deltaX) < 50 && deltaTime < 300;
-			const isSwipeUp = deltaY < -50 && Math.abs(deltaX) < 50 && deltaTime < 300;
-			const isSwipeLeft = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
-			const isSwipeRight = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+			const isSwipeDown = deltaY > SWIPE_THRESHOLD && Math.abs(deltaX) < SWIPE_THRESHOLD && deltaTime < 300;
+			const isSwipeUp = deltaY < -SWIPE_THRESHOLD && Math.abs(deltaX) < SWIPE_THRESHOLD && deltaTime < 300;
 
 			if (isSwipeDown) {
 				// Swipe down - hard drop
@@ -276,19 +310,20 @@ class GameEngineClass {
 			} else if (isSwipeUp) {
 				// Swipe up - rotate
 				InputHandler.triggerAction('rotate');
-			} else if (isSwipeLeft) {
-				// Swipe left - move piece left
-				InputHandler.triggerAction('moveLeft');
-			} else if (isSwipeRight) {
-				// Swipe right - move piece right
-				InputHandler.triggerAction('moveRight');
+			} else if (!isDragging) {
+				// Horizontal movement wasn't already handled by dragging - check for a quick swipe
+				const isSwipeLeft = deltaX < -SWIPE_THRESHOLD && Math.abs(deltaY) < SWIPE_THRESHOLD && deltaTime < 300;
+				const isSwipeRight = deltaX > SWIPE_THRESHOLD && Math.abs(deltaY) < SWIPE_THRESHOLD && deltaTime < 300;
+
+				if (isSwipeLeft) {
+					// Swipe left - move piece left
+					InputHandler.triggerAction('moveLeft');
+				} else if (isSwipeRight) {
+					// Swipe right - move piece right
+					InputHandler.triggerAction('moveRight');
+				}
 			}
 		});
-		
-		// Prevent default touch behavior on canvas
-		canvas.addEventListener('touchmove', (e) => {
-			e.preventDefault();
-		}, { passive: false });
 	}
 	
 	/**

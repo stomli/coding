@@ -57,7 +57,7 @@ testSuite.tests.push({
 		// Manually trigger the handlers (since we can't dispatch real events in tests)
 		// This tests the logic, not the actual event dispatching
 		const deltaY = endY - startY;
-		const isSwipeUp = deltaY < -50;
+		const isSwipeUp = deltaY < -30;
 		
 		if (isSwipeUp) {
 			InputHandler.triggerAction('rotate');
@@ -84,7 +84,7 @@ testSuite.tests.push({
 		
 		// Simulate swipe down gesture
 		const deltaY = 100; // 100px down
-		const isSwipeDown = deltaY > 50;
+		const isSwipeDown = deltaY > 30;
 		
 		if (isSwipeDown) {
 			InputHandler.triggerAction('drop');
@@ -112,7 +112,7 @@ testSuite.tests.push({
 		const deltaX = -100; // 100px right-to-left swipe distance
 		const deltaY = 10;
 		const deltaTime = 200;
-		const isSwipeLeft = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+		const isSwipeLeft = deltaX < -30 && Math.abs(deltaY) < 30 && deltaTime < 300;
 
 		if (isSwipeLeft) {
 			InputHandler.triggerAction('moveLeft');
@@ -140,7 +140,7 @@ testSuite.tests.push({
 		const deltaX = 100; // 100px left-to-right swipe distance
 		const deltaY = 10;
 		const deltaTime = 200;
-		const isSwipeRight = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+		const isSwipeRight = deltaX > 30 && Math.abs(deltaY) < 30 && deltaTime < 300;
 
 		if (isSwipeRight) {
 			InputHandler.triggerAction('moveRight');
@@ -150,6 +150,39 @@ testSuite.tests.push({
 
 		if (!moveRightFired) {
 			throw new Error('Swipe right should trigger move right');
+		}
+	}
+});
+
+// Test: Dragging the active piece moves it horizontally column-by-column
+testSuite.tests.push({
+	name: 'canvas touch - Drag moves piece horizontally to follow finger',
+	async run() {
+		GameEngine.initialize();
+		GameEngine.start(1, 1);
+
+		if (!GameEngine.currentPiece) {
+			throw new Error('Expected an active piece after starting the game');
+		}
+
+		const startX = GameEngine.currentPiece.getPosition().x;
+
+		// Simulate dragging 2 columns to the right, one column at a time
+		// (mirrors the touchmove handler's column-by-column drag logic)
+		GameEngine._moveRight();
+		GameEngine._moveRight();
+
+		const afterRightX = GameEngine.currentPiece.getPosition().x;
+		if (afterRightX !== startX + 2) {
+			throw new Error(`Expected piece to move 2 columns right (to ${startX + 2}), got ${afterRightX}`);
+		}
+
+		// Drag back 1 column to the left
+		GameEngine._moveLeft();
+
+		const afterLeftX = GameEngine.currentPiece.getPosition().x;
+		if (afterLeftX !== startX + 1) {
+			throw new Error(`Expected piece to move 1 column left (to ${startX + 1}), got ${afterLeftX}`);
 		}
 	}
 });
@@ -253,12 +286,12 @@ testSuite.tests.push({
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
-		// Small vertical movement (< 50px)
-		const deltaY = 30;
+		// Small vertical movement (< 30px)
+		const deltaY = 15;
 		const deltaTime = 200;
-		
-		const isSwipeDown = deltaY > 50 && deltaTime < 300;
-		const isSwipeUp = deltaY < -50 && deltaTime < 300;
+
+		const isSwipeDown = deltaY > 30 && deltaTime < 300;
+		const isSwipeUp = deltaY < -30 && deltaTime < 300;
 		
 		if (isSwipeDown || isSwipeUp) {
 			throw new Error('Small movements should not be detected as swipes');
@@ -276,9 +309,9 @@ testSuite.tests.push({
 		// Large distance but slow (> 300ms)
 		const deltaY = 100;
 		const deltaTime = 500;
-		
-		const isSwipeDown = deltaY > 50 && deltaTime < 300;
-		const isSwipeUp = deltaY < -50 && deltaTime < 300;
+
+		const isSwipeDown = deltaY > 30 && deltaTime < 300;
+		const isSwipeUp = deltaY < -30 && deltaTime < 300;
 		
 		if (isSwipeDown || isSwipeUp) {
 			throw new Error('Slow movements should not be detected as swipes');
