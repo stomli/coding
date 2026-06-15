@@ -57,7 +57,7 @@ testSuite.tests.push({
 		// Manually trigger the handlers (since we can't dispatch real events in tests)
 		// This tests the logic, not the actual event dispatching
 		const deltaY = endY - startY;
-		const isSwipeUp = deltaY < -30;
+		const isSwipeUp = deltaY < -40;
 		
 		if (isSwipeUp) {
 			InputHandler.triggerAction('rotate');
@@ -84,7 +84,7 @@ testSuite.tests.push({
 		
 		// Simulate swipe down gesture
 		const deltaY = 100; // 100px down
-		const isSwipeDown = deltaY > 30;
+		const isSwipeDown = deltaY > 40;
 		
 		if (isSwipeDown) {
 			InputHandler.triggerAction('drop');
@@ -112,7 +112,7 @@ testSuite.tests.push({
 		const deltaX = -100; // 100px right-to-left swipe distance
 		const deltaY = 10;
 		const deltaTime = 200;
-		const isSwipeLeft = deltaX < -30 && Math.abs(deltaY) < 30 && deltaTime < 300;
+		const isSwipeLeft = deltaX < -40 && Math.abs(deltaY) < 40 && deltaTime < 300;
 
 		if (isSwipeLeft) {
 			InputHandler.triggerAction('moveLeft');
@@ -140,7 +140,7 @@ testSuite.tests.push({
 		const deltaX = 100; // 100px left-to-right swipe distance
 		const deltaY = 10;
 		const deltaTime = 200;
-		const isSwipeRight = deltaX > 30 && Math.abs(deltaY) < 30 && deltaTime < 300;
+		const isSwipeRight = deltaX > 40 && Math.abs(deltaY) < 40 && deltaTime < 300;
 
 		if (isSwipeRight) {
 			InputHandler.triggerAction('moveRight');
@@ -286,12 +286,12 @@ testSuite.tests.push({
 		GameEngine.initialize();
 		GameEngine.start(1, 1);
 		
-		// Small vertical movement (< 30px)
-		const deltaY = 15;
+		// Small vertical movement (< 40px)
+		const deltaY = 20;
 		const deltaTime = 200;
 
-		const isSwipeDown = deltaY > 30 && deltaTime < 300;
-		const isSwipeUp = deltaY < -30 && deltaTime < 300;
+		const isSwipeDown = deltaY > 40 && deltaTime < 300;
+		const isSwipeUp = deltaY < -40 && deltaTime < 300;
 		
 		if (isSwipeDown || isSwipeUp) {
 			throw new Error('Small movements should not be detected as swipes');
@@ -310,8 +310,8 @@ testSuite.tests.push({
 		const deltaY = 100;
 		const deltaTime = 500;
 
-		const isSwipeDown = deltaY > 30 && deltaTime < 300;
-		const isSwipeUp = deltaY < -30 && deltaTime < 300;
+		const isSwipeDown = deltaY > 40 && deltaTime < 300;
+		const isSwipeUp = deltaY < -40 && deltaTime < 300;
 		
 		if (isSwipeDown || isSwipeUp) {
 			throw new Error('Slow movements should not be detected as swipes');

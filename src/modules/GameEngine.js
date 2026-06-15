@@ -224,7 +224,7 @@ class GameEngineClass {
 		
 		const canvas = this.renderer.canvas;
 
-		const SWIPE_THRESHOLD = 30;
+		const SWIPE_THRESHOLD = 40;
 
 		let touchStartX = 0;
 		let touchStartY = 0;
