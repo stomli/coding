@@ -331,37 +331,25 @@ body::after {
 	top: 0;
 	left: 0;
 	right: 0;
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 0.4rem;
 	padding: 0.35rem 0.6rem;
 	z-index: 8;
-}
-
-.menu-top-bar-right {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	gap: 0.3rem;
-}
-
-.menu-top-bar-row {
-	display: flex;
-	align-items: center;
-	gap: 0.4rem;
 }
 
 .player-pill-container {
 	position: relative;
 	z-index: 8;
+	width: 100%;
 }
 
 .player-pill-toggle {
-	display: inline-flex;
+	display: flex;
+	width: 100%;
+	max-width: 500px;
+	margin: 0 auto;
 	align-items: center;
+	justify-content: center;
 	gap: 0.35rem;
-	padding: 0.35rem 0.75rem;
+	padding: 0.5rem 1rem;
 	border-radius: 999px;
 	border: 1px solid rgba(var(--color-game-green-rgb), 0.55);
 	background: rgba(10, 36, 30, 0.78);
@@ -389,7 +377,7 @@ body::after {
 
 .player-pill-name {
 	color: #ffffff;
-	max-width: 140px;
+	max-width: 60vw;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -405,8 +393,10 @@ body::after {
 .player-pill-menu {
 	position: absolute;
 	top: calc(100% + 0.35rem);
-	left: 0;
+	left: 50%;
+	transform: translateX(-50%);
 	width: 255px;
+	max-width: calc(100% - 1rem);
 	max-height: 320px;
 	overflow-y: auto;
 	padding: 0.45rem;
@@ -769,6 +759,14 @@ body::after {
 .menu-actions .btn-primary,
 .menu-actions .btn-secondary {
 	padding: 0.405rem 0.972rem;
+}
+
+.menu-secondary-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: center;
+	margin-bottom: 0.5rem;
 }
 
 .menu-legal {
@@ -1852,10 +1850,6 @@ body::after {
 	.supporter-button {
 		font-size: 0.68rem;
 		padding: 0.28rem 0.65rem;
-	}
-
-	.menu-top-bar-row {
-		gap: 0.3rem;
 	}
 	}
 
