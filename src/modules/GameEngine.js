@@ -267,8 +267,8 @@ class GameEngineClass {
 			// Check if it's a swipe (fast, directional movement)
 			const isSwipeDown = deltaY > 50 && Math.abs(deltaX) < 50 && deltaTime < 300;
 			const isSwipeUp = deltaY < -50 && Math.abs(deltaX) < 50 && deltaTime < 300;
-			const isSwipeLeft = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
-			const isSwipeRight = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+			const isSwipeLeft = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+			const isSwipeRight = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
 
 			if (isSwipeDown) {
 				// Swipe down - hard drop

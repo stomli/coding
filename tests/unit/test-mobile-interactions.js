@@ -108,11 +108,11 @@ testSuite.tests.push({
 		const listener = () => { moveLeftFired = true; };
 		EventEmitter.on(CONSTANTS.EVENTS.MOVE_LEFT, listener);
 
-		// Simulate swipe left gesture (positive deltaX, small deltaY)
-		const deltaX = 100; // 100px right-to-left swipe distance
+		// Simulate swipe left gesture (negative deltaX, small deltaY)
+		const deltaX = -100; // 100px right-to-left swipe distance
 		const deltaY = 10;
 		const deltaTime = 200;
-		const isSwipeLeft = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+		const isSwipeLeft = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
 
 		if (isSwipeLeft) {
 			InputHandler.triggerAction('moveLeft');
@@ -136,11 +136,11 @@ testSuite.tests.push({
 		const listener = () => { moveRightFired = true; };
 		EventEmitter.on(CONSTANTS.EVENTS.MOVE_RIGHT, listener);
 
-		// Simulate swipe right gesture (negative deltaX, small deltaY)
-		const deltaX = -100; // 100px left-to-right swipe distance
+		// Simulate swipe right gesture (positive deltaX, small deltaY)
+		const deltaX = 100; // 100px left-to-right swipe distance
 		const deltaY = 10;
 		const deltaTime = 200;
-		const isSwipeRight = deltaX < -50 && Math.abs(deltaY) < 50 && deltaTime < 300;
+		const isSwipeRight = deltaX > 50 && Math.abs(deltaY) < 50 && deltaTime < 300;
 
 		if (isSwipeRight) {
 			InputHandler.triggerAction('moveRight');
